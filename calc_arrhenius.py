@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 
-def calc_arrhenius(kinetics,tsec,TC,geometry,extra_steps = True):
+def calc_arrhenius(kinetics,tsec,TC,geometry,extra_steps = True,added_steps:int = 0):
     
         # kinetics: (Ea, lnd0aa_x, fracs_x). To make this compatible with other functions, if there are x fracs, input x-1 fractions, and the code will determine the
     # final fraction.
@@ -90,7 +90,7 @@ def calc_arrhenius(kinetics,tsec,TC,geometry,extra_steps = True):
         newf = torch.zeros(sumf_MDD.shape)
         newf[0] = sumf_MDD[0]
         newf[1:] = sumf_MDD[1:]-sumf_MDD[0:-1]
-        newf = newf[2:]
+        newf = newf[added_steps:]
         normalization_factor = torch.max(torch.cumsum(newf,0))
         diffFi= newf/normalization_factor 
         sumf_MDD = torch.cumsum(diffFi,axis=0)
@@ -121,7 +121,12 @@ def calc_arrhenius(kinetics,tsec,TC,geometry,extra_steps = True):
         diffti = torch.concat((torch.unsqueeze(cumtsec[0,0],dim=-1),diffti),dim=-1)
 
     if extra_steps == True:
-        diffti = diffti[2:]
+        
+        if ndom >1:
+            diffti = diffti[added_steps:]
+        else:
+            
+            diffti = diffti[added_steps:].ravel()
     else:
         if ndom > 1:
             diffti = tsec[:,1].unsqueeze(0).ravel()
@@ -167,7 +172,7 @@ def calc_arrhenius(kinetics,tsec,TC,geometry,extra_steps = True):
         #Fechtig and Kalbitzer Equation 5a
         
         DR2_a[0] = ((((sumf_MDD[0]**2) - 0**2))*math.pi)/(4*diffti[0])
-        
+        breakpoint()
         DR2_a[1:] = ((((sumf_MDD[1:]**2)-(sumf_MDD[0:-1])**2))*math.pi)/(4*diffti[1:])
         DR2_b[1:] = (4/((math.pi**2)*diffti[1:]))*np.log((1-sumf_MDD[0:-1])/(1-sumf_MDD[1:]))
         usea = (sumf_MDD > 0) & (sumf_MDD < 0.6)

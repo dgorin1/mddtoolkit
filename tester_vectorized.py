@@ -11,14 +11,17 @@ from save_results import save_results
 from organize_x import organize_x
 # get this file's directory
 dir_path = os.path.dirname(os.path.realpath(__file__))
+
 data_input = pd.read_csv(f"{dir_path}/data/input_8DomSynthDataNoisyM3_plane_sheet.csv")
-mineral_name = "kspar"
-time_add = [1000] #Add extra time in seconds
-temp_add = [20]
+lnd0aa_bounds = (-5,50) # The user should really be able to pick any numerical values they want here (Good to list its in units of 1/s)
+Ea_bounds = (50,500) # User should also be able to pick any number >0 for these bounds. List in kJ/mol
+#mineral_name = "kspar"
+time_add = [] #Add extra time in seconds
+temp_add = []
 sample_name = "TESTNAME"
 moves = "snooker" # Define moves as "snooker" if you fear multimodality in your dataset. Can lead to poor performance if no multimodality exists
-max_domains_to_model = 3
-geometry  = "plane sheet" #"plane sheet" # options are "plane sheet", or "spherical"
+max_domains_to_model = 5
+geometry  = "spherical" #"plane sheet" # options are "plane sheet", or "spherical"
 omit_value_indices = [33,34,35,36,37,38,39,40,41] #[]#[0,1,2]#
 misfit_stat_list = ["chisq","lnd0aa_chisq","percent_frac","l1_frac_cum","l1_frac","l1_moles","l2_moles","l2_frac","lnd0aa"] # #ADD BACK PERCENT_FRAC. #options are chisq, l1_moles, l2_moles, l1_frac, l2_frac, percent_frac
 
@@ -52,7 +55,7 @@ for misfit_stat in misfit_stat_list:
         # Read in the nonlinear constra¸¸int
 
 
-        params, misfit_val = diffEV_multiples(objective,dataset,2,mineral_name,domains_to_model)
+        params, misfit_val = diffEV_multiples(objective,dataset,2,domains_to_model,Ea_bounds = Ea_bounds, lnd0aa_bounds = lnd0aa_bounds)
 
 
         plot_results(params,dataset,objective,sample_name=sample_name,quiet = True,misfit_stat = misfit_stat)

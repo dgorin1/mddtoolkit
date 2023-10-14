@@ -5,7 +5,7 @@ import torch
 import math as math
 from jax import numpy as jnp
 
-def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"): 
+def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical",added_steps:int = 2): 
 
 
     # Check the number of dimensions being passed in to see how many vectors we're dealing with. Code handles 1 vs >1 differently
@@ -73,14 +73,7 @@ def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"):
         DtaaForSum[1:,:] = Daa[1:,:]*(cumtsec[1:,:]-cumtsec[0:-1,:])
 
         if geometry == "spherical":
-            # # Make the correction for P_D vs D_only
-            # for i in range(len(DtaaForSum[0,:])): #This is a really short loop... range of i is # domains. Maybe we could vectorize to improve performance?
-            #     if DtaaForSum[0,i] <= 1.347419e-17:
-            #         DtaaForSum[0,i] *= 0
-            #     elif DtaaForSum[0,i] >= 4.698221e-06:
-            #         pass
-            #     else:
-            #         DtaaForSum[0,i] *= lookup_table(DtaaForSum[0,i])
+
 
             # Calculate Dtaa in cumulative form.
             Dtaa = torch.cumsum(DtaaForSum, axis = 0)
@@ -110,8 +103,8 @@ def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"):
 
         # If the second heating step gets gas release all the way to 100%, then the rest of the calculation is not necessary. 
         # Return that sumf_MDD == 0
-        if (torch.round(sumf_MDD[2],decimals=6) == 1):
-            return torch.zeros(len(sumf_MDD)-2),0
+        if (torch.round(sumf_MDD[added_steps],decimals=6) == 1):
+            return torch.zeros(len(sumf_MDD)-added_steps),0
             
 
         # Remove the two steps we added, recalculate the total sum, and renormalize.
@@ -119,7 +112,7 @@ def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"):
         newf[0] = sumf_MDD[0]
         newf[1:] = sumf_MDD[1:]-sumf_MDD[0:-1]
 
-        newf = newf[2:]
+        newf = newf[added_steps:]
         normalization_factor = torch.max(torch.cumsum(newf,0))
 
         punishmentFlag = torch.round(sumf_MDD[-1],decimals=3) < 1.0
@@ -203,15 +196,7 @@ def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"):
             DtaaForSum[0,:] = Daa[0,:]*tsec[0,:]
             DtaaForSum[1:,:,:] = Daa[1:,:]*(cumtsec[1:,:]-cumtsec[0:-1,:])
         if geometry == "spherical":
-            # # Make the correction for P_D vs D_only
-            # for j in range(len(DtaaForSum[0,0,:])    ):
-            #     for i in range(len(DtaaForSum[0,:,0])): #This is a really short loop... range of i is # domains. Maybe we could vectorize to improve performance?
-            #         if DtaaForSum[0,i,j] <= 1.347419e-17:
-            #             DtaaForSum[0,i,j] *= 0
-            #         elif DtaaForSum[0,i,j] >= 4.698221e-06:
-            #             pass
-            #         else:
-            #             DtaaForSum[0,i,j] *= lookup_table(DtaaForSum[0,i,j])
+
 
             # Calculate Dtaa in cumulative form.
             Dtaa = torch.cumsum(DtaaForSum, axis = 0)
@@ -254,7 +239,7 @@ def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"):
         newf[0] = sumf_MDD[0]
         newf[1:] = sumf_MDD[1:]-sumf_MDD[0:-1]
 
-        newf = newf[2:]
+        newf = newf[added_steps:]
 
         normalization_factor = torch.max(torch.cumsum(newf,0),axis=0).values
     
@@ -280,7 +265,7 @@ def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"):
         nan_mask = torch.isnan(sumf_MDD).all(dim=0)
         sumf_MDD[:,nan_mask]= 0.0
 
-     
+ 
         return sumf_MDD,punishmentFlag
     
 
@@ -451,15 +436,6 @@ def forward_model_kinetics_no_extra_heating(kinetics, tsec,TC, geometry:str = "s
             DtaaForSum[0,:] = Daa[0,:]*tsec[0,:]
             DtaaForSum[1:,:,:] = Daa[1:,:]*(cumtsec[1:,:]-cumtsec[0:-1,:])
         if geometry == "spherical":
-            # # Make the correction for P_D vs D_only
-            # for j in range(len(DtaaForSum[0,0,:])    ):
-            #     for i in range(len(DtaaForSum[0,:,0])): #This is a really short loop... range of i is # domains. Maybe we could vectorize to improve performance?
-            #         if DtaaForSum[0,i,j] <= 1.347419e-17:
-            #             DtaaForSum[0,i,j] *= 0
-            #         elif DtaaForSum[0,i,j] >= 4.698221e-06:
-            #             pass
-            #         else:
-            #             DtaaForSum[0,i,j] *= lookup_table(DtaaForSum[0,i,j])
 
             # Calculate Dtaa in cumulative form.
             Dtaa = torch.cumsum(DtaaForSum, axis = 0)
@@ -475,7 +451,6 @@ def forward_model_kinetics_no_extra_heating(kinetics, tsec,TC, geometry:str = "s
         elif geometry == "plane sheet":
             # Need to derive a correction for the plane sheet... for now I just won't do an irradiation correction
             Dtaa = torch.cumsum(DtaaForSum, axis = 0)
-            
             f = (2/np.sqrt(math.pi))*np.sqrt((Dtaa))
             f[f > 0.6] = 1-(8/(math.pi**2))*np.exp(-math.pi**2*Dtaa[f > 0.6]/4)
 
@@ -494,6 +469,7 @@ def forward_model_kinetics_no_extra_heating(kinetics, tsec,TC, geometry:str = "s
         sumf_MDD[:,nan_mask]= 0.0
 
         punishmentFlag = torch.round(sumf_MDD[-1,:],decimals = 3) < 1
+        
         return sumf_MDD, punishmentFlag
     
 

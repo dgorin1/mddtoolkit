@@ -64,8 +64,8 @@ class DiffusionObjective():
         self.Daa_uncertainty[self.Daa_uncertainty==-np.inf] = 0
         self.Daa_uncertainty[torch.isnan(self.Daa_uncertainty)] = 0
         data.uncert[data.uncert == 0] = torch.min(data.uncert[data.uncert !=0])*0.1
-
-
+        self.exp_moles = torch.tensor(data.M)
+        self.added_steps = len(time_add)
 
     
     def __call__(self, X):
@@ -78,7 +78,7 @@ class DiffusionObjective():
 
     
     def objective(self, X): #__call__ #evaluate
-
+        
         data = self.dataset
         # This function calculates the fraction of gas released from each domain
         # in an MDD model during the heating schedule used in the diffusion
@@ -104,7 +104,8 @@ class DiffusionObjective():
                 # Forward model the results so that we can calculate the misfit.
 
         if self.extra_steps == True:
-            Fi_MDD,punishmentFlag = forwardModelKinetics(X,self.tsec,self._TC,geometry = self.geometry)
+            
+            Fi_MDD,punishmentFlag = forwardModelKinetics(X,self.tsec,self._TC,geometry = self.geometry,added_steps = self.added_steps)
         else:
             Fi_MDD, punishmentFlag = forward_model_kinetics_no_extra_heating(X,self.tsec,self._TC,geometry = self.geometry)
             
