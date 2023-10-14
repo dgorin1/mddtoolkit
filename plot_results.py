@@ -84,8 +84,6 @@ def plot_results(params,dataset,objective, reference_law = [],sample_name:str = 
     #     plt.plot(np.linspace(min(T_plot),max(T_plot),1000), np.linspace(max(ref),min(ref),1000), '--k')
     axes[0,0].set_ylabel("ln(D/a^2)")
     axes[0,0].set_xlabel("10000/T (K)")
-    #axes[0].xlim([min(T_plot)-2,max(T_plot)+2])
-    #axes[0].ylim([min(dataset["ln(D/a^2)"]-2),min(dataset["ln(D/a^2)"]+2)])
     axes[0,0].set_box_aspect(1)
 
     #plt.subplot(n_plots,1,2)

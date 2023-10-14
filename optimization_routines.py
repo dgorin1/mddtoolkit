@@ -9,7 +9,7 @@ import numpy as np
 from conHe_Param import conHe_Param
 
 
-def diffEV_multiples(objective,dataset, num_iters: int,ndom,Ea_bounds:tuple,lnd0aa_bounds:tuple):
+def diffEV_multiples(objective,dataset, num_iters: int,ndom,Ea_bounds:tuple,lnd0aa_bounds:tuple, max_iters:int = 30000):
     # If the number of domains > 1, enforce constraing that 1-sum(fracs) > 0. Else, no constraint. 
     if ndom > 1:
         nlc = NonlinearConstraint(conHe_Param,lb =[0],ub = [np.inf])
@@ -27,9 +27,9 @@ def diffEV_multiples(objective,dataset, num_iters: int,ndom,Ea_bounds:tuple,lnd0
         result = differential_evolution(
         objective, 
         bounds, 
-        disp=True, 
+        disp=False, 
         tol=0.0001, # zeros seems like a good number from testing. slow, but useful.
-        maxiter = 30000,
+        maxiter = max_iters,
         constraints = nlc,
         vectorized = True,
         updating = "deferred",

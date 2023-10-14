@@ -172,7 +172,7 @@ def calc_arrhenius(kinetics,tsec,TC,geometry,extra_steps = True,added_steps:int 
         #Fechtig and Kalbitzer Equation 5a
         
         DR2_a[0] = ((((sumf_MDD[0]**2) - 0**2))*math.pi)/(4*diffti[0])
-        breakpoint()
+  
         DR2_a[1:] = ((((sumf_MDD[1:]**2)-(sumf_MDD[0:-1])**2))*math.pi)/(4*diffti[1:])
         DR2_b[1:] = (4/((math.pi**2)*diffti[1:]))*np.log((1-sumf_MDD[0:-1])/(1-sumf_MDD[1:]))
         usea = (sumf_MDD > 0) & (sumf_MDD < 0.6)
