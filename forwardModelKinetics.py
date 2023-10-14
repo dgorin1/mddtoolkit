@@ -5,7 +5,7 @@ import torch
 import math as math
 from jax import numpy as jnp
 
-def forwardModelKineticsDiffEV(kinetics, lookup_table,tsec,TC, geometry:str = "spherical"): 
+def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"): 
 
 
     # Check the number of dimensions being passed in to see how many vectors we're dealing with. Code handles 1 vs >1 differently
@@ -287,7 +287,7 @@ def forwardModelKineticsDiffEV(kinetics, lookup_table,tsec,TC, geometry:str = "s
 
 
  #This function will not do the re-normalize step and is for when there is no irradiation or other lab storage heating to be considered
-def forward_model_kinetics_no_extra_heating(kinetics, lookup_table,tsec,TC, geometry:str = "spherical"): 
+def forward_model_kinetics_no_extra_heating(kinetics, tsec,TC, geometry:str = "spherical"): 
 
 
     # Check the number of dimensions being passed in to see how many vectors we're dealing with. Code handles 1 vs >1 differently
@@ -317,11 +317,14 @@ def forward_model_kinetics_no_extra_heating(kinetics, lookup_table,tsec,TC, geom
 
 
     if num_vectors == 1:
-  
-        lnD0aa = torch.tile(kinetics[0:ndom].T,(len(TC),1)) # Do this for LnD0aa
+
+        lnD0aa = torch.tile(kinetics[0:ndom].permute(*torch.arange(kinetics[0:ndom].ndim - 1, -1, -1)),(len(TC),1)) # Do this for LnD0aa
         fracstemp = kinetics[ndom:] # Grab fracs that were input (one will be missing because it is pre-determined by the others)
 
-        fracs = torch.tile(torch.concat((fracstemp,1-torch.sum(fracstemp,axis=0,keepdim=True)),axis=0).T,(len(TC),1)) # Add the last frac as 1-sum(other fracs)
+
+        fracs_int = torch.concat((fracstemp,1-torch.sum(fracstemp,axis=0,keepdim=True)),axis=0)
+        fracs_intT = fracs_int.permute(*torch.arange(fracs_int.ndim - 1, -1, -1))
+        fracs = torch.tile(fracs_intT,(len(TC),1)) # Add the last frac as 1-sum(other fracs)
         Ea = torch.tile(Ea,(len(TC),ndom)) # Do for Ea
 
     
@@ -355,16 +358,7 @@ def forward_model_kinetics_no_extra_heating(kinetics, lookup_table,tsec,TC, geom
         DtaaForSum[1:,:] = Daa[1:,:]*(cumtsec[1:,:]-cumtsec[0:-1,:])
 
         if geometry == "spherical":
-            # # Make the correction for P_D vs D_only
-            # for i in range(len(DtaaForSum[0,:])): #This is a really short loop... range of i is # domains. Maybe we could vectorize to improve performance?
-            #     if DtaaForSum[0,i] <= 1.347419e-17:
-            #         DtaaForSum[0,i] *= 0
-            #     elif DtaaForSum[0,i] >= 4.698221e-06:
-            #         pass
-            #     else:
-            #         DtaaForSum[0,i] *= lookup_table(DtaaForSum[0,i])
 
-            # Calculate Dtaa in cumulative form.
             Dtaa = torch.cumsum(DtaaForSum, axis = 0)
 
 

@@ -19,8 +19,6 @@ def D0calc_MonteCarloErrors(expdata,geometry:str = "spherical"):
 
     #Check if units are in minutes and convert from hours to minutes if necesssary
 
-
-
     #Convert units
     TK = 273.15+TC
     tsec = thr*60*60

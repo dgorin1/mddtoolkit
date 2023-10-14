@@ -41,7 +41,7 @@ def plot_results(params,dataset,objective, reference_law = [],sample_name:str = 
 
 
 
-    data = calc_arrhenius(params,objective.lookup_table,tsec,TC,objective.geometry,objective.extra_steps)
+    data = calc_arrhenius(params,tsec,TC,objective.geometry,objective.extra_steps)
 
 
     T_plot = 10000/(dataset["TC"]+273.15)
@@ -50,8 +50,13 @@ def plot_results(params,dataset,objective, reference_law = [],sample_name:str = 
     else:
         n_plots = 4
 
-    fracs = params[ndom+1:]
-    fracs = torch.concat((fracs,1-torch.sum(fracs,axis=0,keepdim=True)),axis=-1)
+    if ndom>1:
+        fracs = params[ndom+1:]
+        fracs = torch.concat((fracs,1-torch.sum(fracs,axis=0,keepdim=True)),axis=-1)
+        frac_weights = (fracs-torch.min(fracs)/(torch.max(fracs)-torch.min(fracs)))*3.5+1.7
+    else:
+        fracs = 1
+        frac_weights = [2]
 
     fig,axes = plt.subplots(ncols = 2, nrows = 2,layout = "constrained",figsize=(10,10))
 
@@ -60,10 +65,8 @@ def plot_results(params,dataset,objective, reference_law = [],sample_name:str = 
 
     #plt.subplot(n_plots,1,1)
 
-    frac_weights = (fracs-torch.min(fracs)/(torch.max(fracs)-torch.min(fracs)))*3.5+1.7
-    if torch.any(torch.lt(frac_weights,0)):
-
-        frac_weights = torch.abs(frac_weights.flip(0))
+        
+    
 
     for i in range(ndom):
         D = np.log(np.exp(params[i+1])*np.exp((-params[0])/(R*(dataset["TC"]+273.15))))
@@ -122,8 +125,8 @@ def plot_results(params,dataset,objective, reference_law = [],sample_name:str = 
         axes[0,1].set_box_aspect(1)     
     plt.tight_layout
     file_name = get_plot_name(ndom,"fit_plot",sample_name,moves_type = moves_type,misfit_stat = misfit_stat)
-
+    breakpoint()
     plt.savefig(file_name)
     
-    if quiet == False:
-        plt.show()
+    #if quiet == False:
+    plt.show()

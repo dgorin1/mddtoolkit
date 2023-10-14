@@ -10,7 +10,12 @@ from conHe_Param import conHe_Param
 
 
 def diffEV_multiples(objective,dataset, num_iters: int, mineral: str ,ndom):
-    nlc = NonlinearConstraint(conHe_Param,lb =[0,-np.inf],ub = [np.inf,np.inf])
+    # If the number of domains > 1, enforce constraing that 1-sum(fracs) > 0. Else, no constraint. 
+    if ndom > 1:
+        nlc = NonlinearConstraint(conHe_Param,lb =[0],ub = [np.inf])
+    else:
+        nlc = []
+
     misfits = []
     params = []
     seed = random.randint(0,2^28)

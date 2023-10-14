@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 
-def calc_arrhenius(kinetics,lookup_table,tsec,TC,geometry,extra_steps = True):
+def calc_arrhenius(kinetics,tsec,TC,geometry,extra_steps = True):
     
         # kinetics: (Ea, lnd0aa_x, fracs_x). To make this compatible with other functions, if there are x fracs, input x-1 fractions, and the code will determine the
     # final fraction.
@@ -18,7 +18,7 @@ def calc_arrhenius(kinetics,lookup_table,tsec,TC,geometry,extra_steps = True):
         ndom = (len(kinetics))//2
 
     # Make a subset of X, removing the Ea so that we have an even number of elements
-    kinetics = torch.tensor(kinetics)
+    #kinetics = torch.tensor(kinetics)
     temp = kinetics[1:]
 
     # Copy the parameters into dimensions that mirror those of the experiment schedule to increase calculation speed.
@@ -26,16 +26,6 @@ def calc_arrhenius(kinetics,lookup_table,tsec,TC,geometry,extra_steps = True):
     fracstemp = temp[ndom:] # Grab fracs that were input (one will be missing because it is pre-determined by the others)
     fracs = torch.tile(torch.concat((fracstemp,1-torch.sum(fracstemp,axis=0,keepdim=True)),axis=-1),(len(TC),1)) # Add the last frac as 1-sum(other fracs)
     Ea = torch.tile(kinetics[0],(len(TC),ndom)) # Do for Ea
-
-
-    # THIS IS TEMPORARY-- WE NEED TO ADD THIS AS AN INPUT.. THE INPUTS WILL NEED TO BE
-    # 1. Duration of irradiation
-    # 2. Temperature during irradiation
-    # 3. Duration of lab storage
-    # 4. Temperature during lab storage
-
-    # We might also want to make this all optional at some point, since some minerals are so retentive 
-    # that they wont lease any helium during irradiation and storage.
     
   
     # Put time and cumulative time in the correct shape
@@ -64,15 +54,6 @@ def calc_arrhenius(kinetics,lookup_table,tsec,TC,geometry,extra_steps = True):
 
     DtaaForSum[0,:] = Daa[0,:]*tsec[0,:]
     DtaaForSum[1:,:] = Daa[1:,:]*(cumtsec[1:,:]-cumtsec[0:-1,:])
-
-    # # Make the correction for P_D vs D_only
-    # for i in range(len(DtaaForSum[0,:])): #This is a really short loop... range of i is # domains. Maybe we could vectorize to improve performance?
-    #     if DtaaForSum[0,i] <= 1.347419e-17:
-    #         DtaaForSum[0,i] *= 0
-    #     elif DtaaForSum[0,i] >= 4.698221e-06:
-    #         pass
-    #     else:
-    #         DtaaForSum[0,i] *= lookup_table(DtaaForSum[0,i])
 
     # Calculate Dtaa in cumulative form.
     Dtaa = torch.cumsum(DtaaForSum, axis = 0)
@@ -131,14 +112,21 @@ def calc_arrhenius(kinetics,lookup_table,tsec,TC,geometry,extra_steps = True):
     # use equations 5a through c from Fechtig and Kalbitzer for spherical geometry
     # Fechtig and Kalbitzer Equation 5a, for cumulative gas fractions up to 10%
     # special case when i = 1; need to insert 0 for previous amount released
-
+    if ndom == 1:
+        diffti = cumtsec[1:]-cumtsec[0:-1]
+        diffti = torch.concat((torch.unsqueeze(cumtsec[0],dim=1),diffti),dim=-2)
+    else:
     # Calculate duration for each individual step removing the added steps
-    diffti = cumtsec[1:,1]-cumtsec[0:-1,1]
-    diffti = torch.concat((torch.unsqueeze(cumtsec[0,0],dim=-1),diffti),dim=-1)
+        diffti = cumtsec[1:,1]-cumtsec[0:-1,1]
+        diffti = torch.concat((torch.unsqueeze(cumtsec[0,0],dim=-1),diffti),dim=-1)
+
     if extra_steps == True:
         diffti = diffti[2:]
     else:
-        diffti = tsec[:,1].unsqueeze(0).ravel()
+        if ndom > 1:
+            diffti = tsec[:,1].unsqueeze(0).ravel()
+        else:
+            diffti = tsec.ravel()
 
     # Resum the gas fractions into cumulative space that doesn't include the two added steps
 
@@ -177,8 +165,9 @@ def calc_arrhenius(kinetics,lookup_table,tsec,TC,geometry,extra_steps = True):
             DR2_b = torch.zeros(diffFi.shape[0])
 
         #Fechtig and Kalbitzer Equation 5a
-
+        
         DR2_a[0] = ((((sumf_MDD[0]**2) - 0**2))*math.pi)/(4*diffti[0])
+        
         DR2_a[1:] = ((((sumf_MDD[1:]**2)-(sumf_MDD[0:-1])**2))*math.pi)/(4*diffti[1:])
         DR2_b[1:] = (4/((math.pi**2)*diffti[1:]))*np.log((1-sumf_MDD[0:-1])/(1-sumf_MDD[1:]))
         usea = (sumf_MDD > 0) & (sumf_MDD < 0.6)
@@ -187,9 +176,6 @@ def calc_arrhenius(kinetics,lookup_table,tsec,TC,geometry,extra_steps = True):
         Daa_MDD = usea*DR2_a + useb*DR2_b
         
     lnDaa_MDD = torch.log(Daa_MDD)
-
-    # if torch.sum(torch.isnan(sumf_MDD))>0:
-    #     breakpoint()
 
     return(sumf_MDD, lnDaa_MDD)
 
