@@ -1,19 +1,19 @@
-from forwardModelKinetics import forwardModelKinetics
-from forwardModelKinetics import forward_model_kinetics_no_extra_heating
-from forwardModelKinetics import calc_lnd0aa
-from dataset import Dataset
+from optimization.forwardModelKinetics import forwardModelKinetics
+from optimization.forwardModelKinetics import forward_model_kinetics_no_extra_heating
+from optimization.forwardModelKinetics import calc_lnd0aa
+from input_data.dataset import Dataset
 import math as math
 import torch as torch
 import numpy as np
-from jax import numpy as jnp
+
 
 
 class DiffusionObjective:
     def __init__(
         self,
         data: Dataset,
-        time_add: jnp.array,
-        temp_add: jnp.array,
+        time_add: list,
+        temp_add: list,
         omitValueIndices=[],
         stat: str = "chisq",
         geometry: str = "spherical",

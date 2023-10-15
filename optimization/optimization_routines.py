@@ -1,12 +1,12 @@
 import random
 from scipy.optimize import NonlinearConstraint
 from scipy.optimize import differential_evolution
-from generate_bounds import generate_bounds
+from utils.generate_bounds import generate_bounds
 from torch import torch
-from dataset import Dataset
-from diffusion_objective import DiffusionObjective
+from input_data.dataset import Dataset
+from optimization.diffusion_objective import DiffusionObjective
 import numpy as np
-from conHe_Param import conHe_Param
+from optimization.conHe_Param import conHe_Param
 
 
 def diffEV_multiples(

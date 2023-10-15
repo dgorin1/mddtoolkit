@@ -1,13 +1,11 @@
 import torch as torch
 import numpy as np
-from calc_arrhenius import calc_arrhenius
 import matplotlib.pyplot as plt
-from jax import numpy as jnp
 import pandas as pd
-from get_plot_name import get_plot_name
-from forwardModelKinetics import forward_model_kinetics_no_extra_heating
-from forwardModelKinetics import forwardModelKinetics
-from forwardModelKinetics import calc_lnd0aa
+from utils.get_plot_name import get_plot_name
+from optimization.forwardModelKinetics import forward_model_kinetics_no_extra_heating
+from optimization.forwardModelKinetics import forwardModelKinetics
+from optimization.forwardModelKinetics import calc_lnd0aa
 
 def plot_results(
     params,
