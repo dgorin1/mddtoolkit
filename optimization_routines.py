@@ -19,7 +19,7 @@ def diffEV_multiples(
     max_iters: int = 30000,
 ):
     """
-    Run the differential evolution algorithm multiple times and return the best result.
+    Run the differential evolution algorithm multiple times and returns the best result.
 
     Args:
         objective (DiffusionObjective): the objective function for the optimization problem.

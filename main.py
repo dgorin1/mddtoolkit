@@ -23,24 +23,15 @@ Ea_bounds = (
 )  # User should also be able to pick any number >0 for these bounds. List in kJ/mol
 # mineral_name = "kspar"
 time_add = []  # Add extra time in seconds
-temp_add = []
-sample_name = "TESTNAME"
+temp_add = [] # Add extra time in degrees C
+sample_name = "TESTNAME" # Sample name
 max_domains_to_model = 8
-geometry = "plane sheet"  # "plane sheet" # options are "plane sheet", or "spherical"
+geometry = "spherical"  # options are "plane sheet", or "spherical". Spherical should be default.
 omit_value_indices = [
-    33,
-    34,
-    35,
-    36,
-    37,
-    38,
-    39,
-    40,
-    41,
 ]  # Values you want to be ignored in your fit
 misfit_stat_list = [
-    "chisq",
     "lnd0aa_chisq",
+    "chisq",
     "percent_frac",
     "l1_frac_cum",
     "l1_frac",
@@ -51,6 +42,7 @@ misfit_stat_list = [
 ]  # This is a list of all the options. The user should just pick one.
 max_iters = 100000  # Often 30k is enough, but not always.
 iteration_repeats = 10  # Default should be 10, but user can set to any integer 1-?
+punish_degas_early = True #Default is true. Title for gui can be punish if modeled experiment fully degasses too early.
 
 
 # Create dataset class for each associate package
@@ -76,6 +68,7 @@ for misfit_stat in misfit_stat_list:
             omitValueIndices=omit_value_indices,
             stat=misfit_stat,
             geometry=geometry,
+            punish_degas_early = True
         )
 
         # Read in the nonlinear constra¸¸int

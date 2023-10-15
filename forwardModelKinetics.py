@@ -10,7 +10,10 @@ def forwardModelKinetics(
     kinetics, tsec, TC, geometry: str = "spherical", added_steps: int = 2
 ):
     """
-    Calculates the gas release from a single heating step using the Arrhenius equation and the Fechtig and Kalbitzer model for gas release.
+    Uses fechtig and kalbitzer to calculate the gas fraction released at each step. 
+    forwardModelKinetics does this when there are no extra heating steps to be added
+    and renormalized for. Otherwise, forwardModelKinetics_no_extra_steps is used. Calc_lnd0aa 
+    calculates the ln(diffusivity) for each heating step.
 
     Args:
         kinetics (torch.tensor): A tensor containing the Ea, lnD0aa_x, and Frac_x-1 for each domain.
@@ -20,7 +23,9 @@ def forwardModelKinetics(
         added_steps (int, optional): The number of extra steps to add to the calculation. Defaults to 2.
 
     Returns:
-        torch.tensor: A tensor containing the gas release from each heating step.
+        sumf_MDD: A tensor containing the cumulative gas release from each heating step.
+        punishmentFlag (torch.tensor): a tensor containing a boolean indicating if any value violated the constraint that 
+        we shouldn't run out of gas before the experiment is over.
     """
 
     # Check the number of dimensions being passed in to see how many vectors we're dealing with. Code handles 1 vs >1 differently
@@ -286,6 +291,26 @@ def forwardModelKinetics(
 def forward_model_kinetics_no_extra_heating(
     kinetics, tsec, TC, geometry: str = "spherical"
 ):
+    
+    """
+    Uses fechtig and kalbitzer to calculate the gas fraction released at each step. 
+    forwardModelKinetics does this when there are no extra heating steps to be added
+    and renormalized for. Otherwise, forwardModelKinetics_no_extra_steps is used. 
+
+    Args:
+        kinetics (torch.tensor): A tensor containing the Ea, lnD0aa_x, and Frac_x-1 for each domain.
+        tsec (torch.tensor): A tensor containing the duration of each heating step in seconds.
+        TC (torch.tensor): A tensor containing the temperature of each heating step in degrees C.
+        geometry (str, optional): A string indicating the geometry of the sample. Either "spherical" or "plane sheet". Defaults to "spherical".
+        added_steps (int, optional): The number of extra steps to add to the calculation. Defaults to 2.
+
+    Returns:
+        sumf_MDD (torch.tensor): A tensor containing the cumulative gas release from each heating step.
+        punishmentFlag: a tensor containing a boolean indicating if any value violated the constraint that 
+        we shouldn't run out of gas before the experiment is over.
+        punishmentFlag 
+    """
+
     # Check the number of dimensions being passed in to see how many vectors we're dealing with. Code handles 1 vs >1 differently
     if kinetics.ndim > 1:
         num_vectors = len(kinetics[0, :])
@@ -497,11 +522,26 @@ def forward_model_kinetics_no_extra_heating(
         return sumf_MDD, punishmentFlag
 
 
-def calc_lnd0aa(sumf_MDD, diffti, geometry, extra_steps):
+def calc_lnd0aa(sumf_MDD, diffti, geometry, extra_steps, added_steps):
+
+    """
+    Uses fechtig and kalbitzer to calculate the diffusivities at each heating step
+
+    Args:
+        sumf_MDD (torch.tensor): A tensor containing the cumulative gas fraction at each heating step.
+        diffti (torch.tensor): A tensor containing the duration of each heating step in seconds including extra steps if added.
+        geometry (str, optional): A string indicating the geometry of the sample. Either "spherical" or "plane sheet". Defaults to "spherical".
+        extra_steps (bool): A boolean indicating if extra steps have been added
+        added_steps (int, optional): The number of extra steps to add to the calculation. Defaults to 2.
+
+    Returns:
+        lnd0aa_MDD: A tensor containing the calculated diffusivity released at each step by the MDD model.
+    """
+    
     if len(sumf_MDD.size()) > 1:  # if there are multiple entries
         diffti = diffti.unsqueeze(1).repeat(1, sumf_MDD.size()[1])
     if extra_steps == True:
-        diffti = diffti[2:]
+        diffti = diffti[added_steps:]
 
     if geometry == "spherical":
         Daa_MDD_a = torch.zeros(sumf_MDD.shape)
@@ -569,8 +609,5 @@ def calc_lnd0aa(sumf_MDD, diffti, geometry, extra_steps):
         Daa_MDD = usea * DR2_a + useb * DR2_b
 
     lnd0aa_MDD = torch.log(Daa_MDD)
-
-    # if torch.sum(torch.isnan(sumf_MDD))>0:
-    #     breakpoint()
 
     return lnd0aa_MDD

@@ -2,7 +2,8 @@ import numpy as np
 
 
 def organize_x(x, ndim, chop_fracs=True):
-    """Organize the parameters from the optimization problem into a single array.
+    """Organize the parameters from the optimization problem into a single array and ensure that the 
+    domains are listed in order from least to most retentive.
 
     Args:
         x (torch.Tensor): the parameters from the optimization problem.

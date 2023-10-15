@@ -17,22 +17,19 @@ class DiffusionObjective:
         omitValueIndices=[],
         stat: str = "chisq",
         geometry: str = "spherical",
+        punish_degas_early:bool = True
     ):
         """
-        This function calculates the fraction of gas released from each domain in an MDD
-        model during the heating schedule used in the diffusion experiment. Then the 
-        fractions released from each domain are combined in proportion to one another as 
-        specified by the MDD model, and the diffusivity of each step is calculated. 
-        A residual is calculated as the sum of absolute differences between the observed
-        and modeled release fractions over all steps.
-
+        This function forward models a set of MDD parameters and returns a residual based on the specified misfit statistic.
+        
         Args:
             data (Dataset): the dataset to be used for the objective function.
-            time_add (jnp.array): the times of the extra heating steps to be added to the dataset.
-            temp_add (jnp.array): the temperatures of the extra heating steps to be added to the dataset.
+            time_add (list): the times of the extra heating steps to be added to the dataset.
+            temp_add array (list): the temperatures of the extra heating steps to be added to the dataset.
             omitValueIndices (list, optional): the indices of the values to be omitted from the objective function. Defaults to [].
             stat (str, optional): the statistic to be used for the objective function. Defaults to "chisq".
             geometry (str, optional): the geometry of the sample. Defaults to "spherical".
+            punish_degas_early(bool, optional): Tells the model whether to punish proposed fits that degas before the modeled experiment is complete
         """
 
         self.dataset = data
@@ -95,6 +92,7 @@ class DiffusionObjective:
         data.uncert[data.uncert == 0] = torch.min(data.uncert[data.uncert != 0]) * 0.1
         self.exp_moles = torch.tensor(data.M)
         self.added_steps = len(time_add)
+        self.punish_degas_early = punish_degas_early
 
     def __call__(self, X):
         return self.objective(X)
@@ -139,7 +137,10 @@ class DiffusionObjective:
                 X, self.tsec, self._TC, geometry=self.geometry
             )
 
-        punishmentFlag = punishmentFlag * 10 + 1
+        if self.punish_degas_early == True:
+            punishmentFlag = punishmentFlag * 10 + 1
+        else:
+            punishmentFlag = 1
 
         exp_moles = torch.tensor(data.M)
         if len(X.shape) > 1:
@@ -214,7 +215,7 @@ class DiffusionObjective:
                     )
                 elif self.stat.lower() == "lnd0aa":
                     lnd0aa_MDD = calc_lnd0aa(
-                        Fi_MDD, self.tsec, self.geometry, self.extra_steps
+                        Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps
                     )
 
                     lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
@@ -227,7 +228,7 @@ class DiffusionObjective:
                     )
                 elif self.stat.lower() == "lnd0aa_chisq":
                     lnd0aa_MDD = calc_lnd0aa(
-                        Fi_MDD, self.tsec, self.geometry, self.extra_steps
+                        Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps
                     )
                     lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
                     lnd0aa_MDD[lnd0aa_MDD == np.inf] = 0
@@ -320,7 +321,7 @@ class DiffusionObjective:
                     )
                 elif self.stat.lower() == "lnd0aa":
                     lnd0aa_MDD = calc_lnd0aa(
-                        Fi_MDD, self.tsec, self.geometry, self.extra_steps
+                        Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps
                     )
                     lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
                     lnd0aa_MDD[lnd0aa_MDD == np.inf] = 0
@@ -333,7 +334,7 @@ class DiffusionObjective:
 
                 elif self.stat.lower() == "lnd0aa_chisq":
                     lnd0aa_MDD = calc_lnd0aa(
-                        Fi_MDD, self.tsec, self.geometry, self.extra_steps
+                        Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps
                     )
                     lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
                     lnd0aa_MDD[lnd0aa_MDD == np.inf] = 0
@@ -408,7 +409,7 @@ class DiffusionObjective:
                 / trueFracFi
             )
         elif self.stat.lower() == "lnd0aa":
-            lnd0aa_MDD = calc_lnd0aa(Fi_MDD, self.tsec, self.geometry, self.extra_steps)
+            lnd0aa_MDD = calc_lnd0aa(Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps)
             lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
             lnd0aa_MDD[lnd0aa_MDD == np.inf] = 0
             lnd0aa_MDD[torch.isnan(lnd0aa_MDD)] = 0
@@ -416,7 +417,7 @@ class DiffusionObjective:
                 (1 - self.omitValueIndices_lnd0aa) * ((lnd0aa_MDD - self.lnd0aa) ** 2)
             )
         elif self.stat.lower() == "lnd0aa_chisq":
-            lnd0aa_MDD = calc_lnd0aa(Fi_MDD, self.tsec, self.geometry, self.extra_steps)
+            lnd0aa_MDD = calc_lnd0aa(Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps)
             lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
             lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
             lnd0aa_MDD[torch.isnan(lnd0aa_MDD)] = 0

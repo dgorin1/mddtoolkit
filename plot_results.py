@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 from jax import numpy as jnp
 import pandas as pd
 from get_plot_name import get_plot_name
-
+from forwardModelKinetics import forward_model_kinetics_no_extra_heating
+from forwardModelKinetics import forwardModelKinetics
+from forwardModelKinetics import calc_lnd0aa
 
 def plot_results(
     params,
@@ -43,7 +45,7 @@ def plot_results(
     else:
         moles_calc = False
 
-        # Infer the number of domains from input
+    # Infer the number of domains from input
     if len(params) <= 3:
         ndom = 1
     else:
@@ -52,20 +54,39 @@ def plot_results(
     # Reconstruct the time-added and temp-added inputs
     time = torch.tensor(dataset.thr * 3600)
     TC = torch.tensor(dataset.TC)
+    
     if objective.extra_steps == True:
         tsec = torch.cat([torch.tensor(np.array(objective.time_add)), time])
         TC = torch.cat([torch.tensor(np.array(objective.temp_add)), TC])
     else:
         tsec = objective.tsec
 
-    data = calc_arrhenius(
-        params,
-        tsec,
-        TC,
-        objective.geometry,
-        objective.extra_steps,
-        objective.added_steps,
-    )
+    if objective.extra_steps ==False:
+        Fi_MDD,punishmentFlag = forward_model_kinetics_no_extra_heating(params, 
+                                                       tsec, 
+                                                       TC, 
+                                                       geometry = objective.geometry
+                                                       )
+    else:
+        Fi_MDD, punishmentFlag = forwardModelKinetics(params,
+                                     tsec, 
+                                     TC, 
+                                     geometry = objective.geometry,
+                                     added_steps=objective.added_steps)
+    lnd0aa_MDD = calc_lnd0aa(
+                        Fi_MDD, objective.tsec, objective.geometry, objective.extra_steps, objective.added_steps
+                    )
+    
+    # data = calc_arrhenius(
+    #     params,
+    #     tsec,
+    #     TC,
+    #     objective.geometry,
+    #     objective.extra_steps,
+    #     objective.added_steps,
+    # )
+
+    data = (Fi_MDD,lnd0aa_MDD)
 
     T_plot = 10000 / (dataset["TC"] + 273.15)
     if len(reference_law) == 0:

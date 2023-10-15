@@ -9,6 +9,12 @@ def generate_inputs(
     """
     Generates the input file for the optimization problem from the experimental data.
 
+    Right now, I've just been calling on this individually from the command line. If you do that
+    it will run main, which executes the code. The deal is that you need to enter the name of the input csv file
+    and the name of the output file and the desired geometry before you run this code. 
+    I suppose this should maybe be a part of the gui?
+
+
     Args:
         nameOfInputCSVFile (str): the name of the input .csv file.
         nameOfExperimentalResultsFile (str): the name of the output .csv file.

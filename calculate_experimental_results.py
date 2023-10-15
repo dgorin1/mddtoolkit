@@ -6,13 +6,23 @@ import math as math
 
 def D0calc_MonteCarloErrors(expdata, geometry: str = "spherical"):
     """
-    Calculates the diffusivity and its uncertainty from experimental data using the Fechtig and Kalbitzer equations.
+    Calculates the diffusivity and its uncertainty from experimental data using the Fechtig and Kalbitzer equations. This is based off the approach
+    published in Tremblay, 2014b. 
+
     Args:
-        expdata (pd.DataFrame): Experimental data with columns "TC", "thr", "M", and "delM".
+        expdata (pd.DataFrame): Experimental data with columns "TC", "thr", "M", and "delM". No headers.
         geometry (str, optional): Geometry of the sample. Defaults to "spherical".
 
     Returns:
-        pd.DataFrame: A dataframe containing the diffusivity, its uncertainty, and the cumulative gas release fraction.
+        pd.DataFrame: A dataframe containing the following:
+        Tplot = 10000/(273.15+T)-- a temperature used for making arrhenius plots
+        "Fi": Fraction at each heating step
+        "Fi uncertainty": Uncertainty on Fi at each step from monte carlo,
+        "Daa" D/a^2 for each heating step
+        "Daa uncertainty": uncertainty on D/a^2 for each step
+        "ln(D/a^2)": ln(D/a^2) for each heaitng step
+        "ln(D/a^2)-del": negative uncertainty for each ln(D/a^2),
+         "ln(D/a^2)+del": positive uncertainty for each ln(D/a^2),
     """
 
     # Function for calculating D0 and D/a^2 from experimental data. Input should be a

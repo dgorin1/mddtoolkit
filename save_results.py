@@ -8,7 +8,7 @@ def save_results(
     sample_name: str = "", misfit_stat: str = "", params=[], moves_type=""
 ):
     """
-    Generate a plot based on the number of domains, the type of plot, and the sample name.
+    Save the resulting parameters for an optimization run to a CSV.
 
     Args:
         sample_name (str, optional): The name of the sample. Defaults to "".
