@@ -121,10 +121,8 @@ def plot_results(
     # plt.subplot(n_plots,1,1)
 
     for i in range(ndom):
-        D = np.log(
-            np.exp(params[i + 1])
-            * np.exp((-params[0]) / (R * (dataset["TC"] + 273.15)))
-        )
+       
+        D = np.log(np.exp(params[i + 1])* np.exp((-params[0]) / (R * (TC + 273.15))))
         axes[0, 0].plot(
             np.linspace(min(T_plot), max(T_plot), 1000),
             np.linspace(max(D), min(D), 1000),
