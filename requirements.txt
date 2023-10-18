@@ -1,0 +1,7 @@
+numpy
+torch
+scipy
+scipy[optimize]
+pandas
+jax
+matplotlib
