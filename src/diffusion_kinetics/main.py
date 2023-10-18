@@ -8,7 +8,7 @@ from utils.plot_results import plot_results
 from diffusion_kinetics.optimization.optimization_routines import diffEV_multiples
 from utils.save_results import save_results
 from utils.organize_x import organize_x
-from paths import DATA_DIR
+from diffusion_kinetics import DATA_DIR
 
 # get this file's directory
 dir_path = os.path.dirname(os.path.realpath(__file__))

@@ -1,6 +1,7 @@
 import os
 import datetime as datetime
 import numpy as np
+from diffusion_kinetics import RESULTS_DIR
 
 
 def save_results(
@@ -19,7 +20,7 @@ def save_results(
 
     run_name = f"{misfit_stat}"
 
-    folder_name = os.path.join("results", f"{sample_name}", run_name)
+    folder_name = os.path.join(RESULTS_DIR, f"{sample_name}", run_name)
 
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
