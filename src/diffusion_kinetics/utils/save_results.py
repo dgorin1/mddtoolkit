@@ -11,10 +11,10 @@ def save_results(
     Save the resulting parameters for an optimization run to a CSV.
 
     Args:
-        sample_name (str, optional): The name of the sample. Defaults to "".
-        misfit_stat (str, optional): The type of misfit statistic used in the optimization. Defaults to "".
-        params (list, optional): The parameters from the optimization. Defaults to [].
-        moves_type (str, optional): The type of moves used in the optimization. Defaults to "".
+        - sample_name (str, optional): The name of the sample. Defaults to "".
+        - misfit_stat (str, optional): The type of misfit statistic used in the optimization. Defaults to "".
+        - params (list, optional): The parameters from the optimization. Defaults to [].
+        - moves_type (str, optional): The type of moves used in the optimization. Defaults to "".
     """
     # Get the current date and time
 

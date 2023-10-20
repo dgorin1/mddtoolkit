@@ -15,15 +15,15 @@ def forwardModelKinetics(
     calculates the ln(diffusivity) for each heating step.
 
     Args:
-        kinetics (torch.tensor): A tensor containing the Ea, lnD0aa_x, and Frac_x-1 for each domain.
-        tsec (torch.tensor): A tensor containing the duration of each heating step in seconds.
-        TC (torch.tensor): A tensor containing the temperature of each heating step in degrees C.
-        geometry (str, optional): A string indicating the geometry of the sample. Either "spherical" or "plane sheet". Defaults to "spherical".
-        added_steps (int, optional): The number of extra steps to add to the calculation. Defaults to 2.
+        - kinetics (torch.tensor): A tensor containing the Ea, lnD0aa_x, and Frac_x-1 for each domain.
+        - tsec (torch.tensor): A tensor containing the duration of each heating step in seconds.
+        - TC (torch.tensor): A tensor containing the temperature of each heating step in degrees C.
+        - geometry (str, optional): A string indicating the geometry of the sample. Either "spherical" or "plane sheet". Defaults to "spherical".
+        - added_steps (int, optional): The number of extra steps to add to the calculation. Defaults to 2.
 
     Returns:
-        sumf_MDD: A tensor containing the cumulative gas release from each heating step.
-        punishmentFlag (torch.tensor): a tensor containing a boolean indicating if any value violated the constraint that 
+        - sumf_MDD: A tensor containing the cumulative gas release from each heating step.
+        - punishmentFlag (torch.tensor): a tensor containing a boolean indicating if any value violated the constraint that 
         we shouldn't run out of gas before the experiment is over.
     """
 

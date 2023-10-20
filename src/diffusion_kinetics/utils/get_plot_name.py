@@ -4,11 +4,8 @@ from diffusion_kinetics import RESULTS_DIR
 
 def get_plot_name(
     num_domains: int,
-    plot_type,
     sample_name: str = "",
-    extra_label: str = "",
     file_type: str = "pdf",
-    moves_type: str = "",
     misfit_stat: str = "",
 ):
     """
@@ -33,13 +30,13 @@ def get_plot_name(
     run_name = f"{misfit_stat}"
     # Create the folder if it doesn't exist
 
-    folder_name = os.path.join(RESULTS_DIR, f"{sample_name}", run_name)
+    folder_name = os.path.join(sample_name, run_name)
 
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
 
     # Generate the file name
 
-    return os.path.join(folder_name, f"{num_domains}domains.{file_type}")
+    return os.path.join(misfit_stat, f"{num_domains}domains.{file_type}")
 
     # Save the figure as a PDF file

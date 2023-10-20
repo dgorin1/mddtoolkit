@@ -10,11 +10,11 @@ def D0calc_MonteCarloErrors(expdata, geometry: str = "spherical"):
     published in Tremblay, 2014b. 
 
     Args:
-        expdata (pd.DataFrame): Experimental data with columns "TC", "thr", "M", and "delM". No headers.
-        geometry (str, optional): Geometry of the sample. Defaults to "spherical".
+        - expdata (pd.DataFrame): Experimental data with columns "TC", "thr", "M", and "delM". No headers.
+        - geometry (str, optional): Geometry of the sample. Defaults to "spherical".
 
     Returns:
-        pd.DataFrame: A dataframe containing the following:
+        - pd.DataFrame: A dataframe containing the following:
         Tplot = 10000/(273.15+T)-- a temperature used for making arrhenius plots
         "Fi": Fraction at each heating step
         "Fi uncertainty": Uncertainty on Fi at each step from monte carlo,

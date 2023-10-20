@@ -1,14 +1,16 @@
-from diffusion_kinetics.optimization.diffusion_objective import DiffusionObjective
-from diffusion_kinetics.optimization.dataset import Dataset
 import torch as torch
 import pandas as pd
 import os
 import numpy as np
 from utils.plot_results import plot_results
-from diffusion_kinetics.optimization.optimization_routines import diffEV_multiples
 from utils.save_results import save_results
 from utils.organize_x import organize_x
 from diffusion_kinetics import DATA_DIR
+from diffusion_kinetics.optimization import (
+    DiffusionObjective,
+    Dataset,
+    diffEV_multiples,
+)
 
 # get this file's directory
 dir_path = os.path.dirname(os.path.realpath(__file__))

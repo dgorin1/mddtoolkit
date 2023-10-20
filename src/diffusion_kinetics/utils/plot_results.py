@@ -2,34 +2,33 @@ import torch as torch
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from utils.get_plot_name import get_plot_name
-from diffusion_kinetics.optimization.forwardModelKinetics import (
+# from utils.get_plot_name import get_plot_name
+from diffusion_kinetics.optimization import (
     forward_model_kinetics_no_extra_heating, 
     forwardModelKinetics, 
     calc_lnd0aa
 )
+import os
 
 def plot_results(
     params,
     dataset,
     objective,
     reference_law=[],
-    sample_name: str = "",
-    moves_type: str = "",
     misfit_stat: str = "",
     quiet=False,
 ):
     """Plot the results of the optimization.
 
     Args:
-        params (torch.tensor): The parameters from the optimization.
-        dataset (Dataset): The dataset for the optimization.
-        objective (DiffusionObjective): The objective function for the optimization.
-        reference_law (list, optional): The reference law for the optimization. Defaults to [].
-        sample_name (str, optional): The name of the sample. Defaults to "".
-        moves_type (str, optional): _description_. Defaults to "".
-        misfit_stat (str, optional): _description_. Defaults to "".
-        quiet (bool, optional): Whether to show the plot. Defaults to False.
+        - params (torch.tensor): The parameters from the optimization.
+        - dataset (Dataset): The dataset for the optimization.
+        - objective (DiffusionObjective): The objective function for the optimization.
+        - reference_law (list, optional): The reference law for the optimization. Defaults to [].
+        - sample_name (str, optional): The name of the sample. Defaults to "".
+        - moves_type (str, optional): _description_. Defaults to "".
+        - misfit_stat (str, optional): _description_. Defaults to "".
+        - quiet (bool, optional): Whether to show the plot. Defaults to False.
     """
     # Params is a vector X of the input parameters
     # dataset is the dataset class with your data
@@ -213,9 +212,8 @@ def plot_results(
         axes[0, 1].set_ylabel("log(r/r_0)")
         axes[0, 1].set_box_aspect(1)
     plt.tight_layout
-    file_name = get_plot_name(
-        ndom, "fit_plot", sample_name, moves_type=moves_type, misfit_stat=misfit_stat
-    )
+    
+    file_name = os.path.join(misfit_stat, f"{ndom}domains.pdf")
 
     plt.savefig(file_name)
 

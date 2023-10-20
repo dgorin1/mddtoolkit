@@ -1,12 +1,14 @@
 import random
 from scipy.optimize import NonlinearConstraint
 from scipy.optimize import differential_evolution
-from utils.generate_bounds import generate_bounds
+from diffusion_kinetics.utils.generate_bounds import generate_bounds
 from torch import torch
-from diffusion_kinetics.optimization.dataset import Dataset
-from diffusion_kinetics.optimization.diffusion_objective import DiffusionObjective
 import numpy as np
-from diffusion_kinetics.optimization.conHe_Param import conHe_Param
+from diffusion_kinetics.optimization import (
+    Dataset,
+    DiffusionObjective,
+    conHe_Param
+)
 
 
 def diffEV_multiples(
@@ -22,16 +24,16 @@ def diffEV_multiples(
     Run the differential evolution algorithm multiple times and returns the best result.
 
     Args:
-        objective (DiffusionObjective): the objective function for the optimization problem.
-        dataset (Dataset): the dataset for the optimization problem.
-        num_iters (int): the number of times to run the differential evolution algorithm.
-        ndom (int): the number of domains in the optimization problem.
-        Ea_bounds (tuple): the bounds for the activation energy.
-        lnd0aa_bounds (tuple): the bounds for the ln(D0/a^2).
-        max_iters (int, optional): the maximum number of iterations for the differential evolution algorithm. Defaults to 30000.
+        - objective (DiffusionObjective): the objective function for the optimization problem.
+        - dataset (Dataset): the dataset for the optimization problem.
+        - num_iters (int): the number of times to run the differential evolution algorithm.
+        - ndom (int): the number of domains in the optimization problem.
+        - Ea_bounds (tuple): the bounds for the activation energy.
+        - lnd0aa_bounds (tuple): the bounds for the ln(D0/a^2).
+        - max_iters (int, optional): the maximum number of iterations for the differential evolution algorithm. Defaults to 30000.
 
     Returns:
-        _type_: _description_
+        - tuple: the best parameters and the best misfit.
     """
     # If the number of domains > 1, enforce constraing that 1-sum(fracs) > 0. Else, no constraint.
     if ndom > 1:

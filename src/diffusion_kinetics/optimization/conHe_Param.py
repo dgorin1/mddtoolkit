@@ -10,12 +10,12 @@ def conHe_Param(X: torch.Tensor):  # Input is Ea, lnd0aa_x, Frac_x-1
     preceeding N-1. Therefore, if the sum of the preceeding is greater than 1, we have violated the constraint.
 
     Args:
-        X (torch.Tensor): A tensor containing the total moles (if using a misfit statistic 
+        - X (torch.Tensor): A tensor containing the total moles (if using a misfit statistic 
         that calculates this), Ea, lnD0aa_x, and Frac_x-1 for each domain
         
 
     Returns:
-        torch.Tensor: A tensor containing the constraints for the optimization problem.
+        - torch.Tensor: A tensor containing the constraints for the optimization problem.
     """
     X = X[1:]
     # CONSTRAING 1: FRACTIONS MUST ADD TO 1

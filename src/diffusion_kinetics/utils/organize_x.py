@@ -6,12 +6,12 @@ def organize_x(x, ndim, chop_fracs=True):
     domains are listed in order from least to most retentive.
 
     Args:
-        x (torch.Tensor): the parameters from the optimization problem.
-        ndim (int): the number of domains in the optimization problem.
-        chop_fracs (bool, optional): whether or not to chop the last fraction. Defaults to True.
+        - x (torch.Tensor): the parameters from the optimization problem.
+        - ndim (int): the number of domains in the optimization problem.
+        - chop_fracs (bool, optional): whether or not to chop the last fraction. Defaults to True.
 
     Returns:
-        np.array: the parameters from the optimization problem.
+        - np.array: the parameters from the optimization problem.
     """
     ndom = int(((ndim) / 2))
     print(f"ndom is {ndom}")

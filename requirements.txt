@@ -3,5 +3,5 @@ torch
 scipy
 scipy[optimize]
 pandas
-jax
 matplotlib
+pyyaml

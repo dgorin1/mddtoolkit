@@ -1,8 +1,6 @@
-from diffusion_kinetics.optimization.forwardModelKinetics import (
-    forwardModelKinetics,
-    calc_lnd0aa,
-    forward_model_kinetics_no_extra_heating
-)
+from diffusion_kinetics.optimization.forward_model_kinetics import forwardModelKinetics
+from diffusion_kinetics.optimization.forward_model_kinetics import forward_model_kinetics_no_extra_heating
+from diffusion_kinetics.optimization.forward_model_kinetics import calc_lnd0aa
 from diffusion_kinetics.optimization.dataset import Dataset
 import math as math
 import torch as torch
