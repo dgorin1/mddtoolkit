@@ -101,6 +101,7 @@ class DiffusionObjective:
         return self.grad(X)
 
     def objective(self, X):  # __call__ #evaluate
+
         data = self.dataset
         # This function calculates the fraction of gas released from each domain
         # in an MDD model during the heating schedule used in the diffusion
@@ -143,10 +144,9 @@ class DiffusionObjective:
             punishmentFlag = 1
 
         exp_moles = torch.tensor(data.M)
+
         if len(X.shape) > 1:
-            if (
-                X.shape[1] == 0
-            ):  # If we get passed an empty vector, which seems to happen when all generated samples do not meet constraints
+            if (X.shape[1] == 0):  # If we get passed an empty vector, which seems to happen when all generated samples do not meet constraints
                 return []
 
                 # Calculate the fraction released for each heating step in the modeled experiment
@@ -331,7 +331,9 @@ class DiffusionObjective:
                         multiplier * ((lnd0aa_MDD - self.lnd0aa.unsqueeze(1)) ** 2),
                         axis=0,
                     )
+                
 
+                
                 elif self.stat.lower() == "lnd0aa_chisq":
                     lnd0aa_MDD = calc_lnd0aa(
                         Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps
@@ -347,10 +349,11 @@ class DiffusionObjective:
                     )
                     nan_rows = torch.isnan(misfit).any(dim=1)
                     misfit = torch.sum(misfit[~nan_rows], axis=0)
-
+         
             if torch.sum(misfit < 0) > 0:
                 breakpoint()
-
+ 
+    
             return misfit * punishmentFlag
 
         trueFracMDD = Fi_MDD[1:] - Fi_MDD[0:-1]
@@ -427,5 +430,5 @@ class DiffusionObjective:
             )
             nan_rows = (torch.isnan(misfit)) | (misfit == np.inf) | (misfit == -np.inf)
             misfit = torch.sum(misfit[~nan_rows], axis=0)
-
+      
         return misfit * punishmentFlag
