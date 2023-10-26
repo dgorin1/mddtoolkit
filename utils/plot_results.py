@@ -92,14 +92,21 @@ def plot_results(
     else:
         n_plots = 4
 
+
+# def map_range(value, from_min, from_max, to_min, to_max):
+#     # Calculate the ratio of the value's position in the "from" range
+#     ratio = (value - from_min) / (from_max - from_min)
+    
+#     # Map the ratio to the "to" range and return the result
+#     return to_min + (ratio * (to_max - to_min))
+    
+
     if ndom > 1:
         fracs = params[ndom + 1 :]
         fracs = torch.concat(
             (fracs, 1 - torch.sum(fracs, axis=0, keepdim=True)), axis=-1
         )
-        frac_weights = (
-            fracs - torch.min(fracs) / (torch.max(fracs) - torch.min(fracs))
-        ) * 3.5 + 1.7
+        frac_weights = fracs *3 
     else:
         fracs = 1
         frac_weights = [2]

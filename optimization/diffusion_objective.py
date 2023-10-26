@@ -101,7 +101,7 @@ class DiffusionObjective:
         return self.grad(X)
 
     def objective(self, X):  # __call__ #evaluate
-
+  
         data = self.dataset
         # This function calculates the fraction of gas released from each domain
         # in an MDD model during the heating schedule used in the diffusion
@@ -122,7 +122,9 @@ class DiffusionObjective:
 
         # Grab the other parameters from the input
         temp = X[1:]
+        if X.size == 0:
 
+            return([])
         # Forward model the results so that we can calculate the misfit.
 
         if self.extra_steps == True:
@@ -145,226 +147,22 @@ class DiffusionObjective:
 
         exp_moles = torch.tensor(data.M)
 
-        if len(X.shape) > 1:
-            if (X.shape[1] == 0):  # If we get passed an empty vector, which seems to happen when all generated samples do not meet constraints
-                return []
 
-                # Calculate the fraction released for each heating step in the modeled experiment
-            elif X.shape[1] == 1:
-                trueFracMDD = Fi_MDD[1:] - Fi_MDD[0:-1]
-                trueFracMDD = torch.concat(
-                    (torch.unsqueeze(Fi_MDD[0], dim=-0), trueFracMDD), dim=-1
-                )
-
-                if (
-                    self.stat == "l1_frac"
-                    or self.stat == "l2_frac"
-                    or self.stat == "percent_frac"
-                    or self.stat == "lnd0aa"
-                    or self.stat == "lnd0aa_chisq"
-                ):
-                    trueFracFi = self.Fi[1:] - self.Fi[0:-1]
-                    trueFracFi = torch.concat(
-                        (torch.unsqueeze(self.Fi[0], dim=-0), trueFracFi), dim=-1
-                    )
-                    if self.stat == "percent_frac":
-                        trueFracFi[trueFracFi == 0] = (
-                            torch.min(trueFracFi[trueFracFi != 0]) * 0.1
-                        )
-
-                elif self.stat.lower() == "l1_frac_cum":
-                    Fi = torch.tile(self.Fi.unsqueeze(1), [1, Fi_MDD.shape[0]])
-                else:
-                    moles_MDD = trueFracMDD * total_moles
-
-                # Scale by chosen number of moles
-
-                if self.stat.lower() == "chisq":
-                    misfit = torch.sum(
-                        (1 - self.omitValueIndices_chisq)
-                        * ((exp_moles - moles_MDD) ** 2)
-                        / (data.uncert**2)
-                    )
-                elif self.stat.lower() == "l1_moles":
-                    misfit = torch.sum(
-                        (1 - self.omitValueIndices) * (torch.abs(exp_moles - moles_MDD))
-                    )
-                elif self.stat.lower() == "l2_moles":
-                    misfit = torch.sum(
-                        (1 - self.omitValueIndices) * ((exp_moles - moles_MDD) ** 2)
-                    )
-                elif self.stat.lower() == "l1_frac":
-                    misfit = torch.sum(
-                        (1 - self.omitValueIndices)
-                        * (torch.abs(trueFracFi - trueFracMDD))
-                    )
-                elif self.stat.lower() == "l2_frac":
-                    misfit = torch.sum(
-                        (1 - self.omitValueIndices) * (trueFracFi - trueFracMDD) ** 2
-                    )
-                elif self.stat.lower() == "l1_frac_cum":
-                    misfit = torch.sum(
-                        (1 - self.omitValueIndices) * torch.abs(Fi - Fi_MDD)
-                    )
-                elif self.stat.lower() == "percent_frac":
-                    temp1 = torch.abs(trueFracMDD - trueFracFi)
-                    misfit = torch.sum(
-                        (1 - self.omitValueIndices)
-                        * (torch.abs(trueFracFi - trueFracMDD))
-                        / trueFracFi
-                    )
-                elif self.stat.lower() == "lnd0aa":
-                    lnd0aa_MDD = calc_lnd0aa(
-                        Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps
-                    )
-
-                    lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
-                    lnd0aa_MDD[lnd0aa_MDD == np.inf] = 0
-                    lnd0aa_MDD[torch.isnan(lnd0aa_MDD)] = 0
-
-                    misfit = torch.sum(
-                        (1 - self.omitValueIndices_lnd0aa)
-                        * ((lnd0aa_MDD - self.lnd0aa) ** 2)
-                    )
-                elif self.stat.lower() == "lnd0aa_chisq":
-                    lnd0aa_MDD = calc_lnd0aa(
-                        Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps
-                    )
-                    lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
-                    lnd0aa_MDD[lnd0aa_MDD == np.inf] = 0
-                    lnd0aa_MDD[torch.isnan(lnd0aa_MDD)] = 0
-                    misfit = (1 - self.omitValueIndices_lnd0aa) * (
-                        ((torch.exp(lnd0aa_MDD) - torch.exp(self.lnd0aa)) ** 2)
-                        / self.Daa_uncertainty
-                    )
-                    nan_rows = (
-                        (torch.isnan(misfit)) | (misfit == np.inf) | (misfit == -np.inf)
-                    )
-                    misfit = torch.sum(misfit[~nan_rows], axis=0)
-
-            else:
-                trueFracMDD = Fi_MDD[1:] - Fi_MDD[0:-1]
-                trueFracMDD = torch.concat(
-                    (torch.unsqueeze(Fi_MDD[0], dim=0), trueFracMDD), dim=0
-                )
-
-                if (
-                    self.stat.lower() == "l1_frac"
-                    or self.stat.lower() == "l2_frac"
-                    or self.stat.lower() == "percent_frac"
-                    or self.stat == "lnd0aa"
-                    or self.stat == "lnd0aa_chisq"
-                ):
-                    trueFracFi = self.Fi[1:] - self.Fi[0:-1]
-                    trueFracFi = torch.concat(
-                        (torch.unsqueeze(self.Fi[0], dim=-0), trueFracFi), dim=-1
-                    )
-                    trueFracFi = torch.tile(
-                        trueFracFi.unsqueeze(1), [1, trueFracMDD.shape[1]]
-                    )
-                    if self.stat == "percent_frac":
-                        trueFracFi[trueFracFi == 0] = (
-                            torch.min(trueFracFi[trueFracFi != 0]) * 0.1
-                        )
-
-                elif self.stat.lower() == "l1_frac_cum":
-                    Fi = torch.tile(self.Fi.unsqueeze(1), [1, Fi_MDD.shape[1]])
-                else:
-                    moles_MDD = trueFracMDD * total_moles
-
-                if self.stat.lower() == "lnd0aa" or self.stat.lower() == "lnd0aa_chisq":
-                    multiplier = 1 - torch.tile(
-                        self.omitValueIndices_lnd0aa.unsqueeze(1),
-                        [1, trueFracMDD.shape[1]],
-                    )
-                elif self.stat.lower() == "chisq":
-                    multiplier = 1 - torch.tile(
-                        self.omitValueIndices_chisq.unsqueeze(1),
-                        [1, trueFracMDD.shape[1]],
-                    )
-                else:
-                    multiplier = 1 - torch.tile(
-                        self.omitValueIndices.unsqueeze(1), [1, trueFracMDD.shape[1]]
-                    )
-
-                if self.stat.lower() == "chisq":
-                    misfit = torch.sum(
-                        multiplier
-                        * ((exp_moles.unsqueeze(1) - moles_MDD) ** 2)
-                        / (data.uncert.unsqueeze(1) ** 2),
-                        axis=0,
-                    )
-                elif self.stat.lower() == "l1_moles":
-                    misfit = misfit = torch.sum(
-                        multiplier * (torch.abs(exp_moles.unsqueeze(1) - moles_MDD)),
-                        axis=0,
-                    )
-                elif self.stat.lower() == "l2_moles":
-                    misfit = torch.sum(
-                        (multiplier * ((exp_moles.unsqueeze(1) - moles_MDD) ** 2)),
-                        axis=0,
-                    )
-                elif self.stat.lower() == "l1_frac":
-                    misfit = torch.sum(
-                        multiplier * (torch.abs(trueFracFi - trueFracMDD)), axis=0
-                    )
-                elif self.stat.lower() == "l1_frac_cum":
-                    misfit = torch.sum(multiplier * (torch.abs(Fi - Fi_MDD)), axis=0)
-                elif self.stat.lower() == "l2_frac":
-                    misfit = torch.sum(
-                        (multiplier * (trueFracFi - trueFracMDD) ** 2), axis=0
-                    )
-                elif self.stat.lower() == "percent_frac":
-                    misfit = torch.sum(
-                        multiplier * (torch.abs(trueFracFi - trueFracMDD)) / trueFracFi,
-                        axis=0,
-                    )
-                elif self.stat.lower() == "lnd0aa":
-                    lnd0aa_MDD = calc_lnd0aa(
-                        Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps
-                    )
-                    lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
-                    lnd0aa_MDD[lnd0aa_MDD == np.inf] = 0
-                    lnd0aa_MDD[torch.isnan(lnd0aa_MDD)] = 0
-
-                    misfit = torch.sum(
-                        multiplier * ((lnd0aa_MDD - self.lnd0aa.unsqueeze(1)) ** 2),
-                        axis=0,
-                    )
-                
-
-                
-                elif self.stat.lower() == "lnd0aa_chisq":
-                    lnd0aa_MDD = calc_lnd0aa(
-                        Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps
-                    )
-                    lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
-                    lnd0aa_MDD[lnd0aa_MDD == np.inf] = 0
-                    lnd0aa_MDD[torch.isnan(lnd0aa_MDD)] = 0
-
-                    misfit = multiplier * (
-                        (torch.exp(lnd0aa_MDD) - torch.exp(self.lnd0aa.unsqueeze(1)))
-                        ** 2
-                        / self.Daa_uncertainty.unsqueeze(1)
-                    )
-                    nan_rows = torch.isnan(misfit).any(dim=1)
-                    misfit = torch.sum(misfit[~nan_rows], axis=0)
-         
-            if torch.sum(misfit < 0) > 0:
-                breakpoint()
- 
-    
-            return misfit * punishmentFlag
-
+               
         trueFracMDD = Fi_MDD[1:] - Fi_MDD[0:-1]
         trueFracMDD = torch.concat(
-            (torch.unsqueeze(Fi_MDD[0], dim=-0), trueFracMDD), dim=-1
+            (torch.unsqueeze(Fi_MDD[0], dim=0), trueFracMDD), dim=0
         )
 
+        # If only one history was tested, we need to put it into a column shape in 2-d so that it is the correct dimensions for the calculations below.
+        # If only one history was tested, trueFracMDD will have just 1 dimension.
+        if len(trueFracMDD.shape) < 2:
+            trueFracMDD = torch.unsqueeze(trueFracMDD, 1)
+
         if (
-            self.stat == "l1_frac"
-            or self.stat == "l2_frac"
-            or self.stat == "percent_frac"
+            self.stat.lower() == "l1_frac"
+            or self.stat.lower() == "l2_frac"
+            or self.stat.lower() == "percent_frac"
             or self.stat == "lnd0aa"
             or self.stat == "lnd0aa_chisq"
         ):
@@ -372,63 +170,97 @@ class DiffusionObjective:
             trueFracFi = torch.concat(
                 (torch.unsqueeze(self.Fi[0], dim=-0), trueFracFi), dim=-1
             )
+
+            trueFracFi = torch.tile(
+                trueFracFi.unsqueeze(1), [1, trueFracMDD.shape[1]]
+            )
             if self.stat == "percent_frac":
                 trueFracFi[trueFracFi == 0] = (
                     torch.min(trueFracFi[trueFracFi != 0]) * 0.1
                 )
 
         elif self.stat.lower() == "l1_frac_cum":
-            Fi = torch.tile(self.Fi.unsqueeze(1), [1, Fi_MDD.shape[0]])
+            Fi = torch.tile(self.Fi.unsqueeze(1), [1, Fi_MDD.shape[1]])
         else:
             moles_MDD = trueFracMDD * total_moles
 
+        if self.stat.lower() == "lnd0aa" or self.stat.lower() == "lnd0aa_chisq":
+            multiplier = 1 - torch.tile(
+                self.omitValueIndices_lnd0aa.unsqueeze(1),
+                [1, trueFracMDD.shape[1]],
+            )
+        elif self.stat.lower() == "chisq":
+            multiplier = 1 - torch.tile(
+                self.omitValueIndices_chisq.unsqueeze(1),
+                [1, trueFracMDD.shape[1]],
+            )
+        else:
+            multiplier = 1 - torch.tile(
+                self.omitValueIndices.unsqueeze(1), [1, trueFracMDD.shape[1]]
+            )
+
         if self.stat.lower() == "chisq":
             misfit = torch.sum(
-                ((1 - self.omitValueIndices_chisq) * (exp_moles - moles_MDD) ** 2)
-                / (data.uncert**2)
+                multiplier
+                * ((exp_moles.unsqueeze(1) - moles_MDD) ** 2)
+                / (data.uncert.unsqueeze(1) ** 2),
+                axis=0,
             )
         elif self.stat.lower() == "l1_moles":
-            misfit = torch.sum(
-                (1 - self.omitValueIndices) * torch.abs(exp_moles - moles_MDD)
+            misfit = misfit = torch.sum(
+                multiplier * (torch.abs(exp_moles.unsqueeze(1) - moles_MDD)),
+                axis=0,
             )
         elif self.stat.lower() == "l2_moles":
             misfit = torch.sum(
-                (1 - self.omitValueIndices) * ((exp_moles - moles_MDD) ** 2)
+                (multiplier * ((exp_moles.unsqueeze(1) - moles_MDD) ** 2)),
+                axis=0,
             )
         elif self.stat.lower() == "l1_frac":
             misfit = torch.sum(
-                (1 - self.omitValueIndices) * torch.abs(trueFracFi - trueFracMDD)
-            )
-        elif self.stat.lower() == "l2_frac":
-            misfit = torch.sum(
-                (1 - self.omitValueIndices) * (trueFracFi - trueFracMDD) ** 2
+                multiplier * (torch.abs(trueFracFi - trueFracMDD)), axis=0
             )
         elif self.stat.lower() == "l1_frac_cum":
-            misfit = torch.sum((1 - self.omitValueIndices) * torch.abs((Fi - Fi_MDD)))
+            misfit = torch.sum(multiplier * (torch.abs(Fi - Fi_MDD)), axis=0)
+        elif self.stat.lower() == "l2_frac":
+            misfit = torch.sum(
+                (multiplier * (trueFracFi - trueFracMDD) ** 2), axis=0
+            )
         elif self.stat.lower() == "percent_frac":
             misfit = torch.sum(
-                (1 - self.omitValueIndices)
-                * (torch.abs(trueFracFi - trueFracMDD))
-                / trueFracFi
+                multiplier * (torch.abs(trueFracFi - trueFracMDD)) / trueFracFi,
+                axis=0,
             )
         elif self.stat.lower() == "lnd0aa":
-            lnd0aa_MDD = calc_lnd0aa(Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps)
+            lnd0aa_MDD = calc_lnd0aa(
+                Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps
+            )
             lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
             lnd0aa_MDD[lnd0aa_MDD == np.inf] = 0
             lnd0aa_MDD[torch.isnan(lnd0aa_MDD)] = 0
+
             misfit = torch.sum(
-                (1 - self.omitValueIndices_lnd0aa) * ((lnd0aa_MDD - self.lnd0aa) ** 2)
+                multiplier * ((lnd0aa_MDD - self.lnd0aa.unsqueeze(1)) ** 2),
+                axis=0,
             )
+        
         elif self.stat.lower() == "lnd0aa_chisq":
-            lnd0aa_MDD = calc_lnd0aa(Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps)
-            lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
-            lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
-            lnd0aa_MDD[torch.isnan(lnd0aa_MDD)] = 0
-            misfit = (1 - self.omitValueIndices_lnd0aa) * (
-                ((torch.exp(lnd0aa_MDD) - torch.exp(self.lnd0aa)) ** 2)
-                / self.Daa_uncertainty
+            lnd0aa_MDD = calc_lnd0aa(
+                Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps
             )
-            nan_rows = (torch.isnan(misfit)) | (misfit == np.inf) | (misfit == -np.inf)
+            lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
+            lnd0aa_MDD[lnd0aa_MDD == np.inf] = 0
+            lnd0aa_MDD[torch.isnan(lnd0aa_MDD)] = 0
+            if len(lnd0aa_MDD.shape) < 2: 
+                lnd0aa_MDD = torch.unsqueeze(lnd0aa_MDD ,1)
+            
+            misfit = multiplier * ((torch.exp(lnd0aa_MDD) - torch.exp(self.lnd0aa.unsqueeze(1)))** 2/ self.Daa_uncertainty.unsqueeze(1))
+            nan_rows = (torch.isnan(misfit).any(dim=1)) | (torch.isinf(misfit).any(dim=1))
             misfit = torch.sum(misfit[~nan_rows], axis=0)
-      
+                
+        
+
         return misfit * punishmentFlag
+    
+
+   

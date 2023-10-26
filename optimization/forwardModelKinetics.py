@@ -31,7 +31,7 @@ def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"):
     # final fraction.
 
     R = 0.008314 #gas constant
-    torch.pi = torch.acos(torch.zeros(1)).item() * 2
+    torch.pi = torch.tensor(torch.acos(torch.zeros(1)).item() * 2)
 
 
     if num_vectors == 1:
@@ -74,14 +74,6 @@ def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"):
         DtaaForSum[1:,:] = Daa[1:,:]*(cumtsec[1:,:]-cumtsec[0:-1,:])
 
         if geometry == "spherical":
-            # # Make the correction for P_D vs D_only
-            # for i in range(len(DtaaForSum[0,:])): #This is a really short loop... range of i is # domains. Maybe we could vectorize to improve performance?
-            #     if DtaaForSum[0,i] <= 1.347419e-17:
-            #         DtaaForSum[0,i] *= 0
-            #     elif DtaaForSum[0,i] >= 4.698221e-06:
-            #         pass
-            #     else:
-            #         DtaaForSum[0,i] *= lookup_table(DtaaForSum[0,i])
 
             # Calculate Dtaa in cumulative form.
             Dtaa = torch.cumsum(DtaaForSum, axis = 0)
@@ -98,8 +90,8 @@ def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"):
         elif geometry == "plane sheet":
             # Need to derive a correction for the plane sheet... for now I just won't do an irradiation correction
             Dtaa = torch.cumsum(DtaaForSum, axis = 0)
-            f = (2/np.sqrt(math.pi))*np.sqrt((Dtaa))
-            f[f > 0.6] = 1-(8/(math.pi**2))*np.exp(-math.pi**2*Dtaa[f > 0.6]/4)
+            f = (2/torch.sqrt(torch.pi))*torch.sqrt((Dtaa))
+            f[f > 0.6] = 1-(8/(torch.pi**2))*torch.exp(-torch.pi**2*Dtaa[f > 0.6]/4)
 
         f_MDD = f*fracs
 
@@ -229,8 +221,8 @@ def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"):
             # Need to derive a correction for the plane sheet... for now I just won't do an irradiation correction
 
             Dtaa = torch.cumsum(DtaaForSum, axis = 0)
-            f = (2/np.sqrt(math.pi))*np.sqrt((Dtaa))
-            f[f > 0.6] = 1-(8/(math.pi**2))*np.exp(-1*math.pi**2*Dtaa[f > 0.6]/4)
+            f = (2/torch.sqrt(torch.pi))*torch.sqrt((Dtaa))
+            f[f > 0.6] = 1-(8/(torch.pi**2))*torch.exp(-1*torch.pi**2*Dtaa[f > 0.6]/4)
 
 
 
@@ -264,17 +256,6 @@ def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"):
         diffFi= newf/normalization_factor 
 
 
-
-
-        # use equations 5a through c from Fechtig and Kalbitzer for spherical geometry
-        # Fechtig and Kalbitzer Equation 5a, for cumulative gas fractions up to 10%
-        # special case when i = 1; need to insert 0 for previous amount released
-
-        # has_positive_value = (tensor > 0).any()
-
-        # # Add a breakpoint if positive values are present
-        # if has_positive_value:
-        #     breakpoint()
 
         # Resum the gas fractions into cumulative space that doesn't include the two added steps
         sumf_MDD = torch.cumsum(diffFi,axis=0)
@@ -313,7 +294,7 @@ def forward_model_kinetics_no_extra_heating(kinetics, tsec,TC, geometry:str = "s
     # final fraction.
 
     R = 0.008314 #gas constant
-    torch.pi = torch.acos(torch.zeros(1)).item() * 2
+    torch.pi = torch.tensor(torch.acos(torch.zeros(1)).item() * 2)
 
 
     if num_vectors == 1:
@@ -355,14 +336,6 @@ def forward_model_kinetics_no_extra_heating(kinetics, tsec,TC, geometry:str = "s
         DtaaForSum[1:,:] = Daa[1:,:]*(cumtsec[1:,:]-cumtsec[0:-1,:])
 
         if geometry == "spherical":
-            # # Make the correction for P_D vs D_only
-            # for i in range(len(DtaaForSum[0,:])): #This is a really short loop... range of i is # domains. Maybe we could vectorize to improve performance?
-            #     if DtaaForSum[0,i] <= 1.347419e-17:
-            #         DtaaForSum[0,i] *= 0
-            #     elif DtaaForSum[0,i] >= 4.698221e-06:
-            #         pass
-            #     else:
-            #         DtaaForSum[0,i] *= lookup_table(DtaaForSum[0,i])
 
             # Calculate Dtaa in cumulative form.
             Dtaa = torch.cumsum(DtaaForSum, axis = 0)
@@ -378,10 +351,10 @@ def forward_model_kinetics_no_extra_heating(kinetics, tsec,TC, geometry:str = "s
             # Multiply each gas realease by the percent gas located in each domain (prescribed by input)
         elif geometry == "plane sheet":
             # Need to derive a correction for the plane sheet... for now I just won't do an irradiation correction
-
+            
             Dtaa = torch.cumsum(DtaaForSum, axis = 0)
-            f = (2/np.sqrt(math.pi))*np.sqrt((Dtaa))
-            f[f > 0.6] = 1-(8/(math.pi**2))*np.exp(-math.pi**2*Dtaa[f > 0.6]/4)
+            f = (2/torch.sqrt(torch.pi))*torch.sqrt((Dtaa))
+            f[f > 0.6] = 1-(8/(torch.pi**2))*torch.exp(-torch.pi**2*Dtaa[f > 0.6]/4)
 
         f_MDD = f*fracs
 
@@ -398,16 +371,6 @@ def forward_model_kinetics_no_extra_heating(kinetics, tsec,TC, geometry:str = "s
         fracs = torch.cat((fracstemp, 1 - torch.sum(fracstemp, axis=0, keepdim=True))).unsqueeze(0).expand(len(TC), -1, -1)
         Ea = Ea.unsqueeze(0).expand(len(TC),ndom,-1)
 
-
-
-    # THIS IS TEMPORARY-- WE NEED TO ADD THIS AS AN INPUT.. THE INPUTS WILL NEED TO BE
-    # 1. Duration of irradiation
-    # 2. Temperature during irradiation
-    # 3. Duration of lab storage
-    # 4. Temperature during lab storage
-
-    # We might also want to make this all optional at some point, since some minerals are so retentive 
-    # that they wont lease any helium during irradiation and storage.
 
 
         if ndom > 1:
@@ -455,15 +418,6 @@ def forward_model_kinetics_no_extra_heating(kinetics, tsec,TC, geometry:str = "s
             DtaaForSum[0,:] = Daa[0,:]*tsec[0,:]
             DtaaForSum[1:,:,:] = Daa[1:,:]*(cumtsec[1:,:]-cumtsec[0:-1,:])
         if geometry == "spherical":
-            # # Make the correction for P_D vs D_only
-            # for j in range(len(DtaaForSum[0,0,:])    ):
-            #     for i in range(len(DtaaForSum[0,:,0])): #This is a really short loop... range of i is # domains. Maybe we could vectorize to improve performance?
-            #         if DtaaForSum[0,i,j] <= 1.347419e-17:
-            #             DtaaForSum[0,i,j] *= 0
-            #         elif DtaaForSum[0,i,j] >= 4.698221e-06:
-            #             pass
-            #         else:
-            #             DtaaForSum[0,i,j] *= lookup_table(DtaaForSum[0,i,j])
 
             # Calculate Dtaa in cumulative form.
             Dtaa = torch.cumsum(DtaaForSum, axis = 0)
@@ -477,10 +431,11 @@ def forward_model_kinetics_no_extra_heating(kinetics, tsec,TC, geometry:str = "s
 
         elif geometry == "plane sheet":
             # Need to derive a correction for the plane sheet... for now I just won't do an irradiation correction
+
             Dtaa = torch.cumsum(DtaaForSum, axis = 0)
             
-            f = (2/np.sqrt(math.pi))*np.sqrt((Dtaa))
-            f[f > 0.6] = 1-(8/(math.pi**2))*np.exp(-math.pi**2*Dtaa[f > 0.6]/4)
+            f = (2/torch.sqrt(torch.pi))*torch.sqrt((Dtaa))
+            f[f > 0.6] = 1-(8/(torch.pi**2))*torch.exp(-torch.pi**2*Dtaa[f > 0.6]/4)
 
 
 
@@ -498,6 +453,7 @@ def forward_model_kinetics_no_extra_heating(kinetics, tsec,TC, geometry:str = "s
 
         punishmentFlag = torch.round(sumf_MDD[-1,:],decimals = 3) < 1
 
+     
         return sumf_MDD, punishmentFlag
     
 
@@ -561,16 +517,16 @@ def calc_lnd0aa(sumf_MDD,diffti,geometry,extra_steps,added_steps):
 
 
     elif geometry == "plane sheet":
-        
+
         DR2_a = torch.zeros(sumf_MDD.shape)
         DR2_b = torch.zeros(sumf_MDD.shape)
 
 
         #Fechtig and Kalbitzer Equation 5a
 
-        DR2_a[0] = ((((sumf_MDD[0]**2) - 0**2))*math.pi)/(4*diffti[0])
-        DR2_a[1:] = ((((sumf_MDD[1:]**2)-(sumf_MDD[0:-1])**2))*math.pi)/(4*diffti[1:])
-        DR2_b[1:] = (4/((math.pi**2)*diffti[1:]))*np.log((1-sumf_MDD[0:-1])/(1-sumf_MDD[1:]))
+        DR2_a[0] = ((((sumf_MDD[0]**2) - 0**2))*torch.pi)/(4*diffti[0])
+        DR2_a[1:] = ((((sumf_MDD[1:]**2)-(sumf_MDD[0:-1])**2))*torch.pi)/(4*diffti[1:])
+        DR2_b[1:] = (4/((torch.pi**2)*diffti[1:]))*torch.log((1-sumf_MDD[0:-1])/(1-sumf_MDD[1:]))
         usea = (sumf_MDD > 0) & (sumf_MDD < 0.6)
         useb = (sumf_MDD >= 0.6) & (sumf_MDD <= 1)
 
@@ -578,8 +534,6 @@ def calc_lnd0aa(sumf_MDD,diffti,geometry,extra_steps,added_steps):
         
     lnd0aa_MDD = torch.log(Daa_MDD)
 
-    # if torch.sum(torch.isnan(sumf_MDD))>0:
-    #     breakpoint()
 
     return lnd0aa_MDD
 

@@ -26,7 +26,7 @@ time_add = []  # Add extra time in seconds
 temp_add = [] # Add extra time in degrees C
 sample_name = "TESTNAME" # Sample name
 max_domains_to_model = 8
-geometry = "spherical"  # options are "plane sheet", or "spherical". Spherical should be default.
+geometry = "plane sheet"  # options are "plane sheet", or "spherical". Spherical should be default.
 omit_value_indices = [
 ]  # Values you want to be ignored in your fit
 misfit_stat_list = [
@@ -50,7 +50,7 @@ punish_degas_early = True #Default is true. Title for gui can be punish if model
 for misfit_stat in misfit_stat_list:
     save_params = np.empty((max_domains_to_model - 1, max_domains_to_model * 2 + 4))
     save_params.fill(np.NaN)
-    i = 1
+    i = 6
     prev_misfit = 11**17
     misfit_val = 10**17
     while i < max_domains_to_model + 1 and misfit_val < prev_misfit:
