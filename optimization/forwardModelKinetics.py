@@ -5,9 +5,9 @@ import torch
 import math as math
 
 
-def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"): 
+def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"):  #I NEED TO FIX THE ADDED STEPS PROBLEM HERE STILL
 
-
+    
     # Check the number of dimensions being passed in to see how many vectors we're dealing with. Code handles 1 vs >1 differently
     if kinetics.ndim > 1:
         num_vectors = len(kinetics[0,:])

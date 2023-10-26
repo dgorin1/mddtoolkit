@@ -197,21 +197,32 @@ class DiffusionObjective:
         else:
             moles_MDD = trueFracMDD * total_moles
 
+        # Create the multiplier mask which will show values of 1 for values we want to include in the misfit, and 
+        # zero for those we don't. 
+
+        # This one is specific for lnd0aa (DREW TO ADD BETTER COMMENT)
         if self.stat.lower() == "lnd0aa" or self.stat.lower() == "lnd0aa_chisq":
             multiplier = 1 - torch.tile(
                 self.omitValueIndices_lnd0aa.unsqueeze(1),
                 [1, trueFracMDD.shape[1]],
             )
+
+        # This one is specific for chi_sq (DREW TO ADD BETTER COMMENT)
         elif self.stat.lower() == "chisq":
             multiplier = 1 - torch.tile(
                 self.omitValueIndices_chisq.unsqueeze(1),
                 [1, trueFracMDD.shape[1]],
             )
+
+        # This is the last multiplier contianing user-specified indices.
         else:
             multiplier = 1 - torch.tile(
                 self.omitValueIndices.unsqueeze(1), [1, trueFracMDD.shape[1]]
             )
 
+
+        # This is a giant if statement to decide which misfit statistic you're using. 
+        # It calculates the misfit as appropriate.
         if self.stat.lower() == "chisq":
             misfit = torch.sum(
                 multiplier

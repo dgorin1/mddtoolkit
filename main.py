@@ -50,7 +50,7 @@ punish_degas_early = True #Default is true. Title for gui can be punish if model
 for misfit_stat in misfit_stat_list:
     save_params = np.empty((max_domains_to_model - 1, max_domains_to_model * 2 + 4))
     save_params.fill(np.NaN)
-    i = 6
+    i = 1
     prev_misfit = 11**17
     misfit_val = 10**17
     while i < max_domains_to_model + 1 and misfit_val < prev_misfit:
