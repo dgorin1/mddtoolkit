@@ -5,7 +5,7 @@ import torch
 import math as math
 
 
-def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"):  #I NEED TO FIX THE ADDED STEPS PROBLEM HERE STILL
+def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical", added_steps:int = 0):  #I NEED TO FIX THE ADDED STEPS PROBLEM HERE STILL
 
     
     # Check the number of dimensions being passed in to see how many vectors we're dealing with. Code handles 1 vs >1 differently
@@ -110,7 +110,7 @@ def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"):  #I NEE
         newf[0] = sumf_MDD[0]
         newf[1:] = sumf_MDD[1:]-sumf_MDD[0:-1]
 
-        newf = newf[2:]
+        newf = newf[added_steps:]
         normalization_factor = torch.max(torch.cumsum(newf,0))
 
         punishmentFlag = torch.round(sumf_MDD[-1],decimals=3) < 1.0
@@ -247,7 +247,7 @@ def forwardModelKinetics(kinetics, tsec,TC, geometry:str = "spherical"):  #I NEE
         newf[0] = sumf_MDD[0]
         newf[1:] = sumf_MDD[1:]-sumf_MDD[0:-1]
 
-        newf = newf[2:]
+        newf = newf[added_steps:]
 
         normalization_factor = torch.max(torch.cumsum(newf,0),axis=0).values
     
