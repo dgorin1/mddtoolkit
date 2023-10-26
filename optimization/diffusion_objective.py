@@ -83,7 +83,8 @@ class DiffusionObjective:
             / (data.uncert**2)
         )
         self.Fi = torch.tensor(data.Fi)
-
+        self.trueFracFi = self.Fi[1:] - self.Fi[0:-1]
+        self.trueFracFi = torch.concat((torch.unsqueeze(self.Fi[0], dim=-0), self.trueFracFi), dim=-1)
         self.geometry = geometry
         self.Daa_uncertainty = torch.tensor(self.dataset["Daa uncertainty"])
         self.Daa_uncertainty[self.Daa_uncertainty == -np.inf] = 0
@@ -94,39 +95,39 @@ class DiffusionObjective:
         self.added_steps = len(time_add)
         self.punish_degas_early = punish_degas_early
 
+
+
     def __call__(self, X):
         return self.objective(X)
 
     def grad(self, X):
         return self.grad(X)
 
-    def objective(self, X):  # __call__ #evaluate
-  
-        data = self.dataset
+    def objective(self, X):
+        
         # This function calculates the fraction of gas released from each domain
         # in an MDD model during the heating schedule used in the diffusion
         # experiment. Then the fractions released from each domain are combined in
         # proportion to one another as specified by the MDD model, and the
-        # diffusivity of each step is calculated. A residual is calculated as the
-        # sum of absolute differences between the observed and modeled release
-        # fractions over all steps.
+        # diffusivity of each step is calculated. A residual is calculated as prescribed by the user.
+        # If the constraint function removes all possible models for this step, return empty list
 
+        if X.size == 0:
+            return([])
+
+
+        # Determine whether or not moles are being calculated and save to variable if yes
         if len(X) % 2 != 0:
             total_moles = X[0]
             X = X[1:]
 
-        if len(X) <= 3:
-            ndom = 1
-        else:
-            ndom = (len(X)) // 2
+        # Determine the number of domains
+        ndom = (len(X)) // 2
 
-        # Grab the other parameters from the input
-        temp = X[1:]
-        if X.size == 0:
 
-            return([])
         # Forward model the results so that we can calculate the misfit.
 
+        # If the mineral is diffusive enough that we're correcting for laboratory storage and irradiation:
         if self.extra_steps == True:
             Fi_MDD, punishmentFlag = forwardModelKinetics(
                 X,
@@ -135,30 +136,39 @@ class DiffusionObjective:
                 geometry=self.geometry,
                 added_steps=self.added_steps,
             )
+
+        # If the mineral doesn't require this sort of correction.
         else:
             Fi_MDD, punishmentFlag = forward_model_kinetics_no_extra_heating(
                 X, self.tsec, self._TC, geometry=self.geometry
             )
 
+        # Create a punishment flag if the user specified. If the experiment degassed before the end of the temperature steps,
+        # then we add an extra value to the misfit calculated at each step. We do this by multiplying the misfit value 
+        # at each step that degassed too early by 10. This punishes the model and "teaches" it that we don't want the experiment
+        # to degas too early. This is not recommended for experiments where the sample was fused or melted in final steps.
         if self.punish_degas_early == True:
             punishmentFlag = punishmentFlag * 10 + 1
         else:
             punishmentFlag = 1
 
-        exp_moles = torch.tensor(data.M)
-
-
-               
+        
+        # Objective function calculates Fi in cumulative form. Switch into non-cumulative space for calculations.               
         trueFracMDD = Fi_MDD[1:] - Fi_MDD[0:-1]
         trueFracMDD = torch.concat(
             (torch.unsqueeze(Fi_MDD[0], dim=0), trueFracMDD), dim=0
         )
 
-        # If only one history was tested, we need to put it into a column shape in 2-d so that it is the correct dimensions for the calculations below.
-        # If only one history was tested, trueFracMDD will have just 1 dimension.
+        # If only one history was tested in a 1D shape, we need to put it into a column shape in 2-d so that 
+        # it is the correct dimensions for the calculations below. If only one history was tested, 
+        # trueFracMDD will have just 1 dimension.
         if len(trueFracMDD.shape) < 2:
             trueFracMDD = torch.unsqueeze(trueFracMDD, 1)
 
+        # Assign to a variable since we need to modify the shape of this variable depending on the size of X
+        trueFracFi = self.trueFracFi
+      
+      
         if (
             self.stat.lower() == "l1_frac"
             or self.stat.lower() == "l2_frac"
@@ -166,21 +176,24 @@ class DiffusionObjective:
             or self.stat == "lnd0aa"
             or self.stat == "lnd0aa_chisq"
         ):
-            trueFracFi = self.Fi[1:] - self.Fi[0:-1]
-            trueFracFi = torch.concat(
-                (torch.unsqueeze(self.Fi[0], dim=-0), trueFracFi), dim=-1
-            )
-
+            
             trueFracFi = torch.tile(
                 trueFracFi.unsqueeze(1), [1, trueFracMDD.shape[1]]
             )
+
+            # If you're using percent_frac, we'll reassign all the values that are 0 to 
+            # 10% of the minimum size in seen in the experiment to avoid "divide by zero" errors.
+            # We ignore zero steps when calculating the misfit anyway.
             if self.stat == "percent_frac":
                 trueFracFi[trueFracFi == 0] = (
                     torch.min(trueFracFi[trueFracFi != 0]) * 0.1
                 )
-
+        # If using l1_frac_cum, make that variable the correct shape.
         elif self.stat.lower() == "l1_frac_cum":
             Fi = torch.tile(self.Fi.unsqueeze(1), [1, Fi_MDD.shape[1]])
+        
+        # If nothing above is true, then you're using a calc that involves moles and you'll need to calculate
+        # the predicted moles for each step.
         else:
             moles_MDD = trueFracMDD * total_moles
 
@@ -202,18 +215,18 @@ class DiffusionObjective:
         if self.stat.lower() == "chisq":
             misfit = torch.sum(
                 multiplier
-                * ((exp_moles.unsqueeze(1) - moles_MDD) ** 2)
-                / (data.uncert.unsqueeze(1) ** 2),
+                * ((self.exp_moles.unsqueeze(1) - moles_MDD) ** 2)
+                / (self.dataset.uncert.unsqueeze(1) ** 2),
                 axis=0,
             )
         elif self.stat.lower() == "l1_moles":
             misfit = misfit = torch.sum(
-                multiplier * (torch.abs(exp_moles.unsqueeze(1) - moles_MDD)),
+                multiplier * (torch.abs(self.exp_moles.unsqueeze(1) - moles_MDD)),
                 axis=0,
             )
         elif self.stat.lower() == "l2_moles":
             misfit = torch.sum(
-                (multiplier * ((exp_moles.unsqueeze(1) - moles_MDD) ** 2)),
+                (multiplier * ((self.exp_moles.unsqueeze(1) - moles_MDD) ** 2)),
                 axis=0,
             )
         elif self.stat.lower() == "l1_frac":
