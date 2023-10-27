@@ -75,16 +75,9 @@ def plot_results(
                         Fi_MDD, objective.tsec, objective.geometry, objective.extra_steps, objective.added_steps
                     )
     
-    # data = calc_arrhenius(
-    #     params,
-    #     tsec,
-    #     TC,
-    #     objective.geometry,
-    #     objective.extra_steps,
-    #     objective.added_steps,
-    # )
 
-    data = (Fi_MDD,lnd0aa_MDD)
+
+    data = (Fi_MDD.ravel(),lnd0aa_MDD.ravel())
 
     T_plot = 10000 / (dataset["TC"] + 273.15)
     if len(reference_law) == 0:
@@ -147,6 +140,7 @@ def plot_results(
         zorder=5,
     )
 
+
     axes[0, 0].plot(
         T_plot,
         pd.Series(data[1].tolist())
@@ -164,8 +158,8 @@ def plot_results(
             np.exp(reference_law[1])
             * np.exp((-reference_law[0]) / (R * (dataset["TC"] + 273.15)))
         )
-    #     breakpoint()
-    #     plt.plot(np.linspace(min(T_plot),max(T_plot),1000), np.linspace(max(ref),min(ref),1000), '--k')
+
+
     axes[0, 0].set_ylabel("ln(D/a^2)")
     axes[0, 0].set_xlabel("10000/T (K)")
     axes[0, 0].set_box_aspect(1)
@@ -181,7 +175,7 @@ def plot_results(
     axes[1, 0].errorbar(
         range(0, len(T_plot)),
         Fi,
-        yerr=dataset["Fi uncertainty"],
+        
         fmt="b-o",
         markersize=5,
         zorder=5,

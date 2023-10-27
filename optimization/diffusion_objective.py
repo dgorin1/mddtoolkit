@@ -121,27 +121,17 @@ class DiffusionObjective:
             total_moles = X[0]
             X = X[1:]
 
-        # Determine the number of domains
-        ndom = (len(X)) // 2
-
-
         # Forward model the results so that we can calculate the misfit.
 
         # If the mineral is diffusive enough that we're correcting for laboratory storage and irradiation:
-        if self.extra_steps == True:
-            Fi_MDD, punishmentFlag = forwardModelKinetics(
-                X,
-                self.tsec,
-                self._TC,
-                geometry=self.geometry,
-                added_steps=self.added_steps,
-            )
-
-        # If the mineral doesn't require this sort of correction.
-        else:
-            Fi_MDD, punishmentFlag = forward_model_kinetics_no_extra_heating(
-                X, self.tsec, self._TC, geometry=self.geometry
-            )
+        # if self.extra_steps == True:
+        Fi_MDD, punishmentFlag = forwardModelKinetics(
+            X,
+            self.tsec,
+            self._TC,
+            geometry=self.geometry,
+            added_steps=self.added_steps,
+        )
 
         # Create a punishment flag if the user specified. If the experiment degassed before the end of the temperature steps,
         # then we add an extra value to the misfit calculated at each step. We do this by multiplying the misfit value 
@@ -282,8 +272,6 @@ class DiffusionObjective:
             nan_rows = (torch.isnan(misfit).any(dim=1)) | (torch.isinf(misfit).any(dim=1))
             misfit = torch.sum(misfit[~nan_rows], axis=0)
                 
-        
-
         return misfit * punishmentFlag
     
 
