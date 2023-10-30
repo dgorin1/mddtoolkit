@@ -43,7 +43,7 @@ class DiffusionObjective:
             torch.sum(torch.tensor(self.dataset.delM) ** 2)
         )
 
-        # self.omitValueIndices = jnp.array(omitValueIndices)
+        
         self.stat = stat
         time = self.dataset._thr * 3600
         if time_add.numel() > 0:
@@ -197,6 +197,7 @@ class DiffusionObjective:
                 [1, trueFracMDD.shape[1]],
             )
 
+        
         # This one is specific for chi_sq (DREW TO ADD BETTER COMMENT)
         elif self.stat.lower() == "chisq":
             multiplier = 1 - torch.tile(
@@ -210,7 +211,7 @@ class DiffusionObjective:
                 self.omitValueIndices.unsqueeze(1), [1, trueFracMDD.shape[1]]
             )
 
-
+        
         # This is a giant if statement to decide which misfit statistic you're using. 
         # It calculates the misfit as appropriate.
         if self.stat.lower() == "chisq":

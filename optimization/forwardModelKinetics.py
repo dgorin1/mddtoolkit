@@ -152,16 +152,8 @@ def calc_lnd0aa(sumf_MDD,diffti,geometry,extra_steps,added_steps):
         DR2_b = torch.zeros(sumf_MDD.shape)
         #Fi is cumulative F at each step i, cumtsec is cumulative t in seconds, diffFi is differential Fi at each step, so length is len(Fi)-1, diffti is analagously length n-1
         DR2_a[0] = 1/((torch.pi**2)*cumtsec[0])*(2*torch.pi - (torch.pi**2/3)*Fi[0] - 2*torch.pi*torch.sqrt(1-(torch.pi/3)*Fi[0]))
-
-     
         DR2_a[1:] = (1/(torch.pi**2*diffti)) * (-torch.pi**2/3 * diffFi - 2*torch.pi*( torch.sqrt(1-(torch.pi/3)*Fi[1:]) - torch.sqrt(1-(torch.pi/3)*Fi[0:-1])))
-
-
         DR2_b[0] = -1/(torch.pi**2* cumtsec[0]) * torch.log((1-Fi[0]) * (torch.pi**2/6))
-
-
-
-
         DR2_b[1:] = -1/(torch.pi**2*diffti) * torch.log( (1-Fi[1:])/(1-Fi[0:-1]))
 
 
