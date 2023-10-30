@@ -75,16 +75,9 @@ def plot_results(
                         Fi_MDD, objective.tsec, objective.geometry, objective.extra_steps, objective.added_steps
                     )
     
-    # data = calc_arrhenius(
-    #     params,
-    #     tsec,
-    #     TC,
-    #     objective.geometry,
-    #     objective.extra_steps,
-    #     objective.added_steps,
-    # )
 
-    data = (Fi_MDD,lnd0aa_MDD)
+
+    data = (Fi_MDD.ravel(),lnd0aa_MDD.ravel())
 
     T_plot = 10000 / (dataset["TC"] + 273.15)
     if len(reference_law) == 0:
@@ -92,14 +85,21 @@ def plot_results(
     else:
         n_plots = 4
 
+
+# def map_range(value, from_min, from_max, to_min, to_max):
+#     # Calculate the ratio of the value's position in the "from" range
+#     ratio = (value - from_min) / (from_max - from_min)
+    
+#     # Map the ratio to the "to" range and return the result
+#     return to_min + (ratio * (to_max - to_min))
+    
+
     if ndom > 1:
         fracs = params[ndom + 1 :]
         fracs = torch.concat(
             (fracs, 1 - torch.sum(fracs, axis=0, keepdim=True)), axis=-1
         )
-        frac_weights = (
-            fracs - torch.min(fracs) / (torch.max(fracs) - torch.min(fracs))
-        ) * 3.5 + 1.7
+        frac_weights = fracs *3 
     else:
         fracs = 1
         frac_weights = [2]
@@ -121,7 +121,7 @@ def plot_results(
     for i in range(ndom):
         D = np.log(
             np.exp(params[i + 1])
-            * np.exp((-params[0]) / (R * (dataset["TC"] + 273.15)))
+            * np.exp((-params[0]) / (R * (TC + 273.15)))
         )
         axes[0, 0].plot(
             np.linspace(min(T_plot), max(T_plot), 1000),
@@ -140,6 +140,7 @@ def plot_results(
         zorder=5,
     )
 
+
     axes[0, 0].plot(
         T_plot,
         pd.Series(data[1].tolist())
@@ -157,8 +158,8 @@ def plot_results(
             np.exp(reference_law[1])
             * np.exp((-reference_law[0]) / (R * (dataset["TC"] + 273.15)))
         )
-    #     breakpoint()
-    #     plt.plot(np.linspace(min(T_plot),max(T_plot),1000), np.linspace(max(ref),min(ref),1000), '--k')
+
+
     axes[0, 0].set_ylabel("ln(D/a^2)")
     axes[0, 0].set_xlabel("10000/T (K)")
     axes[0, 0].set_box_aspect(1)
@@ -174,7 +175,7 @@ def plot_results(
     axes[1, 0].errorbar(
         range(0, len(T_plot)),
         Fi,
-        yerr=dataset["Fi uncertainty"],
+        
         fmt="b-o",
         markersize=5,
         zorder=5,

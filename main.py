@@ -12,7 +12,7 @@ from utils.organize_x import organize_x
 # get this file's directory
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-data_input = pd.read_csv(f"{dir_path}/data/input_8DomSynthDataNoisyM3_plane_sheet.csv")
+data_input = pd.read_csv(f"{dir_path}/data/input_8DomSynthData_plane_sheet.csv")
 lnd0aa_bounds = (
     -5,
     50,
@@ -26,7 +26,7 @@ time_add = []  # Add extra time in seconds
 temp_add = [] # Add extra time in degrees C
 sample_name = "TESTNAME" # Sample name
 max_domains_to_model = 8
-geometry = "spherical"  # options are "plane sheet", or "spherical". Spherical should be default.
+geometry = "plane sheet"  # options are "plane sheet", or "spherical". Spherical should be default.
 omit_value_indices = [
 ]  # Values you want to be ignored in your fit
 misfit_stat_list = [
@@ -41,16 +41,16 @@ misfit_stat_list = [
     "lnd0aa",
 ]  # This is a list of all the options. The user should just pick one.
 max_iters = 100000  # Often 30k is enough, but not always.
-iteration_repeats = 10  # Default should be 10, but user can set to any integer 1-?
+iteration_repeats = 1  # Default should be 10, but user can set to any integer 1-?
 punish_degas_early = True #Default is true. Title for gui can be punish if modeled experiment fully degasses too early.
 
 
 # Create dataset class for each associate package
 
 for misfit_stat in misfit_stat_list:
-    save_params = np.empty((max_domains_to_model - 1, max_domains_to_model * 2 + 4))
-    save_params.fill(np.NaN)
     i = 1
+    save_params = np.empty((max_domains_to_model - i+1, max_domains_to_model * 2 + 4))
+    save_params.fill(np.NaN)
     prev_misfit = 11**17
     misfit_val = 10**17
     while i < max_domains_to_model + 1 and misfit_val < prev_misfit:
@@ -107,8 +107,7 @@ for misfit_stat in misfit_stat_list:
             array_w_nans = params
         add_num_doms = np.append(i, array_w_nans)
         params_to_add = np.append(add_num_doms, misfit_val)
-
-        save_params[i - 1, 0 : len(params_to_add)] = params_to_add
+        save_params[i-1, 0 : len(params_to_add)] = params_to_add
 
         save_results(
             sample_name=sample_name, misfit_stat=misfit_stat, params=save_params

@@ -1,0 +1,17 @@
+README.md
+setup.py
+src/diffusion_kinetics/__init__.py
+src/diffusion_kinetics/main.py
+src/diffusion_kinetics/optimization/__init__.py
+src/diffusion_kinetics/optimization/conHe_Param.py
+src/diffusion_kinetics/optimization/dataset.py
+src/diffusion_kinetics/optimization/diffusion_objective.py
+src/diffusion_kinetics/optimization/forward_model_kinetics.py
+src/diffusion_kinetics/optimization/optimization_routines.py
+src/diffusion_kinetics/pipeline/__init__.py
+src/diffusion_kinetics/pipeline/pipeline_config.py
+src/diffusion_kinetics/pipeline/run_pipeline.py
+src/diffusion_modeller.egg-info/PKG-INFO
+src/diffusion_modeller.egg-info/SOURCES.txt
+src/diffusion_modeller.egg-info/dependency_links.txt
+src/diffusion_modeller.egg-info/top_level.txt
