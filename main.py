@@ -12,7 +12,7 @@ from utils.organize_x import organize_x
 # get this file's directory
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-data_input = pd.read_csv(f"{dir_path}/data/input_KM95-15-Df.csv")
+data_input = pd.read_csv(f"{dir_path}/data/input_KM95-15-Dh.csv")
 lnd0aa_bounds = (
     -5,
     60,
@@ -22,9 +22,9 @@ Ea_bounds = (
     500,
 )  # User should also be able to pick any number >0 for these bounds. List in kJ/mol
 # mineral_name = "kspar"
-time_add = [3600*5,136944000]  # Add extra time in seconds
+time_add = [3600*5,140400000]  # Add extra time in seconds
 temp_add = [40,21.1111] # Add extra time in degrees C
-sample_name = "KM95-15-Df" # Sample name
+sample_name = "KM95-15-Dh" # Sample name
 max_domains_to_model = 8
 geometry = "spherical"  # options are "plane sheet", or "spherical". Spherical should be default.
 omit_value_indices = [
