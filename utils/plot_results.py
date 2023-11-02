@@ -215,7 +215,9 @@ def plot_results(
 
     # If moles were calculated, make the same plot but with moles
     if moles_calc == True:
-        # axes[2].subplot(n_plots,1,3)
+
+
+        # Plot the moles measured in experiment at each step
         axes[1, 1].errorbar(
             range(0, len(T_plot)),
             dataset["M"],
@@ -225,14 +227,21 @@ def plot_results(
             mfc= (0.69,0.69,0.69), 
             mec='black', 
             alpha = 0.8,
-            zorder = 10,
+            zorder = 5,
             linewidth = 1,
             linestyle = '--',
             color = 'k'
 
         )
         axes[1, 1].plot(
-            range(0, len(T_plot)), tot_moles * Fi_MDD, "k-o", markersize=3, zorder=10
+            range(0, len(T_plot)), 
+            tot_moles * Fi_MDD, 
+            "-o", 
+            markersize=5.25, 
+            color='black', 
+            linewidth=1, 
+            mec='black',
+            zorder = 10
         )
         axes[1, 1].set_xlabel("step number")
         axes[1, 1].set_ylabel("Atoms Released at Each Step")
