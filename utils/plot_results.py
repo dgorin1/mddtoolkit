@@ -122,21 +122,13 @@ def plot_results(
         axes[0, 0].plot(
             np.linspace(min(T_plot), max(T_plot), 1000),
             np.linspace(max(D), min(D), 1000),
-            "--k",
+            "--",
             linewidth=frac_weights[i],
             zorder=0,
+            color = (0.6,0,0),
             alpha = 0.5
         )
     
-    # Plot the experimental lndaa values
-    axes[0, 0].errorbar(
-        T_plot,
-        dataset["ln(D/a^2)"].replace(-np.inf, 0),
-        yerr=errors_for_plot,
-        fmt="bo",
-        markersize=10,
-        zorder=5,
-    )
 
     # Plot the MDD Model lndaa values
     axes[0, 0].plot(
@@ -144,10 +136,28 @@ def plot_results(
         pd.Series(data[1].tolist())
         .replace(-np.inf, np.inf)
         .fillna(max(data[1]).item()),
-        "ko",
-        markersize=7,
-        zorder=10,
+         "o", 
+         markersize=5, 
+         color='black', 
+         linewidth=1, 
+         mec='black',
+         zorder = 2
     )
+
+    # Plot the experimental lndaa values
+    axes[0, 0].errorbar(
+        T_plot,
+        dataset["ln(D/a^2)"].replace(-np.inf, 0),
+        yerr=errors_for_plot,
+        fmt = 'o', 
+        markersize=12, 
+        color= (0.69,0.69,0.69),
+        linewidth=1,
+         mec='black', 
+        #  alpha = 0.8
+        zorder = 1
+    )
+    
 
     # Label axes
     axes[0, 0].set_ylabel("ln(D/a^2)")
@@ -169,16 +179,35 @@ def plot_results(
     temp = Fi[1:] - Fi[0:-1]
     Fi = np.insert(temp, 0, Fi[0])
 
-    # Make Plot of Gas Fraction model vs experiment
+    # Plot T_plot vs the gas fraction observed at each step
     axes[1, 0].errorbar(
         range(0, len(T_plot)),
         Fi,
-        
-        fmt="b-o",
-        markersize=5,
-        zorder=5,
+        fmt='-o', 
+        markersize=12, 
+        mfc= (0.69,0.69,0.69), 
+        mec='black', 
+        # alpha = 0.8,
+        zorder = 5,
+        linewidth = 1,
+        linestyle = '--',
+        color = 'k'
     )
-    axes[1, 0].plot(range(0, len(T_plot)), Fi_MDD, "k-o", markersize=3, zorder=10)
+
+    # Plot T_plot vs the modeled gas fraction observed at each step
+    axes[1, 0].plot(range(0, len(T_plot)), 
+                    Fi_MDD, 
+                    "-o", 
+                    markersize=5.25, 
+                    color='black', 
+                    linewidth=1, 
+                    mec='black',
+                    zorder = 10
+                    )
+
+
+
+
     axes[1, 0].set_xlabel("step number")
     axes[1, 0].set_ylabel("Fractional Release (%)")
     # axes[1].axis('square')
@@ -191,9 +220,16 @@ def plot_results(
             range(0, len(T_plot)),
             dataset["M"],
             yerr=dataset["delM"],
-            fmt="b-o",
-            markersize=5,
-            zorder=5,
+            fmt='-o', 
+            markersize=12, 
+            mfc= (0.69,0.69,0.69), 
+            mec='black', 
+            alpha = 0.8,
+            zorder = 10,
+            linewidth = 1,
+            linestyle = '--',
+            color = 'k'
+
         )
         axes[1, 1].plot(
             range(0, len(T_plot)), tot_moles * Fi_MDD, "k-o", markersize=3, zorder=10
@@ -212,12 +248,26 @@ def plot_results(
         resid_exp = dataset["ln(D/a^2)"] - (-m * T_plot + params[1].item())
         resid_model = lnd0aa_MDD.ravel() - (-m*T_plot + params[1].item())
     
-        axes[0, 1].plot(data[0] * 100, resid_exp, '-o', markersize=10, color='gray', linestyle='-', linewidth=1, mec='black', alpha = 0.8)
+        axes[0, 1].plot(data[0] * 100, 
+                        resid_exp, 'o', markersize=12, 
+                        color= (0.69,0.69,0.69), 
+                        mec='black', 
+                        alpha = 0.8
+                        )
+        
 
-        axes[0, 1].plot(data[0] * 100, resid_model, "-o", markersize=5, color='black', linestyle='-', linewidth=1, mec='black')
+        axes[0, 1].plot(data[0] * 100, resid_model, 
+                        "-o", markersize=5, 
+                        color='black', 
+                        linestyle='-', 
+                        linewidth=1, 
+                        mec='black'
+                        )
+        
         axes[0, 1].set_xlabel("Cumulative 3He Release (%)")
         axes[0, 1].set_ylabel("Residual ln(1/s)")
         axes[0, 1].set_box_aspect(1)
+
     plt.tight_layout
     file_name = get_plot_name(
         ndom, "fit_plot", sample_name, moves_type=moves_type, misfit_stat=misfit_stat
