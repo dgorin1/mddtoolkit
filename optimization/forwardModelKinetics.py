@@ -107,7 +107,7 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
     # Turn all nans into zeros so that 
     nan_mask = torch.isnan(sumf_MDD).all(dim=0)
     if sum(nan_mask > 0):
-        breakpoint()
+        pass
     sumf_MDD[:,nan_mask]= 0.0
 
 

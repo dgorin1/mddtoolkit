@@ -1,5 +1,4 @@
 from optimization.forwardModelKinetics import forwardModelKinetics
-from optimization.forwardModelKinetics import forward_model_kinetics_no_extra_heating
 from optimization.forwardModelKinetics import calc_lnd0aa
 from input_data.dataset import Dataset
 import math as math
