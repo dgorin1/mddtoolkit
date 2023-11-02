@@ -12,25 +12,25 @@ from utils.organize_x import organize_x
 # get this file's directory
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-data_input = pd.read_csv(f"{dir_path}/data/input_8DomSynthData_plane_sheet.csv")
+data_input = pd.read_csv(f"{dir_path}/data/input_KM95-15-Df.csv")
 lnd0aa_bounds = (
     -5,
-    50,
+    60,
 )  # The user should really be able to pick any numerical values they want here (Good to list its in units of 1/s)
 Ea_bounds = (
     50,
     500,
 )  # User should also be able to pick any number >0 for these bounds. List in kJ/mol
 # mineral_name = "kspar"
-time_add = []  # Add extra time in seconds
-temp_add = [] # Add extra time in degrees C
-sample_name = "TESTNAME" # Sample name
+time_add = [3600*5,136944000]  # Add extra time in seconds
+temp_add = [40,21.1111] # Add extra time in degrees C
+sample_name = "KM95-15-Df" # Sample name
 max_domains_to_model = 8
-geometry = "plane sheet"  # options are "plane sheet", or "spherical". Spherical should be default.
+geometry = "spherical"  # options are "plane sheet", or "spherical". Spherical should be default.
 omit_value_indices = [
 ]  # Values you want to be ignored in your fit
 misfit_stat_list = [
-    "lnd0aa_chisq",
+    
     "chisq",
     "percent_frac",
     "l1_frac_cum",
@@ -39,9 +39,10 @@ misfit_stat_list = [
     "l2_moles",
     "l2_frac",
     "lnd0aa",
+    "lnd0aa_chisq"
 ]  # This is a list of all the options. The user should just pick one.
 max_iters = 100000  # Often 30k is enough, but not always.
-iteration_repeats = 1  # Default should be 10, but user can set to any integer 1-?
+iteration_repeats = 10  # Default should be 10, but user can set to any integer 1-?
 punish_degas_early = True #Default is true. Title for gui can be punish if modeled experiment fully degasses too early.
 
 

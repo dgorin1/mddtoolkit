@@ -89,11 +89,13 @@ def plot_results(
             frac_weights = fracs *(ndom+5) 
         else:
             frac_weights = fracs*(ndom+10)
+        frac_weights[frac_weights < 0.4] = 0.4
     else:
         fracs = 1
         frac_weights = [2]
 
 
+    
     fig, axes = plt.subplots(ncols=2, nrows=2, layout="constrained", figsize=(10, 10))
 
 
@@ -101,8 +103,8 @@ def plot_results(
     errors_for_plot = np.array(
         pd.concat(
             [
-                dataset["ln(D/a^2)"] - dataset["ln(D/a^2)-del"],
-                dataset["ln(D/a^2)+del"] - dataset["ln(D/a^2)"],
+                dataset["ln(D/a^2)-del"],
+                dataset["ln(D/a^2)+del"],
             ],
             axis=1,
         ).T
@@ -145,6 +147,7 @@ def plot_results(
     )
 
     # Plot the experimental lndaa values
+
     axes[0, 0].errorbar(
         T_plot,
         dataset["ln(D/a^2)"].replace(-np.inf, 0),
@@ -253,9 +256,10 @@ def plot_results(
 
         # Slope
         m = params[0]/83.14 #Activation energy (kJ/mol) / gas constant
-   
-        resid_exp = dataset["ln(D/a^2)"] - (-m * T_plot + params[1].item())
-        resid_model = lnd0aa_MDD.ravel() - (-m*T_plot + params[1].item())
+  
+        resid_exp = dataset["ln(D/a^2)"] - (-m.item() * T_plot + params[1].item())
+
+        resid_model = np.array(lnd0aa_MDD.ravel()) - (-m.item() *T_plot + params[1].item())
     
         axes[0, 1].plot(data[0] * 100, 
                         resid_exp, 'o', markersize=12, 

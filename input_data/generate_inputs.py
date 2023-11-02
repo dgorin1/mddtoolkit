@@ -48,5 +48,5 @@ if __name__ == "__main__":
 
     nameOfInputCSVFile = f"{dir_path}/KM95-15-Dc-1308um.csv"
     nameOfExperimentalResultsFile = f"{dir_path}/input_KM95-15-Dc-1308um.csv"
-    geometry = "plane sheet"
+    geometry = "spherical"
     generate_inputs(nameOfInputCSVFile, nameOfExperimentalResultsFile, geometry)

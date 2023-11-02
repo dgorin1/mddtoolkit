@@ -61,12 +61,13 @@ def diffEV_multiples(
             objective,
             bounds,
             disp=False,
-            tol=0.0001,  # zeros seems like a good number from testing. slow, but useful.
+            tol=0.0001,  
             maxiter=max_iters,
             constraints=nlc,
             vectorized=True,
             updating="deferred",
             seed=seed,
+            popsize= 15
         )
 
         misfits.append(result.fun)
