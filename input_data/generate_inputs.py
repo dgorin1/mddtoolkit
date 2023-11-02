@@ -46,7 +46,7 @@ if __name__ == "__main__":
     # generate some results
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    nameOfInputCSVFile = f"{dir_path}/8DomSynthData_plane_sheet.csv"
-    nameOfExperimentalResultsFile = f"{dir_path}/input_8DomSynthData_plane_sheet.csv"
+    nameOfInputCSVFile = f"{dir_path}/KM95-15-Dc-1308um.csv"
+    nameOfExperimentalResultsFile = f"{dir_path}/input_KM95-15-Dc-1308um.csv"
     geometry = "plane sheet"
     generate_inputs(nameOfInputCSVFile, nameOfExperimentalResultsFile, geometry)

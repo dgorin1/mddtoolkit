@@ -146,6 +146,7 @@ def D0calc_MonteCarloErrors(expdata,geometry:str = "spherical"):
         else: # If first release is > 60% of gas
             DR2_uncert[0] = (4/(math.pi^2*diffti[0]*np.sum(M)))*np.sqrt(delM[0]**2+ (diffFi[0]/(1-diffFi[0]))**2 * (np.sum(delM[2:]**2)))
         
+        
     return pd.DataFrame({"Tplot": Tplot,"Fi": Fi.ravel(),"Daa": DR2,"Daa uncertainty": DR2_uncert.ravel(), \
-                            "ln(D/a^2)": np.log(DR2),"ln(D/a^2)-del": np.log(DR2-DR2_uncert.ravel()), \
-                            "ln(D/a^2)+del": np.log(DR2+DR2_uncert.ravel()) })
+                            "ln(D/a^2)": np.log(DR2),"ln(D/a^2)-del": DR2_uncert.ravel()/DR2, \
+                            "ln(D/a^2)+del": DR2_uncert.ravel()/DR2 })
