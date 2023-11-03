@@ -60,14 +60,14 @@ def diffEV_multiples(
         result = differential_evolution(
             objective,
             bounds,
-            disp=False,
+            disp=True,
             tol=0.0001,  
             maxiter=max_iters,
             constraints=nlc,
             vectorized=True,
             updating="deferred",
             seed=seed,
-            popsize= 15
+
         )
 
         misfits.append(result.fun)

@@ -249,14 +249,16 @@ class DiffusionObjective:
             lnd0aa_MDD = calc_lnd0aa(
                 Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps
             )
+           
+            lnd0aa_MDD = lnd0aa_MDD[0:-1,:]
+            multiplier = multiplier[0:-1,:]
+
             lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
             lnd0aa_MDD[lnd0aa_MDD == np.inf] = 0
             lnd0aa_MDD[torch.isnan(lnd0aa_MDD)] = 0
-
+            
             misfit = torch.sum(
-                multiplier * ((lnd0aa_MDD - self.lnd0aa.unsqueeze(1)) ** 2),
-                axis=0,
-            )
+                multiplier * ((lnd0aa_MDD - self.lnd0aa[0:-1].unsqueeze(1)) ** 2),axis=0,)
         
         elif self.stat.lower() == "lnd0aa_chisq":
             lnd0aa_MDD = calc_lnd0aa(
@@ -269,9 +271,12 @@ class DiffusionObjective:
                 lnd0aa_MDD = torch.unsqueeze(lnd0aa_MDD ,1)
             
             misfit = multiplier * ((torch.exp(lnd0aa_MDD) - torch.exp(self.lnd0aa.unsqueeze(1)))** 2/ self.Daa_uncertainty.unsqueeze(1))
-            nan_rows = (torch.isnan(misfit).any(dim=1)) | (torch.isinf(misfit).any(dim=1))
-            misfit = torch.sum(misfit[~nan_rows], axis=0)
-                
+            #nan_rows = (torch.isnan(misfit).any(dim=1)) | (torch.isinf(misfit).any(dim=1))
+            #misfit = torch.sum(misfit[~nan_rows], axis=0)
+            misfit[(torch.isnan(misfit).any(dim=1)) | (torch.isinf(misfit).any(dim=1))] = 0 
+            misfit = torch.sum(misfit,axis=0)
+
+
         return misfit * punishmentFlag
     
 

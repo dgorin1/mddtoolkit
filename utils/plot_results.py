@@ -100,17 +100,7 @@ def plot_results(
 
 
     # This is going to cause and error and Drew needs to fix
-    errors_for_plot = np.array(
-        pd.concat(
-            [
-                dataset["ln(D/a^2)-del"],
-                dataset["ln(D/a^2)+del"],
-            ],
-            axis=1,
-        ).T
-    )
-
-
+    errors_for_plot = np.array(pd.concat([dataset["ln(D/a^2)-del"], dataset["ln(D/a^2)-del"],],axis=1,).T)
 
     for i in range(ndom):
         

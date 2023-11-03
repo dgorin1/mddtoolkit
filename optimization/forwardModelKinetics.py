@@ -58,9 +58,13 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
 
         # Calculate f at each step
         Bt = Dtaa*torch.pi**2 # Use tabulation from XXXX to calculate
-        f[Bt <= 1.401] = 6/(torch.pi**(3/2))*(torch.pi**2*Dtaa[Bt <= 1.401])**(1/2) - (3/(torch.pi**2))*(torch.pi**2*Dtaa[Bt <= 1.401])
-        f[Bt > 1.401] = 1 - (6/(torch.pi**2))*torch.exp(-(torch.pi**2)*Dtaa[Bt > 1.401])
-
+   
+        #f[Bt <= 1.401] = 6/(torch.pi**(3/2))*(torch.pi**2*Dtaa[Bt <= 1.401])**(1/2) - (3/(torch.pi**2))*(torch.pi**2*Dtaa[Bt <= 1.401])
+        #f[Bt > 1.401] = 1 - (6/(torch.pi**2))*torch.exp(-(torch.pi**2)*Dtaa[Bt > 1.401])
+        
+        
+        f = 1 - (6/(torch.pi**2))*torch.exp(-(torch.pi**2)*Dtaa)
+        f[f < .85] = 6/(torch.pi**(3/2))*(torch.pi**2*Dtaa[f < 0.85])**(1/2) - (3/(torch.pi**2))*(torch.pi**2*Dtaa[f < .85])
 
     elif geometry == "plane sheet":
 
@@ -123,20 +127,12 @@ def calc_lnd0aa(sumf_MDD,diffti,geometry,extra_steps,added_steps):
         diffti = diffti[added_steps:]
 
     if geometry == "spherical":
-        Daa_MDD_a = torch.zeros(sumf_MDD.shape)
-        Daa_MDD_b = torch.zeros(sumf_MDD.shape)
-        Daa_MDD_c = torch.zeros(sumf_MDD.shape)
-        Daa_MDD_a[0] = ( (sumf_MDD[0]**2 - 0.**2 )*torch.pi/(36*(diffti[0])))
-
-
-        # Equation 5a for all other steps
 
         diffFi = torch.zeros(sumf_MDD.shape)
-        #diffFi[0] = sumf_MDD[0]
         diffFi = sumf_MDD[1:]-sumf_MDD[0:-1]
 
 
-        Daa_MDD_a[0] = ( (sumf_MDD[0]**2 - 0.**2 )*torch.pi/(36*(diffti[0])))
+    
 
 
    
