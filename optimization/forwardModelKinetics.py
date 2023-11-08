@@ -61,9 +61,6 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
         f[Bt <= 1.401] = 6/(torch.pi**(3/2))*(torch.pi**2*Dtaa[Bt <= 1.401])**(1/2) - (3/(torch.pi**2))*(torch.pi**2*Dtaa[Bt <= 1.401])
         f[Bt > 1.401] = 1 - (6/(torch.pi**2))*torch.exp(-(torch.pi**2)*Dtaa[Bt > 1.401])
         
-        
-        #f = 1 - (6/(torch.pi**2))*torch.exp(-(torch.pi**2)*Dtaa)
-        #f[f < .85] = 6/(torch.pi**(3/2))*(torch.pi**2*Dtaa[f < 0.85])**(1/2) - (3/(torch.pi**2))*(torch.pi**2*Dtaa[f < .85])
 
     elif geometry == "plane sheet":
 
@@ -79,7 +76,7 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
     # Renormalize everything by first calculating the fractional releases at each step, summing back up, 
     # and then dividing by the max released in each fraction. This simulates how we would have measured and calculated this in the lab.
     sumf_MDD = torch.sum(f_MDD,axis=1)
-    breakpoint()
+
     # If added steps are used, then we need to remove them and renormalize the results 
     # so that it appears that we hadn't measured the gas from the first X steps.
     if added_steps > 0:
@@ -101,6 +98,7 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
         # Then proceed with the normalization.
 
         normalization_factor = torch.max(torch.cumsum(newf,0),axis=0).values
+
         diffFi= newf/normalization_factor 
 
         # Resum the gas fractions into cumulative space that doesn't include the two added steps

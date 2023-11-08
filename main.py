@@ -12,7 +12,7 @@ from utils.organize_x import organize_x
 # get this file's directory
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-data_input = pd.read_csv(f"{dir_path}/data/input_KM95-15-Dh.csv")
+data_input = pd.read_csv(f"{dir_path}/data/input_KM95-15-Dc.csv")
 lnd0aa_bounds = (
     -5,
     50,
@@ -24,7 +24,7 @@ Ea_bounds = (
 # mineral_name = "kspar"
 time_add = [3600*5,111801600]# Add extra time in seconds
 temp_add = [40,21.11111]# Add extra time in degrees C
-sample_name = "KM95-15-Dh_CorrectButNoPunishment" # Sample name
+sample_name = "KM95-15-Dc_TEST" # Sample name
 max_domains_to_model = 8
 geometry = "spherical"  # options are "plane sheet", or "spherical". Spherical should be default.
 omit_value_indices = []  #For Dc I used [0,1,2,3,4,5]. For De, I used [0,1,2,3,4]. For Df, I used [0,1,2,3,4,5,6]. For Dg, I used [0,1,2]. For Dh, I used [0,1,2] Values you want to be ignored in your fit
@@ -40,13 +40,13 @@ misfit_stat_list = [
 ]  # This is a list of all the options. The user should just pick one.
 max_iters = 100000 # Often 30k is enough, but not always.
 iteration_repeats = 10  # Default should be 10, but user can set to any integer 1-?
-punish_degas_early = False #Default is true. Title for gui can be punish if modeled experiment fully degasses too early.
+punish_degas_early = True #Default is true. Title for gui can be punish if modeled experiment fully degasses too early.
 
 
 # Create dataset class for each associate package
 
 for misfit_stat in misfit_stat_list:
-    i = 1
+    i = 8
     counter = 0
     save_params = np.empty((max_domains_to_model - i+1, max_domains_to_model * 2 + 4))
     save_params.fill(np.NaN)

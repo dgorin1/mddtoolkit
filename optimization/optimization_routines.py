@@ -60,7 +60,7 @@ def diffEV_multiples(
         result = differential_evolution(
             objective,
             bounds,
-            disp=False,
+            disp=True,
             tol=0.0001,  
             maxiter=max_iters,
             constraints=nlc,
@@ -74,6 +74,7 @@ def diffEV_multiples(
         misfits.append(result.fun)
         print(f"misfit: {result.fun}")
         print(f"number of iterations: {result.nit}")
+        print(result.x)
         params.append(result.x)
 
         seed += 1
