@@ -12,7 +12,7 @@ from utils.organize_x import organize_x
 # get this file's directory
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-data_input = pd.read_csv(f"{dir_path}/data/input_8domSynthData_plane_sheet.csv")
+data_input = pd.read_csv(f"{dir_path}/data/input_KM95-15-Dh.csv")
 lnd0aa_bounds = (
     -5,
     50,
@@ -22,34 +22,32 @@ Ea_bounds = (
     500,
 )  # User should also be able to pick any number >0 for these bounds. List in kJ/mol
 # mineral_name = "kspar"
-time_add = []#[3600*5,140400000]  # Add extra time in seconds
-temp_add = []#[40,21.1111] # Add extra time in degrees C
-sample_name = "synthtest_planesheet" # Sample name
+time_add = [3600*5,111801600]# Add extra time in seconds
+temp_add = [40,21.11111]# Add extra time in degrees C
+sample_name = "KM95-15-Dh_CorrectButNoPunishment" # Sample name
 max_domains_to_model = 8
-geometry = "plane sheet"  # options are "plane sheet", or "spherical". Spherical should be default.
-omit_value_indices = [
-]  # Values you want to be ignored in your fit
+geometry = "spherical"  # options are "plane sheet", or "spherical". Spherical should be default.
+omit_value_indices = []  #For Dc I used [0,1,2,3,4,5]. For De, I used [0,1,2,3,4]. For Df, I used [0,1,2,3,4,5,6]. For Dg, I used [0,1,2]. For Dh, I used [0,1,2] Values you want to be ignored in your fit
 misfit_stat_list = [
-    
     "chisq",
     "percent_frac",
     "l1_frac_cum",
     "l1_frac",
     "l1_moles",
-    "l2_moles",
-    "l2_frac",
+    "lnd0aa_chisq",
     "lnd0aa",
-    "lnd0aa_chisq"
+
 ]  # This is a list of all the options. The user should just pick one.
-max_iters = 10000  # Often 30k is enough, but not always.
-iteration_repeats = 1  # Default should be 10, but user can set to any integer 1-?
-punish_degas_early = True #Default is true. Title for gui can be punish if modeled experiment fully degasses too early.
+max_iters = 100000 # Often 30k is enough, but not always.
+iteration_repeats = 10  # Default should be 10, but user can set to any integer 1-?
+punish_degas_early = False #Default is true. Title for gui can be punish if modeled experiment fully degasses too early.
 
 
 # Create dataset class for each associate package
 
 for misfit_stat in misfit_stat_list:
-    i = 8
+    i = 1
+    counter = 0
     save_params = np.empty((max_domains_to_model - i+1, max_domains_to_model * 2 + 4))
     save_params.fill(np.NaN)
     prev_misfit = 11**17
@@ -84,6 +82,8 @@ for misfit_stat in misfit_stat_list:
             max_iters=max_iters,
         )
 
+        params = organize_x(params, len(params), chop_fracs=True)
+
         plot_results(
             params,
             dataset,
@@ -94,7 +94,6 @@ for misfit_stat in misfit_stat_list:
         )
         print(sample_name)
 
-        params = organize_x(params, len(params), chop_fracs=False)
         print(params)
 
         if i < max_domains_to_model:
@@ -108,10 +107,12 @@ for misfit_stat in misfit_stat_list:
             array_w_nans = params
         add_num_doms = np.append(i, array_w_nans)
         params_to_add = np.append(add_num_doms, misfit_val)
-        save_params[i-1, 0 : len(params_to_add)] = params_to_add
+
+        save_params[counter, 0 : len(params_to_add)] = params_to_add
 
         save_results(
             sample_name=sample_name, misfit_stat=misfit_stat, params=save_params
         )
         misfit = misfit_val
-        i = i + 1
+        i += 1
+        counter += 1

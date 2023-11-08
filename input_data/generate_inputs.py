@@ -21,8 +21,8 @@ def generate_inputs(
         geometry (str, optional): the geometry of the sample. Defaults to "spherical".
     """
 
-    expData = pd.read_csv(nameOfInputCSVFile, header=None)
 
+    expData = pd.read_csv(nameOfInputCSVFile, header=None)
     # If extra columns get read in, trim them down to just 3
     if expData.shape[1] >= 4:
         expData = expData.loc[:, 1:4]
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     # generate some results
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    nameOfInputCSVFile = f"{dir_path}/8DomSynthData_plane_sheet.csv"
-    nameOfExperimentalResultsFile = f"{dir_path}/input_8DomSynthData_plane_sheet.csv"
-    geometry = "plane sheet"
+    nameOfInputCSVFile = f"{dir_path}/KM95-15-Dh.csv"
+    nameOfExperimentalResultsFile = f"{dir_path}/input_KM95-15-Dh.csv"
+    geometry = "spherical"
     generate_inputs(nameOfInputCSVFile, nameOfExperimentalResultsFile, geometry)

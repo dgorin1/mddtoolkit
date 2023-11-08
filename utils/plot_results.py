@@ -5,6 +5,7 @@ import pandas as pd
 from utils.get_plot_name import get_plot_name
 from optimization.forwardModelKinetics import forwardModelKinetics
 from optimization.forwardModelKinetics import calc_lnd0aa
+from utils.organize_x import organize_x
 
 def plot_results(
     params,
@@ -77,14 +78,13 @@ def plot_results(
 
     n_plots = 4
 
-
-
     # Calculate weights proportional to the gas fractions if numdom > 1
     if ndom > 1:
         fracs = params[ndom + 1 :]
         fracs = torch.concat(
             (fracs, 1 - torch.sum(fracs, axis=0, keepdim=True)), axis=-1
         )
+
         if ndom <= 6:
             frac_weights = fracs *(ndom+5) 
         else:
@@ -103,16 +103,13 @@ def plot_results(
     errors_for_plot = np.array(pd.concat([dataset["ln(D/a^2)-del"], dataset["ln(D/a^2)-del"],],axis=1,).T)
 
     for i in range(ndom):
-        
-        # Calculate a line representing each domain
-        D = np.log(
-            np.exp(params[i + 1])
-            * np.exp((-params[0]) / (R * (TC + 273.15)))
-        )
 
+        # Calculate a line representing each domain
+        D = params[i+1]-params[0]/R*(1/(TC[objective.added_steps:]+273.15))
+        print(params[i+1])
         # Plot each line
         axes[0, 0].plot(
-            np.linspace(min(T_plot), max(T_plot), 1000),
+            np.linspace(min(10000/(TC[objective.added_steps:]+273.15)), max(10000/(TC[objective.added_steps:]+273.15)), 1000),
             np.linspace(max(D), min(D), 1000),
             "--",
             linewidth=frac_weights[i],
@@ -243,13 +240,14 @@ def plot_results(
 
     if n_plots == 4:
         # Calculate reference law results
-
         # Slope
         m = params[0]/83.14 #Activation energy (kJ/mol) / gas constant
-  
-        resid_exp = dataset["ln(D/a^2)"] - (-m.item() * T_plot + params[1].item())
+        
+        lnd0aa_one_dom = np.array(np.log(np.exp(params[1])* np.exp((-params[0]) / (R * (TC[objective.added_steps:] + 273.15)))))
+        resid_exp = dataset["ln(D/a^2)"] - lnd0aa_one_dom
 
-        resid_model = np.array(lnd0aa_MDD.ravel()) - (-m.item() *T_plot + params[1].item())
+        resid_model = np.array(lnd0aa_MDD.ravel()) - lnd0aa_one_dom
+
     
         axes[0, 1].plot(data[0] * 100, 
                         resid_exp, 'o', markersize=12, 

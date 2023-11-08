@@ -1,22 +1,29 @@
-
 from optimization.forwardModelKinetics import forwardModelKinetics
 import torch as torch
 import pandas as pd
 import os
 import numpy as np
+from optimization.forwardModelKinetics import calc_lnd0aa
+from input_data.calculate_experimental_results import D0calc_MonteCarloErrors
+from input_data.generate_inputs import generate_inputs
+from input_data.dataset import Dataset
+
 
 # get this file's directory
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-input = pd.read_csv(f"{dir_path}/data/input_8DomSynthData_spherical.csv")
-
+input = pd.read_csv(f"{dir_path}/data/input_8DomSynthData_spherical.csv") # Doesn't matter, just pulling TC and THR from this.
+output = f"{dir_path}/data/spherical_test.csv"
+output2 = f"{dir_path}/data/spherical_test_results.csv"
+geometry = "spherical"
 TC = input.TC 
 thr = input.thr
 
-
+# Kinetics
 kinetics = torch.tensor([2.301827982315843997e+02, 2.695453701006638170e+01,	2.399562245075363975e+01,	2.162033080439059063e+01,	2.005857470165684120e+01,	1.840672131604174666e+01,	1.441347501664621511e+01,	1.146143697456085064e+01,	7.403164238243396866e+00 ,3.407813798677972184e-02,	6.168645862319671602e-02,	5.323458631337435465e-02,	3.165096967255043303e-02	,2.695325102213830260e-02,	2.569035505844752265e-01,	3.566193305741533481e-01]).T
-temp = forwardModelKinetics(kinetics,torch.tensor(thr*3600),torch.tensor(TC),"spherical",)
-
+temp = forwardModelKinetics(kinetics,torch.tensor(thr*3600),torch.tensor(TC),geometry)
+ 
+ #Fractional uncertainty
 uncertainty = torch.tensor([3.9884E-02,
 5.2077E-02,
 1.1747E-02,
@@ -67,9 +74,18 @@ moles = np.array((temp[0][1:]-temp[0][0:-1]).ravel().tolist())
 moles = np.append(temp[0][0].item(),moles)
 moles = moles*total_moles
 #moles = temp[0]*total_moles
-breakpoint()
-moles_uncertainty = moles*np.array(uncertainty)
 
+moles_uncertainty = moles*np.array(uncertainty)
+lndaa_out = calc_lnd0aa(temp[0], diffti = torch.tensor(thr*3600), geometry = geometry, added_steps=0, extra_steps=False)
 data_out = pd.DataFrame({'TC': TC, 'thr': thr, 'M': moles.ravel(), 'delM':moles_uncertainty})
 
-data_out.to_csv(f"{dir_path}/data/spherical_test.csv")
+
+
+data_out.to_csv(f"{output}", header=False)
+
+
+test = generate_inputs(f"{output}", f"{output2}", geometry =geometry)
+breakpoint()
+
+
+

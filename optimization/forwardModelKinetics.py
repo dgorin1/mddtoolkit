@@ -58,13 +58,12 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
 
         # Calculate f at each step
         Bt = Dtaa*torch.pi**2 # Use tabulation from XXXX to calculate
-   
-        #f[Bt <= 1.401] = 6/(torch.pi**(3/2))*(torch.pi**2*Dtaa[Bt <= 1.401])**(1/2) - (3/(torch.pi**2))*(torch.pi**2*Dtaa[Bt <= 1.401])
-        #f[Bt > 1.401] = 1 - (6/(torch.pi**2))*torch.exp(-(torch.pi**2)*Dtaa[Bt > 1.401])
+        f[Bt <= 1.401] = 6/(torch.pi**(3/2))*(torch.pi**2*Dtaa[Bt <= 1.401])**(1/2) - (3/(torch.pi**2))*(torch.pi**2*Dtaa[Bt <= 1.401])
+        f[Bt > 1.401] = 1 - (6/(torch.pi**2))*torch.exp(-(torch.pi**2)*Dtaa[Bt > 1.401])
         
         
-        f = 1 - (6/(torch.pi**2))*torch.exp(-(torch.pi**2)*Dtaa)
-        f[f < .85] = 6/(torch.pi**(3/2))*(torch.pi**2*Dtaa[f < 0.85])**(1/2) - (3/(torch.pi**2))*(torch.pi**2*Dtaa[f < .85])
+        #f = 1 - (6/(torch.pi**2))*torch.exp(-(torch.pi**2)*Dtaa)
+        #f[f < .85] = 6/(torch.pi**(3/2))*(torch.pi**2*Dtaa[f < 0.85])**(1/2) - (3/(torch.pi**2))*(torch.pi**2*Dtaa[f < .85])
 
     elif geometry == "plane sheet":
 
@@ -80,7 +79,7 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
     # Renormalize everything by first calculating the fractional releases at each step, summing back up, 
     # and then dividing by the max released in each fraction. This simulates how we would have measured and calculated this in the lab.
     sumf_MDD = torch.sum(f_MDD,axis=1)
-
+    breakpoint()
     # If added steps are used, then we need to remove them and renormalize the results 
     # so that it appears that we hadn't measured the gas from the first X steps.
     if added_steps > 0:
@@ -100,6 +99,7 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
 
         # Find the largest value in the newf, which will be used to renormalize the values.
         # Then proceed with the normalization.
+
         normalization_factor = torch.max(torch.cumsum(newf,0),axis=0).values
         diffFi= newf/normalization_factor 
 
@@ -114,13 +114,14 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
         pass
     sumf_MDD[:,nan_mask]= 0.0
 
-
+    breakpoint()
     return sumf_MDD,punishmentFlag
     
 
 
-def calc_lnd0aa(sumf_MDD,diffti,geometry,extra_steps,added_steps):
+def calc_lnd0aa(sumf_MDD,diffti,geometry,extra_steps: bool = False,added_steps: int = 0):
 
+    # diffti is actually self.tsec (so noncumulative time in seconds)
     if len(sumf_MDD.size())>1: #if there are multiple entries
         diffti = diffti.unsqueeze(1).repeat(1,sumf_MDD.size()[1])
     if extra_steps == True:
@@ -135,7 +136,7 @@ def calc_lnd0aa(sumf_MDD,diffti,geometry,extra_steps,added_steps):
     
 
 
-   
+        # This might be it.. hold on..
         if len(diffti.shape) == 1:
             cumtsec = torch.cumsum(diffti,0)
         else:
@@ -178,7 +179,6 @@ def calc_lnd0aa(sumf_MDD,diffti,geometry,extra_steps,added_steps):
         Daa_MDD = usea*DR2_a + useb*DR2_b
         
     lnd0aa_MDD = torch.log(Daa_MDD)
-
 
     return lnd0aa_MDD
 

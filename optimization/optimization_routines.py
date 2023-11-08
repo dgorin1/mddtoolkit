@@ -60,13 +60,14 @@ def diffEV_multiples(
         result = differential_evolution(
             objective,
             bounds,
-            disp=True,
+            disp=False,
             tol=0.0001,  
             maxiter=max_iters,
             constraints=nlc,
             vectorized=True,
             updating="deferred",
             seed=seed,
+            #popsize = 200
 
         )
 

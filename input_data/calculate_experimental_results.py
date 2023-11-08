@@ -2,7 +2,7 @@ import math
 import numpy as np
 import pandas as pd
 import math as math
-
+import torch as torch
 
 def D0calc_MonteCarloErrors(expdata,geometry:str = "spherical"):
     # Function for calculating D0 and D/a^2 from experimental data. Input should be a
@@ -12,6 +12,7 @@ def D0calc_MonteCarloErrors(expdata,geometry:str = "spherical"):
     # M (measured concentration in cps, atoms, or moles), delM (same units)
     
     # Calculate diffusivities from the previous experiment
+
     TC = expdata.loc[:,"TC"].array
     thr = expdata.loc[:,"thr"].array
     M = expdata.loc[:,"M"].array
@@ -49,7 +50,6 @@ def D0calc_MonteCarloErrors(expdata,geometry:str = "spherical"):
     #If the geometry is spherical...
     if geometry == "spherical":
         #If geometry is spherical, then a third DR2 vector is needed.
-        DR2_c = np.zeros([nstep])
         # use equations 5a through c from Fechtig and Kalbitzer for spherical geometry
         # Fechtig and Kalbitzer Equation 5a, for cumulative gas fractions up to 10%
         # special case when i = 1; need to insert 0 for previous amount released
@@ -61,8 +61,10 @@ def D0calc_MonteCarloErrors(expdata,geometry:str = "spherical"):
         # Equation 5a for all other steps
         # Updated textbook equations from reiners page 90
         #Fi is cumulative F at each step i, cumtsec is cumulative t in seconds, diffFi is differential Fi at each step, so length is len(Fi)-1, diffti is analagously length n-1
+        
         DR2_a[0] = 1/((math.pi**2)*cumtsec[0])*(2*math.pi - (math.pi**2/3)*Fi[0] - 2*math.pi*np.sqrt(1-(math.pi/3)*Fi[0]))
         DR2_a[1:] = (1/(math.pi**2*diffti)) * (-math.pi**2/3 * diffFi - 2*math.pi*( np.sqrt(1-(math.pi/3)*Fi[1:]) - np.sqrt(1-(math.pi/3)*Fi[0:-1])))
+        
         DR2_b[0] = -1/(math.pi**2* cumtsec[0]) * np.log((1-Fi[0]) * (math.pi**2/6))
         DR2_b[1:] = -1/(math.pi**2*diffti) * np.log( (1-Fi[1:])/(1-Fi[0:-1]))
 
@@ -146,7 +148,7 @@ def D0calc_MonteCarloErrors(expdata,geometry:str = "spherical"):
         else: # If first release is > 60% of gas
             DR2_uncert[0] = (4/(math.pi^2*diffti[0]*np.sum(M)))*np.sqrt(delM[0]**2+ (diffFi[0]/(1-diffFi[0]))**2 * (np.sum(delM[2:]**2)))
         
-        
+
     return pd.DataFrame({"Tplot": Tplot,"Fi": Fi.ravel(),"Daa": DR2,"Daa uncertainty": DR2_uncert.ravel(), \
                             "ln(D/a^2)": np.log(DR2),"ln(D/a^2)-del": DR2_uncert.ravel()/DR2, \
                             "ln(D/a^2)+del": DR2_uncert.ravel()/DR2 })
