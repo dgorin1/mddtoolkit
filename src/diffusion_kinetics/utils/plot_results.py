@@ -8,14 +8,15 @@ from diffusion_kinetics.optimization import (
     forwardModelKinetics, 
     calc_lnd0aa
 )
+from diffusion_kinetics.pipeline import PipelineOutput
 import os
 
 def plot_results(
     params,
     dataset,
     objective,
+    out_struct:PipelineOutput,
     reference_law=[],
-    misfit_stat: str = "",
     quiet=False,
 ):
     """Plot the results of the optimization.
@@ -24,10 +25,8 @@ def plot_results(
         - params (torch.tensor): The parameters from the optimization.
         - dataset (Dataset): The dataset for the optimization.
         - objective (DiffusionObjective): The objective function for the optimization.
+        - output_path (str): The path to save the plot to.
         - reference_law (list, optional): The reference law for the optimization. Defaults to [].
-        - sample_name (str, optional): The name of the sample. Defaults to "".
-        - moves_type (str, optional): _description_. Defaults to "".
-        - misfit_stat (str, optional): _description_. Defaults to "".
         - quiet (bool, optional): Whether to show the plot. Defaults to False.
     """
     # Params is a vector X of the input parameters
@@ -75,15 +74,6 @@ def plot_results(
     lnd0aa_MDD = calc_lnd0aa(
                         Fi_MDD, objective.tsec, objective.geometry, objective.extra_steps, objective.added_steps
                     )
-    
-    # data = calc_arrhenius(
-    #     params,
-    #     tsec,
-    #     TC,
-    #     objective.geometry,
-    #     objective.extra_steps,
-    #     objective.added_steps,
-    # )
 
     data = (Fi_MDD,lnd0aa_MDD)
 
@@ -116,8 +106,6 @@ def plot_results(
             axis=1,
         ).T
     )
-
-    # plt.subplot(n_plots,1,1)
 
     for i in range(ndom):
        
@@ -156,13 +144,11 @@ def plot_results(
             np.exp(reference_law[1])
             * np.exp((-reference_law[0]) / (R * (dataset["TC"] + 273.15)))
         )
-    #     breakpoint()
-    #     plt.plot(np.linspace(min(T_plot),max(T_plot),1000), np.linspace(max(ref),min(ref),1000), '--k')
+        
     axes[0, 0].set_ylabel("ln(D/a^2)")
     axes[0, 0].set_xlabel("10000/T (K)")
     axes[0, 0].set_box_aspect(1)
 
-    # plt.subplot(n_plots,1,2)
     Fi_MDD = np.array(data[0])
     temp = Fi_MDD[1:] - Fi_MDD[0:-1]
     Fi_MDD = np.insert(temp, 0, Fi_MDD[0])
@@ -181,11 +167,9 @@ def plot_results(
     axes[1, 0].plot(range(0, len(T_plot)), Fi_MDD, "k-o", markersize=3, zorder=10)
     axes[1, 0].set_xlabel("step number")
     axes[1, 0].set_ylabel("Fractional Release (%)")
-    # axes[1].axis('square')
     axes[1, 0].set_box_aspect(1)
 
     if moles_calc == True:
-        # axes[2].subplot(n_plots,1,3)
         axes[1, 1].errorbar(
             range(0, len(T_plot)),
             dataset["M"],
@@ -200,22 +184,18 @@ def plot_results(
         axes[1, 1].set_xlabel("step number")
         axes[1, 1].set_ylabel("Atoms Released at Each Step")
         axes[1, 1].set_box_aspect(1)
-        # axes[2].axis('square')
 
     if n_plots == 4:
         # Calculate reference law results
 
         r_r0 = 0.5 * (ref - dataset["ln(D/a^2)"])
-        # axes[3].subplot(n_plots,1,n_plots)
         axes[0, 1].plot(data[0] * 100, r_r0, "b-o", markersize=4)
         axes[0, 1].set_xlabel("Cumulative 3He Release (%)")
         axes[0, 1].set_ylabel("log(r/r_0)")
         axes[0, 1].set_box_aspect(1)
     plt.tight_layout
-    
-    file_name = os.path.join(misfit_stat, f"{ndom}domains.pdf")
 
-    plt.savefig(file_name)
+    plt.savefig(out_struct.get_plot_path(ndom))
 
     if quiet == False:
         plt.show()

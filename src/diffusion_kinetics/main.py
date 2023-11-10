@@ -62,7 +62,7 @@ for misfit_stat in misfit_stat_list:
         domains_to_model = i
         print(f"{misfit_stat} with {domains_to_model} domains")
 
-        dataset = Dataset("diffEV", data_input)
+        dataset = Dataset(data_input)
 
         objective = DiffusionObjective(
             dataset,
@@ -86,14 +86,13 @@ for misfit_stat in misfit_stat_list:
             max_iters=max_iters,
         )
 
-        plot_results(
-            params,
-            dataset,
-            objective,
-            sample_name=sample_name,
-            quiet=True,
-            misfit_stat=misfit_stat,
-        )
+        # plot_results(
+        #     params,
+        #     dataset,
+        #     objective,
+        #     quiet=True,
+        #     misfit_stat=misfit_stat,
+        # )
         print(sample_name)
 
         params = organize_x(params, len(params), chop_fracs=False)
@@ -113,8 +112,8 @@ for misfit_stat in misfit_stat_list:
 
         save_params[i - 1, 0 : len(params_to_add)] = params_to_add
 
-        save_results(
-            sample_name=sample_name, misfit_stat=misfit_stat, params=save_params
-        )
+        # save_results(
+        #     sample_name=sample_name, misfit_stat=misfit_stat, params=save_params
+        # )
         misfit = misfit_val
         i = i + 1

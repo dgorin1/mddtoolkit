@@ -1,21 +1,30 @@
 import pandas as pd
 import numpy as np
+import yaml
 import torch
-from diffusion_kinetics.pipeline import PipelineConfig
+from diffusion_kinetics.pipeline import PipelineConfig, PipelineOutput
 from diffusion_kinetics.optimization import (
     Dataset, 
     DiffusionObjective,
     diffEV_multiples,
 )
 from diffusion_kinetics.utils.plot_results import plot_results
+from diffusion_kinetics.utils.organize_x import organize_x
+from diffusion_kinetics.utils.save_results import save_results
+from typing import Union
 
 def run_pipeline(
     input_path:str, 
     output_path:str, 
-    config:dict={}
+    config:Union[str, dict, PipelineConfig]=PipelineConfig(),
 ):
-    config = PipelineConfig(**config)
+    if not isinstance(config, PipelineConfig):
+        config = PipelineConfig.load(config)
     dataset = Dataset(pd.read_csv(input_path))
+    pipe_out = PipelineOutput(output_path)
+    
+    # save config to output
+    config.to_yaml(pipe_out.config_path)
     
     for misfit_stat in config.misfit_stat_list:
         save_params = np.empty((config.max_domains_to_model - 1, config.max_domains_to_model * 2 + 4))
@@ -53,16 +62,38 @@ def run_pipeline(
                 params,
                 dataset,
                 objective,
-                sample_name=sample_name,
+                pipe_out,
                 quiet=True,
-                misfit_stat=misfit_stat,
             )
-            print(sample_name)
+            
+            params = organize_x(params, len(params), chop_fracs=False)
+            print(params)
+
+            if i < config.max_domains_to_model:
+                num_nans_insert = config.max_domains_to_model - i
+                nan_insert = np.empty((num_nans_insert))
+                nan_insert.fill(np.NaN)
+                array_w_nans = np.insert(params, [2 + i], nan_insert, axis=0)
+                array_w_nans = np.concatenate((array_w_nans, nan_insert), axis=0)
+
+            else:
+                array_w_nans = params
+            add_num_doms = np.append(i, array_w_nans)
+            params_to_add = np.append(add_num_doms, misfit_val)
+
+            save_params[i - 1, 0 : len(params_to_add)] = params_to_add
+
+            save_results(
+                ndom=domains_to_model, params=save_params, pipe_out=pipe_out
+            )
+            misfit = misfit_val
+            i = i + 1
                 
         
 
-if __name__ == "__main__":
+if __name__ == "__main__":    
     run_pipeline(
-        "/Users/josh/repos/diffusion_code_final/public/data/input_8DomSynthDataNoisyM3_plane_sheet.csv",
-        "/Users/josh/repos/diffusion_code_final/public/test_new_output_path"
+        "/Users/josh/repos/diffusion_code_final/example/data/input_8DomSynthDataNoisyM3_plane_sheet.csv",
+        "/Users/josh/repos/diffusion_code_final/example/output",
+        "/Users/josh/repos/diffusion_code_final/example/data/config.yaml"
     )

@@ -6,10 +6,9 @@ from torch import torch
 import numpy as np
 from diffusion_kinetics.optimization import (
     Dataset,
-    DiffusionObjective,
-    conHe_Param
+    DiffusionObjective
 )
-
+from diffusion_kinetics.optimization.conHe_Param import conHe_Param
 
 def diffEV_multiples(
     objective,

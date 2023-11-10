@@ -1,7 +1,6 @@
 numpy
 torch
 scipy
-scipy[optimize]
 pandas
 matplotlib
 pyyaml

@@ -1,4 +1,5 @@
 from typing import Union
+import yaml
 
 class PipelineConfig:
     """
@@ -61,7 +62,34 @@ class PipelineConfig:
         self.punish_degas_early = punish_degas_early
         self._assert_is_valid()
         
+    def __repr__(self):
+        attrs = [
+            f"    {attr}={getattr(self, attr)},\n"
+            for attr in dir(self)
+            if not callable(getattr(self, attr)) and not attr.startswith("__")
+        ]
+        return f"PipelineConfig(\n{''.join(attrs)})"
     
+    def to_dict(self):
+        # get all the attributes that are not callable or private
+        return { attr:getattr(self, attr) for attr in dir(self) if not callable(getattr(self, attr)) and not attr.startswith("__") }
+        
+    def to_yaml(self, output_path):
+        yaml.dump(self.to_dict(), open(output_path, "w"))
+        
+    @staticmethod
+    def from_yaml(input_path):
+        return PipelineConfig(**yaml.load(open(input_path, "r"), Loader=yaml.FullLoader))
+    
+    @staticmethod
+    def load(input:Union[str, dict]):
+        if isinstance(input, str):
+            return PipelineConfig.from_yaml(input)
+        elif isinstance(input, dict):
+            return PipelineConfig(**input)
+        else:
+            raise TypeError("input must be a str or dict")
+        
     def _assert_is_valid(self):
         # assert all the types are valid
         assert isinstance(self.lnd0aa_bounds,list), "lnd0aa_bounds must be a list"
@@ -88,12 +116,3 @@ class PipelineConfig:
         assert all([isinstance(stat,str) for stat in self.misfit_stat_list]), "misfit_stat_list must be a list of strings"
         assert self.max_iters > 0, "max_iters must be greater than 0"
         assert self.iteration_repeats > 0, "iteration_repeats must be greater than 0"
-        
-    def __repr__(self):
-        attrs = [
-            f"    {attr}={getattr(self, attr)},\n"
-            for attr in dir(self)
-            if not callable(getattr(self, attr)) and not attr.startswith("__")
-        ]
-        return f"PipelineConfig(\n{''.join(attrs)})"
-
