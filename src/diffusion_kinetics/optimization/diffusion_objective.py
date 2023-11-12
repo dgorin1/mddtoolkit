@@ -46,6 +46,7 @@ class DiffusionObjective:
         # self.omitValueIndices = jnp.array(omitValueIndices)
         self.stat = stat
         time = self.dataset._thr * 3600
+
         if time_add.numel() > 0:
             self.tsec = torch.cat([time_add, time])
             self._TC = torch.cat([temp_add, self.dataset._TC])

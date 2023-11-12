@@ -71,18 +71,22 @@ class PipelineConfig:
         return f"PipelineConfig(\n{''.join(attrs)})"
     
     def to_dict(self):
+        """ function to convert the config to a dict """
         # get all the attributes that are not callable or private
         return { attr:getattr(self, attr) for attr in dir(self) if not callable(getattr(self, attr)) and not attr.startswith("__") }
         
     def to_yaml(self, output_path):
+        """ function to write the config to a yaml file """
         yaml.dump(self.to_dict(), open(output_path, "w"))
         
     @staticmethod
     def from_yaml(input_path):
+        """ function to load the config from a yaml file """
         return PipelineConfig(**yaml.load(open(input_path, "r"), Loader=yaml.FullLoader))
     
     @staticmethod
     def load(input:Union[str, dict]):
+        """ function to load the config from a yaml file or dict """
         if isinstance(input, str):
             return PipelineConfig.from_yaml(input)
         elif isinstance(input, dict):
@@ -91,6 +95,7 @@ class PipelineConfig:
             raise TypeError("input must be a str or dict")
         
     def _assert_is_valid(self):
+        """ assert that the config is valid """
         # assert all the types are valid
         assert isinstance(self.lnd0aa_bounds,list), "lnd0aa_bounds must be a list"
         assert isinstance(self.ea_bounds,list), "ea_bounds must be a list"

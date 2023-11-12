@@ -12,6 +12,7 @@ from diffusion_kinetics.utils.plot_results import plot_results
 from diffusion_kinetics.utils.organize_x import organize_x
 from diffusion_kinetics.utils.save_results import save_results
 from typing import Union
+from  diffusion_kinetics.optimization import DiffusionOptimizer
 
 def run_pipeline(
     input_path:str, 
@@ -22,7 +23,9 @@ def run_pipeline(
         config = PipelineConfig.load(config)
     dataset = Dataset(pd.read_csv(input_path))
     pipe_out = PipelineOutput(output_path)
-    
+    optimizer = DiffusionOptimizer(dataset, config)
+    optimizer.run(misfit_stat="chi2", ndom=1)
+    breakpoint()
     # save config to output
     config.to_yaml(pipe_out.config_path)
     

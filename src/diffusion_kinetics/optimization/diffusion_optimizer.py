@@ -4,17 +4,16 @@ from diffusion_kinetics.pipeline import PipelineConfig
 from scipy.optimize import differential_evolution, NonlinearConstraint
 from diffusion_kinetics.optimization.conHe_Param import conHe_Param
 import numpy as np
+import torch
 
 class DiffusionOptimizer:
     def __init__(
         self, 
         dataset:Dataset, 
         config:PipelineConfig, 
-        nlc:list=NonlinearConstraint(conHe_Param, lb=[0], ub=[np.inf])
     ):
         self.dataset = dataset
         self.config = config
-        self.nlc = nlc
         
     def run(self, misfit_stat:str, ndom:int, seed:int=0):
         """
@@ -24,7 +23,8 @@ class DiffusionOptimizer:
             - misfit_stat (str): The misfit statistic to use.
             - ndom (int): The number of domains to use.
         """
-        bounds = self.config.generate_bounds(ndom)
+        bounds = self._construct_bounds(misfit_stat, ndom)
+        nlcs = self._construct_nlcs(ndom)
         
         objective = DiffusionObjective(
             self.dataset, 
@@ -42,10 +42,49 @@ class DiffusionOptimizer:
             disp=False,
             tol=0.0001,  # zeros seems like a good number from testing. slow, but useful.
             maxiter=self.config.iteration_repeats,
-            constraints=self.nlc,
+            constraints=nlcs,
             vectorized=True,
             updating="deferred",
             seed=seed,
         )
         
         return result
+    
+    def _construct_bounds(self, stat:str, ndom:int):
+        if (
+            stat.lower() == "chisq"
+            or stat.lower() == "l2_moles"
+            or stat.lower() == "l1_moles"
+        ):
+            moles = True
+        else:
+            moles = False
+
+        frac_bounds = (0, 1)
+        mole_bound = tuple((
+                sum(self.dataset.M) - 1 * torch.sqrt(sum(torch.tensor(self.dataset.delM) ** 2)),
+                sum(self.dataset.M) + 1 * torch.sqrt(sum(torch.tensor(self.dataset.delM) ** 2)),
+            )
+        )
+
+        if ndom == 1:
+            if moles == True:
+                return [mole_bound, self.config.ea_bounds, self.config.lnd0aa_bounds]
+            else:
+                return [self.config.ea_bounds, self.config.lnd0aa_bounds]
+        elif ndom > 1:
+            if moles == True:
+                return (
+                    [mole_bound, self.config.ea_bounds]
+                    + ndom * [self.config.lnd0aa_bounds]
+                    + (ndom - 1) * [frac_bounds]
+                )
+            else:
+                return [self.config.ea_bounds] + ndom * [self.config.lnd0aa_bounds] + (ndom - 1) * [frac_bounds]
+    
+       
+    def _construct_nlcs(self, ndom:int):
+        if ndom > 1:
+            return NonlinearConstraint(conHe_Param, lb=[0], ub=[np.inf])
+        else:
+            return []
