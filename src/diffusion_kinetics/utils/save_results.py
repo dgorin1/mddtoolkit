@@ -14,10 +14,6 @@ def save_results(
         - params (list, optional): The parameters from the optimization. Defaults to [].
         - moves_type (str, optional): The type of moves used in the optimization. Defaults to "".
     """
-
     name = pipe_out.get_results_path(ndom)
-
     with open(name, "w", newline="") as file:
-        # writer = csv.writer(file)
-        # writer.writerow(np.append(params,misfit))
         np.savetxt(file, params, delimiter=",")
