@@ -112,7 +112,6 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
         pass
     sumf_MDD[:,nan_mask]= 0.0
 
-    breakpoint()
     return sumf_MDD,punishmentFlag
     
 
