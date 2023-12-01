@@ -42,14 +42,14 @@ misfit_stat_list = [
     "lnd0aa_chisq"
 ]  # This is a list of all the options. The user should just pick one.
 max_iters = 100000  # Often 30k is enough, but not always.
-iteration_repeats = 10  # Default should be 10, but user can set to any integer 1-?
+iteration_repeats = 1  # Default should be 10, but user can set to any integer 1-?
 punish_degas_early = True #Default is true. Title for gui can be punish if modeled experiment fully degasses too early.
 
 
 # Create dataset class for each associate package
 
 for misfit_stat in misfit_stat_list:
-    i = 1
+    i = 6
     save_params = np.empty((max_domains_to_model - i+1, max_domains_to_model * 2 + 4))
     save_params.fill(np.NaN)
     prev_misfit = 11**17

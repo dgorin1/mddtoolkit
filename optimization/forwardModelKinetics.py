@@ -92,8 +92,10 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
         
         # Calculate a punishment flag if the experiment degassed fully before the end of the experiment.
         # If true, then you will lose the ability to notice that after we re-normalize. 
+        punishmentFlag2 = sumf_MDD[added_steps-1,:] > 0.9
         punishmentFlag = torch.round(sumf_MDD[-1,:],decimals = 3) < 1
-
+        
+        print(sumf_MDD[1,0])
         # Find the largest value in the newf, which will be used to renormalize the values.
         # Then proceed with the normalization.
         normalization_factor = torch.max(torch.cumsum(newf,0),axis=0).values
@@ -110,8 +112,8 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
         pass
     sumf_MDD[:,nan_mask]= 0.0
 
-
-    return sumf_MDD,punishmentFlag
+  
+    return sumf_MDD,punishmentFlag,punishmentFlag2
     
 
 

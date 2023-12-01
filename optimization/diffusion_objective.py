@@ -124,7 +124,7 @@ class DiffusionObjective:
 
         # If the mineral is diffusive enough that we're correcting for laboratory storage and irradiation:
         # if self.extra_steps == True:
-        Fi_MDD, punishmentFlag = forwardModelKinetics(
+        Fi_MDD, punishmentFlag, punishmentFlag2 = forwardModelKinetics(
             X,
             self.tsec,
             self._TC,
@@ -271,8 +271,8 @@ class DiffusionObjective:
             misfit = multiplier * ((torch.exp(lnd0aa_MDD) - torch.exp(self.lnd0aa.unsqueeze(1)))** 2/ self.Daa_uncertainty.unsqueeze(1))
             nan_rows = (torch.isnan(misfit).any(dim=1)) | (torch.isinf(misfit).any(dim=1))
             misfit = torch.sum(misfit[~nan_rows], axis=0)
-                
-        return misfit * punishmentFlag
+
+        return misfit * punishmentFlag + punishmentFlag2*10**10
     
 
    

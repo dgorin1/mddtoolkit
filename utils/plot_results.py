@@ -59,7 +59,7 @@ def plot_results(
         tsec = objective.tsec
 
     # Calculate the cumulative fractions from the MDD model
-    Fi_MDD, punishmentFlag = forwardModelKinetics(params,
+    Fi_MDD, punishmentFlag, punishmentFlag2 = forwardModelKinetics(params,
                                      tsec, 
                                      TC, 
                                      geometry = objective.geometry,
