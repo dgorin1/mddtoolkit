@@ -41,7 +41,6 @@ class DiffusionObjective:
         self.total_moles_del = torch.sqrt(
             torch.sum(torch.tensor(self.dataset.delM) ** 2)
         )
-
         
         self.stat = stat
         time = self.dataset._thr * 3600
