@@ -41,6 +41,7 @@ class DiffusionObjective:
         self.total_moles_del = torch.sqrt(
             torch.sum(torch.tensor(self.dataset.delM) ** 2)
         )
+
         
         self.stat = stat
         time = self.dataset._thr * 3600
@@ -123,7 +124,7 @@ class DiffusionObjective:
 
         # If the mineral is diffusive enough that we're correcting for laboratory storage and irradiation:
         # if self.extra_steps == True:
-        Fi_MDD, punishmentFlag, punishmentFlag2 = forwardModelKinetics(
+        Fi_MDD, punishmentFlag, punishmentFlag2, dont_need = forwardModelKinetics(
             X,
             self.tsec,
             self._TC,

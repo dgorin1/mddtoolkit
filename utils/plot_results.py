@@ -59,12 +59,13 @@ def plot_results(
         tsec = objective.tsec
 
     # Calculate the cumulative fractions from the MDD model
-    Fi_MDD, punishmentFlag, punishmentFlag2 = forwardModelKinetics(params,
+    Fi_MDD, punishmentFlag, punishmentFlag2, gas_during_storage = forwardModelKinetics(params,
                                      tsec, 
                                      TC, 
                                      geometry = objective.geometry,
                                      added_steps=objective.added_steps)
-    
+
+
     # Calculate the lndaa from the mdd model
     lnd0aa_MDD = calc_lnd0aa(
                         Fi_MDD, objective.tsec, objective.geometry, objective.extra_steps, objective.added_steps
@@ -115,14 +116,11 @@ def plot_results(
     for i in range(ndom):
         
         # Calculate a line representing each domain
-        D = np.log(
-            np.exp(params[i + 1])
-            * np.exp((-params[0]) / (R * (TC + 273.15)))
-        )
-
+        D = params[i+1]-params[0]/R*(1/(TC[objective.added_steps:]+273.15))
+        print(params[i+1])
         # Plot each line
         axes[0, 0].plot(
-            np.linspace(min(T_plot), max(T_plot), 1000),
+            np.linspace(min(10000/(TC[objective.added_steps:]+273.15)), max(10000/(TC[objective.added_steps:]+273.15)), 1000),
             np.linspace(max(D), min(D), 1000),
             "--",
             linewidth=frac_weights[i],
@@ -260,7 +258,7 @@ def plot_results(
         resid_exp = dataset["ln(D/a^2)"] - (-m.item() * T_plot + params[1].item())
 
         resid_model = np.array(lnd0aa_MDD.ravel()) - (-m.item() *T_plot + params[1].item())
-    
+
         axes[0, 1].plot(data[0] * 100, 
                         resid_exp, 'o', markersize=12, 
                         color= (0.69,0.69,0.69), 
@@ -290,6 +288,8 @@ def plot_results(
 
     if quiet == False:
         plt.show()
+
+    return gas_during_storage
 
 
 

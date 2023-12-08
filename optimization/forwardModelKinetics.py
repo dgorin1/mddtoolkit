@@ -26,7 +26,6 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
 
     # Separate the kinetics vector into its components so that calculations can be performed
     Ea = kinetics[0]   # Moles aren't passed into this function, so first entry of kinetics is Ea
-    
     # Assign the various parameters to variables and put them in the correct shapes
     lnD0aa = kinetics[1:ndom+1].unsqueeze(0).expand(len(TC), ndom, -1)
     fracstemp = kinetics[ndom+1:]
@@ -92,13 +91,16 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
         
         # Calculate a punishment flag if the experiment degassed fully before the end of the experiment.
         # If true, then you will lose the ability to notice that after we re-normalize. 
-        punishmentFlag2 = sumf_MDD[added_steps-1,:] > 0.9
+        punishmentFlag2 = sumf_MDD[added_steps-1,:] > 0.1
+        degassed_amount = sumf_MDD[added_steps-1,:]
+ 
         punishmentFlag = torch.round(sumf_MDD[-1,:],decimals = 3) < 1
         
-        print(sumf_MDD[1,0])
+
         # Find the largest value in the newf, which will be used to renormalize the values.
         # Then proceed with the normalization.
         normalization_factor = torch.max(torch.cumsum(newf,0),axis=0).values
+
         diffFi= newf/normalization_factor 
 
         # Resum the gas fractions into cumulative space that doesn't include the two added steps
@@ -112,8 +114,8 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
         pass
     sumf_MDD[:,nan_mask]= 0.0
 
-  
-    return sumf_MDD,punishmentFlag,punishmentFlag2
+
+    return sumf_MDD,punishmentFlag,punishmentFlag2, degassed_amount
     
 
 

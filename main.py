@@ -12,7 +12,7 @@ from utils.organize_x import organize_x
 # get this file's directory
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-data_input = pd.read_csv(f"{dir_path}/data/input_KM95-15-Dh.csv")
+data_input = pd.read_csv(f"{dir_path}/data/input_KM95-15-Dc.csv")
 lnd0aa_bounds = (
     -5,
     60,
@@ -22,9 +22,10 @@ Ea_bounds = (
     500,
 )  # User should also be able to pick any number >0 for these bounds. List in kJ/mol
 # mineral_name = "kspar"
-time_add = [3600*5,140400000]  # Add extra time in seconds
+time_add = [3600*5,111801600]  # Add extra time in seconds
 temp_add = [40,21.1111] # Add extra time in degrees C
-sample_name = "KM95-15-Dh" # Sample name
+sample_name = "KM95-15-Dc_10%cap"
+#sample_name = "KM95-15-Dh_capped_90%" # Sample name
 max_domains_to_model = 8
 geometry = "spherical"  # options are "plane sheet", or "spherical". Spherical should be default.
 omit_value_indices = [
@@ -32,25 +33,25 @@ omit_value_indices = [
 misfit_stat_list = [
     
     "chisq",
-    "percent_frac",
-    "l1_frac_cum",
-    "l1_frac",
-    "l1_moles",
-    "l2_moles",
-    "l2_frac",
-    "lnd0aa",
-    "lnd0aa_chisq"
+    # "percent_frac",
+    # "l1_frac_cum",
+    # "l1_frac",
+    # "l1_moles",
+    # "l2_moles",
+    # "l2_frac",
+    # "lnd0aa",
+    # "lnd0aa_chisq"
 ]  # This is a list of all the options. The user should just pick one.
 max_iters = 100000  # Often 30k is enough, but not always.
-iteration_repeats = 1  # Default should be 10, but user can set to any integer 1-?
+iteration_repeats = 10  # Default should be 10, but user can set to any integer 1-?
 punish_degas_early = True #Default is true. Title for gui can be punish if modeled experiment fully degasses too early.
 
 
 # Create dataset class for each associate package
 
 for misfit_stat in misfit_stat_list:
-    i = 6
-    save_params = np.empty((max_domains_to_model - i+1, max_domains_to_model * 2 + 4))
+    i = 1
+    save_params = np.empty((max_domains_to_model - i+1, max_domains_to_model * 2 + 5))
     save_params.fill(np.NaN)
     prev_misfit = 11**17
     misfit_val = 10**17
@@ -83,8 +84,8 @@ for misfit_stat in misfit_stat_list:
             lnd0aa_bounds=lnd0aa_bounds,
             max_iters=max_iters,
         )
-
-        plot_results(
+        params = organize_x(params, len(params), chop_fracs=True)
+        gas_released_during_storage = plot_results(
             params,
             dataset,
             objective,
@@ -108,6 +109,8 @@ for misfit_stat in misfit_stat_list:
             array_w_nans = params
         add_num_doms = np.append(i, array_w_nans)
         params_to_add = np.append(add_num_doms, misfit_val)
+        params_to_add = np.append(params_to_add, gas_released_during_storage)
+
         save_params[i-1, 0 : len(params_to_add)] = params_to_add
 
         save_results(
