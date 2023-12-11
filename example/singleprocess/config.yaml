@@ -2,22 +2,12 @@ ea_bounds:
 - 50.0
 - 500.0
 geometry: spherical
-iteration_repeats: 10
 lnd0aa_bounds:
 - -5.0
 - 50.0
-max_domains_to_model: 8
+num_domains: 1
 max_iters: 100000
-misfit_stat_list:
-- lnd0aa_chisq
-- chisq
-- percent_frac
-- l1_frac_cum
-- l1_frac
-- l1_moles
-- l2_moles
-- l2_frac
-- lnd0aa
+misfit_stat: lnd0aa_chisq
 omit_value_indices: []
 punish_degas_early: true
 temp_add: []

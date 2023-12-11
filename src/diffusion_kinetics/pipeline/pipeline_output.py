@@ -1,4 +1,6 @@
 import os
+import pandas as pd
+from diffusion_kinetics.optimization import Dataset
 
 class PipelineOutput:
     """Class to handle the construction and storage of pipeline output.
@@ -37,4 +39,16 @@ class PipelineOutput:
             str: Path to results file.
         """
         return os.path.join(self.output_dir, f"{ndom}results.{file_type}")
+    
+    def save_results(self, results:dict, config:dict, dataset:Dataset):
+        """Save the results to a csv file.
+
+        Args:
+            results (dict): Results dictionary.
+            config (dict): Config dictionary.
+            dataset (Dataset): Dataset object.
+        """
+        results_path = self.get_results_path(config["num_domains"])
+        df = pd.DataFrame(results)
+        df.to_csv(results_path)
     

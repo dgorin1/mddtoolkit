@@ -1,6 +1,6 @@
 
 from diffusion_kinetics.optimization import DiffusionObjective, Dataset
-from diffusion_kinetics.pipeline import PipelineConfig
+from diffusion_kinetics.pipeline import SingleProcessPipelineConfig
 from scipy.optimize import differential_evolution, NonlinearConstraint
 from diffusion_kinetics.optimization.conHe_Param import conHe_Param
 import numpy as np
@@ -10,7 +10,7 @@ class DiffusionOptimizer:
     def __init__(
         self, 
         dataset:Dataset, 
-        config:PipelineConfig, 
+        config:SingleProcessPipelineConfig, 
     ):
         self.dataset = dataset
         self.config = config
@@ -41,7 +41,7 @@ class DiffusionOptimizer:
             bounds,
             disp=False,
             tol=0.0001,  # zeros seems like a good number from testing. slow, but useful.
-            maxiter=self.config.iteration_repeats,
+            maxiter=self.config.max_iters,
             constraints=nlcs,
             vectorized=True,
             updating="deferred",
@@ -88,3 +88,4 @@ class DiffusionOptimizer:
             return NonlinearConstraint(conHe_Param, lb=[0], ub=[np.inf])
         else:
             return []
+        
