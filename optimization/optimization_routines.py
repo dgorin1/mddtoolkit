@@ -42,12 +42,14 @@ def diffEV_multiples(
     misfits = []
     params = []
     seed = random.randint(0, 2 ^ 28)
+ 
+
     mole_bound = tuple(
         (
-            sum(dataset.M) - 1 * torch.sqrt(sum(torch.tensor(dataset.delM) ** 2)),
-            sum(dataset.M) + 1 * torch.sqrt(sum(torch.tensor(dataset.delM) ** 2)),
+            sum(dataset.M) - 6 * torch.sqrt(sum(torch.tensor(dataset.delM) ** 2)),
+            sum(dataset.M)*1000000),
         )
-    )
+      
     bounds = generate_bounds(
         ndom,
         mole_bound,

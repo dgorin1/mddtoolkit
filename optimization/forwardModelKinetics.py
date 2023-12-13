@@ -9,9 +9,13 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
     # Define some necessary variables
     R = 0.008314 #gas constant
     torch.pi = torch.tensor(torch.acos(torch.zeros(1)).item() * 2)
-    
+
     # Convert to a tensor for speed
     kinetics = torch.tensor(kinetics)
+
+    if len(kinetics) % 2 != 0:
+        total_moles= kinetics[0]
+        kinetics = kinetics[1:]
 
     # Check the shape of kinetics and make sure it's a tensor in the shape [num_parameters, num_input_vectors_to_test]
 
@@ -38,7 +42,7 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
     tsec = tsec.unsqueeze(2).repeat(1,1,num_vectors)
     TK = (TC+273.15).unsqueeze(-1).repeat(1,ndom)
     TK = TK.unsqueeze(2).repeat(1,1,num_vectors)
-    
+
 
     # Calculate D/a^2 for each domain
     Daa = torch.exp(lnD0aa)*torch.exp(-Ea/(R*TK))
@@ -79,39 +83,30 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
 
     # If added steps are used, then we need to remove them and renormalize the results 
     # so that it appears that we hadn't measured the gas from the first X steps.
-    if added_steps > 0:
 
-        newf = torch.zeros(sumf_MDD.shape)
 
-        # Create newf, the gas fractions in noncumulative form.
-        newf[0] = sumf_MDD[0]
-        newf[1:] = sumf_MDD[1:]-sumf_MDD[0:-1]
-        
-        # Omit gas from the added steps
-        newf = newf[added_steps:]
-        
-        # Calculate a punishment flag if the experiment degassed fully before the end of the experiment.
-        # If true, then you will lose the ability to notice that after we re-normalize. 
-        punishmentFlag = torch.round(sumf_MDD[-1,:],decimals = 3) < 1
+    newf = torch.zeros(sumf_MDD.shape)
 
-        # Find the largest value in the newf, which will be used to renormalize the values.
-        # Then proceed with the normalization.
-        normalization_factor = torch.max(torch.cumsum(newf,0),axis=0).values
-        diffFi= newf/normalization_factor 
+    # Create newf, the gas fractions in noncumulative form.
+    newf[0] = sumf_MDD[0]
+    newf[1:] = sumf_MDD[1:]-sumf_MDD[0:-1]
+    
 
-        # Resum the gas fractions into cumulative space that doesn't include the two added steps
-        sumf_MDD = torch.cumsum(diffFi,axis=0)
-    else:
-        punishmentFlag = torch.round(sumf_MDD[-1,:],decimals = 3) < 1
+    
+    experimental_moles = newf*total_moles
+
+    # Resum the gas fractions into cumulative space that doesn't include the two added steps
+    sumf_MDD = torch.cumsum(experimental_moles,axis=0)
+
 
     # Turn all nans into zeros so that 
     nan_mask = torch.isnan(sumf_MDD).all(dim=0)
-    if sum(nan_mask > 0):
-        pass
+
     sumf_MDD[:,nan_mask]= 0.0
 
 
-    return sumf_MDD,punishmentFlag
+    sumf_MDD = sumf_MDD[added_steps:,:]
+    return sumf_MDD
     
 
 

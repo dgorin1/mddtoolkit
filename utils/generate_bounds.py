@@ -1,6 +1,6 @@
 def generate_bounds(
     ndom: int,
-    moles_bound,
+    moles_bound1,
     stat="chisq",
     Ea_bounds: tuple = (1, 500),
     lnd0aa_bounds: tuple = (-10, 35),
@@ -32,13 +32,13 @@ def generate_bounds(
 
     if ndom == 1:
         if moles == True:
-            return [moles_bound, Ea_bounds, lnd0aa_bounds]
+            return [moles_bound1, Ea_bounds, lnd0aa_bounds]
         else:
             return [Ea_bounds, lnd0aa_bounds]
     elif ndom > 1:
         if moles == True:
             return (
-                [moles_bound, Ea_bounds]
+                [moles_bound1, Ea_bounds]
                 + ndom * [lnd0aa_bounds]
                 + (ndom - 1) * [frac_bounds]
             )
