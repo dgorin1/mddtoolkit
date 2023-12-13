@@ -22,12 +22,12 @@ Ea_bounds = (
     500,
 )  # User should also be able to pick any number >0 for these bounds. List in kJ/mol
 # mineral_name = "kspar"
-time_add = [3600*5,140400000]  # Add extra time in seconds
-temp_add = [40,21.1111] # Add extra time in degrees C
+time_add = []  # Add extra time in seconds
+temp_add = [] # Add extra time in degrees C
 sample_name = "KM95-15-Dh_omit_values_AND_do_correction" # Sample name
 max_domains_to_model = 10
 geometry = "spherical"  # options are "plane sheet", or "spherical". Spherical should be default.
-omit_value_indices = [0,1,2
+omit_value_indices = [
 ]  # Values you want to be ignored in your fit
 misfit_stat_list = [
     
