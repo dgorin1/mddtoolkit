@@ -84,6 +84,7 @@ for misfit_stat in misfit_stat_list:
             max_iters=max_iters,
         )
 
+        params = organize_x(params, len(params), chop_fracs=True)
         plot_results(
             params,
             dataset,
