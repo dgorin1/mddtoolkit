@@ -47,7 +47,7 @@ def diffEV_multiples(
     mole_bound = tuple(
         (
             sum(dataset.M) - 6 * torch.sqrt(sum(torch.tensor(dataset.delM) ** 2)),
-            sum(dataset.M)*1000000),
+            sum(dataset.M)*100000000),
         )
       
     bounds = generate_bounds(

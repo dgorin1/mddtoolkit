@@ -16,7 +16,8 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
     if len(kinetics) % 2 != 0:
         total_moles= kinetics[0]
         kinetics = kinetics[1:]
-
+    else:
+        breakpoint()
     # Check the shape of kinetics and make sure it's a tensor in the shape [num_parameters, num_input_vectors_to_test]
 
     # If dimension is <= 1, then we need to unsqueeze it so it's a 2D tensor
@@ -93,10 +94,12 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
     
 
     
-    experimental_moles = newf*total_moles
+    sumf_MDD= newf*total_moles
+    sumf_MDD = sumf_MDD[added_steps:,:]
+
 
     # Resum the gas fractions into cumulative space that doesn't include the two added steps
-    sumf_MDD = torch.cumsum(experimental_moles,axis=0)
+    sumf_MDD = torch.cumsum(sumf_MDD,axis=0)
 
 
     # Turn all nans into zeros so that 
@@ -105,13 +108,13 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
     sumf_MDD[:,nan_mask]= 0.0
 
 
-    sumf_MDD = sumf_MDD[added_steps:,:]
+
     return sumf_MDD
     
 
 
 def calc_lnd0aa(sumf_MDD,diffti,geometry,extra_steps,added_steps):
-
+    sumf_MDD = sumf_MDD/sumf_MDD[-1]
     if len(sumf_MDD.size())>1: #if there are multiple entries
         diffti = diffti.unsqueeze(1).repeat(1,sumf_MDD.size()[1])
     if extra_steps == True:
@@ -177,7 +180,7 @@ def calc_lnd0aa(sumf_MDD,diffti,geometry,extra_steps,added_steps):
         Daa_MDD = usea*DR2_a + useb*DR2_b
         
     lnd0aa_MDD = torch.log(Daa_MDD)
-
+    
 
     return lnd0aa_MDD
 

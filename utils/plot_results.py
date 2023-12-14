@@ -34,12 +34,9 @@ def plot_results(
 
     R = 0.008314
     params = torch.tensor(params)
-    if len(params) % 2 != 0:
-        tot_moles = params[0]
-        params = params[1:]
-        moles_calc = True
-    else:
-        moles_calc = False
+
+    moles_calc = True
+
 
     # Infer the number of domains from input
     if len(params) <= 3:
@@ -59,7 +56,7 @@ def plot_results(
         tsec = objective.tsec
 
     # Calculate the cumulative fractions from the MDD model
-    Fi_MDD, punishmentFlag, punishmentFlag2, gas_during_storage = forwardModelKinetics(params,
+    Fi_MDD = forwardModelKinetics(params,
                                      tsec, 
                                      TC, 
                                      geometry = objective.geometry,
@@ -82,7 +79,7 @@ def plot_results(
 
     # Calculate weights proportional to the gas fractions if numdom > 1
     if ndom > 1:
-        fracs = params[ndom + 1 :]
+        fracs = params[ndom + 2 :]
         fracs = torch.concat(
             (fracs, 1 - torch.sum(fracs, axis=0, keepdim=True)), axis=-1
         )
@@ -116,8 +113,7 @@ def plot_results(
     for i in range(ndom):
         
         # Calculate a line representing each domain
-        D = params[i+1]-params[0]/R*(1/(TC[objective.added_steps:]+273.15))
-        print(params[i+1])
+        D = params[i+2]-params[1]/R*(1/(TC[objective.added_steps:]+273.15))
         # Plot each line
         axes[0, 0].plot(
             np.linspace(min(10000/(TC[objective.added_steps:]+273.15)), max(10000/(TC[objective.added_steps:]+273.15)), 1000),
@@ -174,7 +170,9 @@ def plot_results(
     # Put Fi_MDD in non-cumulative space
     temp = Fi_MDD[1:] - Fi_MDD[0:-1]
     Fi_MDD = np.insert(temp, 0, Fi_MDD[0])
-
+    
+    
+    Fi_MDD= Fi_MDD/np.sum(Fi_MDD)
     # Get gas fractions from actual experiment and put in non-cumulative space
     Fi = np.array(dataset.Fi)
     temp = Fi[1:] - Fi[0:-1]
@@ -215,49 +213,49 @@ def plot_results(
     axes[1, 0].set_box_aspect(1)
 
     # If moles were calculated, make the same plot but with moles
-    if moles_calc == True:
 
 
-        # Plot the moles measured in experiment at each step
-        axes[1, 1].errorbar(
-            range(0, len(T_plot)),
-            dataset["M"],
-            yerr=dataset["delM"],
-            fmt='-o', 
-            markersize=12, 
-            mfc= (0.69,0.69,0.69), 
-            mec='black', 
-            alpha = 0.8,
-            zorder = 5,
-            linewidth = 1,
-            linestyle = '--',
-            color = 'k'
 
-        )
-        axes[1, 1].plot(
-            range(0, len(T_plot)), 
-            tot_moles * Fi_MDD, 
-            "-o", 
-            markersize=5.25, 
-            color='black', 
-            linewidth=1, 
-            mec='black',
-            zorder = 10
-        )
-        axes[1, 1].set_xlabel("step number")
-        axes[1, 1].set_ylabel("Atoms Released at Each Step")
-        axes[1, 1].set_box_aspect(1)
-        # axes[2].axis('square')
+    # Plot the moles measured in experiment at each step
+    axes[1, 1].errorbar(
+        range(0, len(T_plot)),
+        dataset["M"],
+        yerr=dataset["delM"],
+        fmt='-o', 
+        markersize=12, 
+        mfc= (0.69,0.69,0.69), 
+        mec='black', 
+        alpha = 0.8,
+        zorder = 5,
+        linewidth = 1,
+        linestyle = '--',
+        color = 'k'
+
+    )
+    axes[1, 1].plot(
+        range(0, len(T_plot)), 
+        params[0] * Fi_MDD, 
+        "-o", 
+        markersize=5.25, 
+        color='black', 
+        linewidth=1, 
+        mec='black',
+        zorder = 10
+    )
+    axes[1, 1].set_xlabel("step number")
+    axes[1, 1].set_ylabel("Atoms Released at Each Step")
+    axes[1, 1].set_box_aspect(1)
+    # axes[2].axis('square')
 
     if n_plots == 4:
         # Calculate reference law results
 
         # Slope
-        m = params[0]/83.14 #Activation energy (kJ/mol) / gas constant
+        m = params[1]/83.14 #Activation energy (kJ/mol) / gas constant
   
-        resid_exp = dataset["ln(D/a^2)"] - (-m.item() * T_plot + params[1].item())
+        resid_exp = dataset["ln(D/a^2)"] - (-m.item() * T_plot + params[2].item())
 
-        resid_model = np.array(lnd0aa_MDD.ravel()) - (-m.item() *T_plot + params[1].item())
+        resid_model = np.array(lnd0aa_MDD.ravel()) - (-m.item() *T_plot + params[2].item())
 
         axes[0, 1].plot(data[0] * 100, 
                         resid_exp, 'o', markersize=12, 
@@ -289,4 +287,3 @@ def plot_results(
     if quiet == False:
         plt.show()
 
-    return gas_during_storage

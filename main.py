@@ -27,7 +27,7 @@ temp_add = [40, 21.1111111] # Add extra time in degrees C
 sample_name = "KM95-15-Dh_TEST" # Sample name
 max_domains_to_model = 8
 geometry = "spherical"  # options are "plane sheet", or "spherical". Spherical should be default.
-omit_value_indices = [
+omit_value_indices = [0,1,2
 ]  # Values you want to be ignored in your fit
 misfit_stat_list = [
     
@@ -42,7 +42,7 @@ misfit_stat_list = [
     # "lnd0aa_chisq"
 ]  # This is a list of all the options. The user should just pick one.
 max_iters = 100000  # Often 30k is enough, but not always.
-iteration_repeats = 18  # Default should be 10, but user can set to any integer 1-?
+iteration_repeats = 10  # Default should be 10, but user can set to any integer 1-?
 punish_degas_early = True #Default is true. Title for gui can be punish if modeled experiment fully degasses too early.
 
 
