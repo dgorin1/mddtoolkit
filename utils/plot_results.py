@@ -34,6 +34,7 @@ def plot_results(
 
     R = 0.008314
     params = torch.tensor(params)
+
     if len(params) % 2 != 0:
         tot_moles = params[0]
         params = params[1:]
@@ -59,7 +60,7 @@ def plot_results(
         tsec = objective.tsec
 
     # Calculate the cumulative fractions from the MDD model
-    Fi_MDD, punishmentFlag, punishmentFlag2, gas_during_storage = forwardModelKinetics(params,
+    Fi_MDD, punishmentFlag = forwardModelKinetics(params,
                                      tsec, 
                                      TC, 
                                      geometry = objective.geometry,
@@ -164,6 +165,7 @@ def plot_results(
     axes[0, 0].set_ylabel("ln(D/a^2)")
     axes[0, 0].set_xlabel("10000/T (K)")
     axes[0, 0].set_box_aspect(1)
+
 
     
     # Make a plot of the gas fractions 
@@ -289,4 +291,4 @@ def plot_results(
     if quiet == False:
         plt.show()
 
-    return gas_during_storage
+  

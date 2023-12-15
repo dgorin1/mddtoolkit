@@ -12,7 +12,7 @@ from utils.organize_x import organize_x
 # get this file's directory
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-data_input = pd.read_csv(f"{dir_path}/data/input_KM95-15-Dh.csv")
+data_input = pd.read_csv(f"{dir_path}/data/input_8DomSynthData_noisy_plane_sheet_combined_last_step.csv")
 lnd0aa_bounds = (
     -5,
     60,
@@ -24,10 +24,10 @@ Ea_bounds = (
 # mineral_name = "kspar"
 time_add = []  # Add extra time in seconds
 temp_add = [] # Add extra time in degrees C
-sample_name = "KM95-15-Dh_omit_values_AND_do_correction" # Sample name
+sample_name = "8DomSynthData_noisy_plane_sheet_combined_last_step.csv" # Sample name
 max_domains_to_model = 10
-geometry = "spherical"  # options are "plane sheet", or "spherical". Spherical should be default.
-omit_value_indices = [
+geometry = "plane sheet"  # options are "plane sheet", or "spherical". Spherical should be default.
+omit_value_indices = [33
 ]  # Values you want to be ignored in your fit
 misfit_stat_list = [
     
