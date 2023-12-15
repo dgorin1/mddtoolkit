@@ -107,7 +107,8 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
         sumf_MDD = torch.cumsum(diffFi,axis=0)
     else:
         punishmentFlag = torch.round(sumf_MDD[-1,:],decimals = 3) < 1
-
+        punishmentFlag2 = 0
+        degassed_amount = 0
     # Turn all nans into zeros so that 
     nan_mask = torch.isnan(sumf_MDD).all(dim=0)
     if sum(nan_mask > 0):
