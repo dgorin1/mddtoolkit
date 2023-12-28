@@ -35,6 +35,7 @@ class Pipeline:
 
         if self.output:
             self.output.save_results(res, self.config, self.dataset)
+            
         res = {
             "x": res.x,
             "fun": res.fun,
@@ -43,6 +44,7 @@ class Pipeline:
             "nit": res.nit,
             "nfev": res.nfev,
         }
+        
         return res
     
     def _load_config(self, config:Union[str, dict, SingleProcessPipelineConfig]):

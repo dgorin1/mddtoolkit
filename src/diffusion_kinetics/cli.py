@@ -1,5 +1,7 @@
 import argparse
 from diffusion_kinetics.pipeline.pipeline import Pipeline
+from diffusion_kinetics.pipeline.multi_pipeline import MultiPipeline
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Diffusion Kinetics')
     parser.add_argument('-i', '--input', help='Input file')
@@ -9,7 +11,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    pipeline = Pipeline(args.input, args.config, args.output)
+    pipeline = MultiPipeline(args.input, args.config, args.output)
     pipeline.run()
     
 if __name__ == "__main__":

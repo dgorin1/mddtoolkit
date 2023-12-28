@@ -14,7 +14,7 @@ from diffusion_kinetics.utils.save_results import save_results
 from typing import Union
 from  diffusion_kinetics.pipeline import OptimizerPool
 
-def run_mp_pipeline(
+def run_pipeline_multi(
     dataset:Union[str, pd.DataFrame, Dataset],
     config:Union[str, dict, MultiProcessPipelineConfig]=MultiProcessPipelineConfig(),
     output:Union[str, PipelineOutput]=None,
