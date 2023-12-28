@@ -23,9 +23,10 @@ class DiffusionOptimizer:
             - misfit_stat (str): The misfit statistic to use.
             - ndom (int): The number of domains to use.
         """
+        print("Running optimization for {} with {} domains".format(misfit_stat, ndom))
         bounds = self._construct_bounds(misfit_stat, ndom)
         nlcs = self._construct_nlcs(ndom)
-        
+
         objective = DiffusionObjective(
             self.dataset, 
             self.config.time_add,
@@ -45,7 +46,7 @@ class DiffusionOptimizer:
             constraints=nlcs,
             vectorized=True,
             updating="deferred",
-            seed=seed,
+            seed=seed
         )
         
         return result

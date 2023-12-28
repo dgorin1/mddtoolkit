@@ -1,7 +1,7 @@
 import pathos.multiprocessing as pathos_mp
 from diffusion_kinetics.optimization import Dataset
 from diffusion_kinetics.pipeline import SingleProcessPipelineConfig
-from diffusion_kinetics.pipeline import pipeline
+from diffusion_kinetics.pipeline import Pipeline
 
 class OptimizerPool:
     def __init__(self, dataset:Dataset, num_workers:int=pathos_mp.cpu_count()):
@@ -18,18 +18,11 @@ class OptimizerPool:
             - sp_configs (list[SingleProcessPipelineConfig]): List of SingleProcessPipelineConfig instances.
             - seed (int): The random seed for the optimization.
         """
-        arguments = [(sp_config, self.dataset.copy(), seed) for sp_config in sp_configs]
-        results = self.pool.map(self._run_single_config, arguments)
-        
-
-    def _run_single_config(self, args):
-        """
-        Helper method to run the pipeline for a single configuration.
-
-        Args:
-            - sp_config (SingleProcessPipelineConfig): SingleProcessPipelineConfig instance.
-        """
-        # Modify the following line based on your requirements
-        result = pipeline(args[0], args[1], None)
-        return result
-        
+        # arguments = [(sp_config, self.dataset.copy(), seed) for sp_config in sp_configs]
+        # results = self.pool.map(self._run_single_config, arguments)
+        results = []
+        for sp_config in sp_configs:
+            pipeline = Pipeline(self.dataset.copy(), sp_config, output=None)
+            result = pipeline.run()
+            results.append(result)
+        return results

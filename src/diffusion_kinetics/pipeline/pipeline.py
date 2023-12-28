@@ -32,7 +32,7 @@ class Pipeline:
         """
         optimizer = DiffusionOptimizer(self.dataset, self.config)
         res = optimizer.run(self.config.misfit_stat, self.config.num_domains)
-
+        
         if self.output:
             self.output.save_results(res, self.config, self.dataset)
             
@@ -70,6 +70,8 @@ class Pipeline:
             pass
         elif isinstance(output, str):
             output = PipelineOutput(output)
+        elif isinstance(output, type(None)):
+            output = None
         else:
             raise ValueError(f"output must be a path to a directory or a PipelineOutput object. Got: {output.__class__.__name__}")
         return output

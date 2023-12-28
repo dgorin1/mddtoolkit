@@ -154,7 +154,7 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
         self.single_pipeline_configs = {}
         for stat in self.misfit_stat_list:
             self.single_pipeline_configs[stat] = []
-            for i in range(self.max_domains_to_model):
+            for i in range(1, self.max_domains_to_model):
                 self.single_pipeline_configs[stat].append(
                     SingleProcessPipelineConfig(
                         lnd0aa_bounds=lnd0aa_bounds,

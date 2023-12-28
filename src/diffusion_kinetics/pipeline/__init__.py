@@ -1,3 +1,3 @@
 from .pipeline_config import MultiProcessPipelineConfig, SingleProcessPipelineConfig
 from .pipeline_output import PipelineOutput
-from .optimizer_pool import OptimizerPool
+from .pipeline import Pipeline
