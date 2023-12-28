@@ -15,7 +15,7 @@ class DiffusionOptimizer:
         self.dataset = dataset
         self.config = config
         
-    def run(self, misfit_stat:str, ndom:int, seed:int=0):
+    def run(self, misfit_stat:str, ndom:int, iters=10, seed:int=0):
         """
         Run the optimization for a given misfit statistic and number of domains.
         
@@ -37,19 +37,44 @@ class DiffusionOptimizer:
             self.config.punish_degas_early
         )
         
-        result = differential_evolution(
-            objective,
-            bounds,
-            disp=False,
-            tol=0.0001,  # zeros seems like a good number from testing. slow, but useful.
-            maxiter=self.config.max_iters,
-            constraints=nlcs,
-            vectorized=True,
-            updating="deferred",
-            seed=seed
-        )
+        misfits = []
+        results = []
+        for i in range(iters):
+            result = differential_evolution(
+                objective,
+                bounds,
+                disp=False,
+                tol=0.0001,  
+                maxiter=self.config.max_iters,
+                constraints=nlcs,
+                vectorized=True,
+                updating="deferred",
+                seed=seed,
+                popsize=15
+            )
+
+            misfits.append(result.fun)
+            print(f"misfit: {result.fun}")
+            print(f"number of iterations: {result.nit}")
+            results.append(result)
+
+            seed += 1
+
+        index = np.argmin(misfits)
+        return results[index]
+        # result = differential_evolution(
+        #     objective,
+        #     bounds,
+        #     disp=False,
+        #     tol=0.0001,  # zeros seems like a good number from testing. slow, but useful.
+        #     maxiter=self.config.max_iters,
+        #     constraints=nlcs,
+        #     vectorized=True,
+        #     updating="deferred",
+        #     seed=seed
+        # )
         
-        return result
+        # return result
     
     def _construct_bounds(self, stat:str, ndom:int):
         if (
