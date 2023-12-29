@@ -40,7 +40,7 @@ class BasePipelineConfig:
         # for each attribute of the class, if it's not a function, add it to the string
         string = f"{self.__class__.__name__} : (\n"
         for attr in dir(self):
-            if not attr.startswith("_") and not callable(getattr(self, attr)):
+            if not attr.startswith("_") and not callable(getattr(self, attr)) and not attr == "single_pipeline_configs":
                 string += f"    {attr}: {getattr(self, attr)}\n"
         string += ")"
         return string
@@ -88,6 +88,10 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
         tol:float=0.0001,
         popsize:int=15,
         updating:str="deferred",
+        strategy:str="best1bin",
+        mutation:float=0.5,
+        recombination:float=0.7,
+        init:str="latinhypercube",
     ):
         self.lnd0aa_bounds = lnd0aa_bounds
         self.ea_bounds = ea_bounds
@@ -104,6 +108,10 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
         self.tol = tol
         self.popsize = popsize
         self.updating = updating
+        self.strategy = strategy
+        self.mutation = mutation
+        self.recombination = recombination
+        self.init = init
         self._assert_is_valid()
         
     def _assert_is_valid(self):
@@ -131,6 +139,18 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
         assert self.tol > 0, "tol must be greater than 0"
         assert self.popsize > 0, "popsize must be greater than 0"
         assert self.updating in ["immediate","deferred"], "updating must be either 'immediate' or 'deferred'"
+        assert self.strategy in ["best1bin","best1exp","rand1exp","randtobest1exp","currenttobest1exp","best2exp","rand2exp","randtobest1bin","currenttobest1bin","best2bin","rand2bin","rand1bin"], "strategy must be a valid strategy"
+        assert self.recombination > 0 and self.recombination < 1, "recombination must be between 0 and 1"
+        # mutation can be given as a float or a list
+        if isinstance(self.mutation, float):
+            assert self.mutation > 0 and self.mutation < 2, "mutation must be between 0 and 2"
+        elif isinstance(self.mutation, list):
+            assert len(self.mutation) == 2, "mutation must be a list of length 2"
+            assert self.mutation[0] > 0 and self.mutation[0] < 2, "mutation[0] must be between 0 and 2"
+            assert self.mutation[1] > 0 and self.mutation[1] < 2, "mutation[1] must be between 0 and 2"
+        else:
+            raise ValueError("mutation must be a float or a list")
+        assert self.init in ["latinhypercube","sobol", "halton", "random"], "init must be a valid init method"
     
     def to_dict(self):
         """ convert the config to a dictionary """
@@ -153,7 +173,7 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
     A class to hold the configuration for a multi-processing pipeline.
     
     Args:
-        - max_domains_to_model (int): The maximum number of domains to model. Defaults to 8.
+        - domains_to_model (int): The maximum number of domains to model. Defaults to 8.
         - misfit_stat_list (list[str]): The list of misfit statistics to use. Defaults to MISFIT_STAT_LIST.
         - lnD0aa_bounds (list[float]): The bounds for the lnD0aa parameter. Defaults to [-5.0,50.0].
         - Ea_bounds (list[float]): The bounds for the Ea parameter. Defaults to [50.0,500.0].
@@ -167,7 +187,7 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
     
     def __init__(
         self, 
-        max_domains_to_model:int=8, 
+        domains_to_model:int=8, 
         misfit_stat_list:list[str]=MISFIT_STAT_LIST,
         lnd0aa_bounds:list[Union[float,int],Union[float,int]]=[-5.0,50.0],
         ea_bounds:list[Union[float,int],Union[float,int]]=[50.0,500.0],
@@ -182,14 +202,33 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
         tol:float=0.0001,
         popsize:int=15,
         updating:str="deferred",
+        strategy:str="best1bin",
+        mutation:float=0.5,
+        recombination:float=0.7,
+        init:str="latinhypercube",
     ):
-        self.max_domains_to_model = max_domains_to_model
+        self.domains_to_model = domains_to_model
         self.misfit_stat_list = misfit_stat_list
+        self.geometry = geometry
+        self.omit_value_indices = omit_value_indices
+        self.max_iters = max_iters
+        self.punish_degas_early = punish_degas_early
+        self.repeat_iterations = repeat_iterations
+        self.seed = seed
+        self.tol = tol
+        self.popsize = popsize
+        self.updating = updating
+        self.strategy = strategy
+        self.mutation = mutation
+        self.recombination = recombination
+        self.init = init
         
         self.single_pipeline_configs = {}
         for stat in self.misfit_stat_list:
             self.single_pipeline_configs[stat] = []
-            for i in range(1, self.max_domains_to_model + 1):
+            # if max domains to model is an array, then use the first value as the min and the second as the max
+            r = range(self.domains_to_model) if isinstance(self.domains_to_model, int) else range(self.domains_to_model[0], self.domains_to_model[1])
+            for i in r:
                 self.single_pipeline_configs[stat].append(
                     SingleProcessPipelineConfig(
                         lnd0aa_bounds=lnd0aa_bounds,
@@ -207,15 +246,23 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
                         tol=tol,
                         popsize=popsize,
                         updating=updating,
+                        strategy=strategy,
+                        mutation=mutation,
+                        recombination=recombination,
+                        init=init,
                     )
                 )
         self._assert_is_valid()
                         
     def _assert_is_valid(self):
-        assert isinstance(self.max_domains_to_model,int), "max_domains_to_model must be an int"
+        # assert max domains is either an int or a list of length 2 of ints
+        assert isinstance(self.domains_to_model, (int, list)), "domains_to_model must be an int or a list of ints"
+        if isinstance(self.domains_to_model, list):
+            assert len(self.domains_to_model) == 2, "domains_to_model must be an int or a list of length 2 of ints"
+            assert isinstance(self.domains_to_model[0], int) and isinstance(self.domains_to_model[1], int), "domains_to_model must be an int or a list of length 2 of ints"
+            assert self.domains_to_model[0] < self.domains_to_model[1], "domains_to_model must be in increasing order"
         assert isinstance(self.misfit_stat_list,list), "misfit_stat_list must be a list"
         assert all([isinstance(stat,str) for stat in self.misfit_stat_list]), "misfit_stat_list must be a list of strings"
         assert all([stat.lower() in MISFIT_STAT_LIST for stat in self.misfit_stat_list]), "misfit_stat_list must be a list of valid misfit statistics"
         assert len(set(self.misfit_stat_list)) == len(self.misfit_stat_list), "misfit_stat_list must not contain duplicate values"
         assert len(self.misfit_stat_list) > 0, "misfit_stat_list must contain at least one misfit statistic"
-        assert self.max_domains_to_model >= 0, "max_domains_to_model must be greater than 0"

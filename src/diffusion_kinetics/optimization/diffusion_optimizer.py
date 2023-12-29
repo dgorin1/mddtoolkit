@@ -42,7 +42,11 @@ class DiffusionOptimizer:
             vectorized=True,
             updating=config.updating,
             seed=seed,
-            popsize=config.popsize
+            popsize=config.popsize,
+            strategy=config.strategy,
+            mutation=config.mutation,
+            recombination=config.recombination,
+            init=config.init,
         )
     
     def _construct_bounds(self, config:SingleProcessPipelineConfig):

@@ -5,7 +5,9 @@ from typing import Union
 from  diffusion_kinetics.optimization import DiffusionOptimizer
 from diffusion_kinetics.pipeline.base_pipeline import BasePipeline
 import numpy as np
-from diffusion_kinetics.utils.organize_x import organize_x
+from diffusion_kinetics.utils.kinetics_dataframe import KineticsDataframe
+from tabulate import tabulate
+
 
 # hide constraint warning, since it's not relevant
 import warnings
@@ -56,7 +58,13 @@ class SinglePipeline(BasePipeline):
         }
         
         x = res["x"]
-        print(f"Best Result: {organize_x(x)}")
+        df = KineticsDataframe(res, config).df
+        df.drop("misfit", axis=1, inplace=True)
+        df = df.T
+        # add the indices as the first column
+        df.insert(0, "index", df.index)
+        print("Best Result:")
+        print(f"{tabulate(df, tablefmt='fancy_grid', numalign='right', showindex=False)}")
         return res
     
     @staticmethod
