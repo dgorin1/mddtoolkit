@@ -11,14 +11,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    try:
-        pipeline = MultiPipeline(args.input, args.output)
-        print("Running multi-process pipeline...")
-        pipeline.run(args.config)
-    except:
-        pipeline = SinglePipeline(args.input, args.output)
-        print("Running single-process pipeline...")
-        pipeline.run(args.config)
+    MultiPipeline(args.input, args.output).run()
     
 if __name__ == "__main__":
     main()
