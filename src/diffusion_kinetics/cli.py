@@ -1,6 +1,5 @@
-import argparse
-from diffusion_kinetics.pipeline.single_pipeline import SinglePipeline
 from diffusion_kinetics.pipeline.multi_pipeline import MultiPipeline
+import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Diffusion Kinetics')
