@@ -1,39 +1,29 @@
 import pandas as pd
-import numpy as np
-import yaml
-import torch
 from diffusion_kinetics.pipeline import MultiProcessPipelineConfig, PipelineOutput
-from diffusion_kinetics.optimization import (
-    Dataset
-)
-from diffusion_kinetics.utils.plot_results import plot_results
-from diffusion_kinetics.utils.organize_x import organize_x
-from diffusion_kinetics.utils.save_results import save_results
+from diffusion_kinetics.pipeline.pipeline import Pipeline
+from diffusion_kinetics.optimization import Dataset
 from typing import Union
-from  diffusion_kinetics.pipeline.optimizer_pool import OptimizerPool
 
 class MultiPipeline:
     def __init__(
         self,
         dataset:Union[str, pd.DataFrame, Dataset],
-        config:Union[str, dict, MultiProcessPipelineConfig]=MultiProcessPipelineConfig(),
         output:Union[str, PipelineOutput]=None,
     ):
         self.dataset = self._load_dataset(dataset)
-        self.config = self._load_config(config)
         self.output = self._create_output(output)
     
-    def run(self):
-        optimizer_pool = OptimizerPool(self.dataset)
+    def run(self, config:Union[str, dict, MultiProcessPipelineConfig]):
         results = []
-        # run the optimization for each misfit statistic
-        for misfit_stat in self.config.misfit_stat_list:
-            sp_configs = self.config.single_pipeline_configs[misfit_stat]
-            result = optimizer_pool.run(sp_configs)
-            results.append(result)
-            # save the results
-            if self.output:
-                self.output.save_results(result, self.config, self.dataset)
+        config = self._load_config(config)
+        pipeline = Pipeline(self.dataset, output=self.output)
+        for misfit_type in config.single_pipeline_configs.keys():
+            configs_for_each_domain_list = config.single_pipeline_configs[misfit_type]
+            for single_pipeline_config in configs_for_each_domain_list:
+                res = pipeline.run(single_pipeline_config)
+                results.append(res)
+                if self.output:
+                    self.output.save_results(res, single_pipeline_config, self.dataset)
         return results
     
     def _load_config(self, config:Union[str, dict, MultiProcessPipelineConfig]):

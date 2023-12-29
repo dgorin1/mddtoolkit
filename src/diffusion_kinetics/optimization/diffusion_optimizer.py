@@ -10,12 +10,10 @@ class DiffusionOptimizer:
     def __init__(
         self, 
         dataset:Dataset, 
-        config:SingleProcessPipelineConfig, 
     ):
         self.dataset = dataset
-        self.config = config
         
-    def run(self, misfit_stat:str, ndom:int, iters=10, seed:int=0):
+    def run(self, config:SingleProcessPipelineConfig):
         """
         Run the optimization for a given misfit statistic and number of domains.
         
@@ -23,29 +21,30 @@ class DiffusionOptimizer:
             - misfit_stat (str): The misfit statistic to use.
             - ndom (int): The number of domains to use.
         """
-        print("Running optimization for {} with {} domains".format(misfit_stat, ndom))
-        bounds = self._construct_bounds(misfit_stat, ndom)
-        nlcs = self._construct_nlcs(ndom)
-
+        print("Running optimization for {} with {} domains".format(config.misfit_stat, config.num_domains))
+        bounds = self._construct_bounds(config)
+        nlcs = self._construct_nlcs(config.num_domains)
+    
         objective = DiffusionObjective(
             self.dataset, 
-            self.config.time_add,
-            self.config.temp_add,
-            self.config.omit_value_indices,
-            misfit_stat,
-            self.config.geometry,
-            self.config.punish_degas_early
+            config.time_add,
+            config.temp_add,
+            config.omit_value_indices,
+            config.misfit_stat,
+            config.geometry,
+            config.punish_degas_early
         )
         
         misfits = []
         results = []
-        for i in range(iters):
+        seed = config.seed
+        for i in range(config.repeat_iterations):
             result = differential_evolution(
                 objective,
                 bounds,
                 disp=False,
                 tol=0.0001,  
-                maxiter=self.config.max_iters,
+                maxiter=config.max_iters,
                 constraints=nlcs,
                 vectorized=True,
                 updating="deferred",
@@ -62,25 +61,12 @@ class DiffusionOptimizer:
 
         index = np.argmin(misfits)
         return results[index]
-        # result = differential_evolution(
-        #     objective,
-        #     bounds,
-        #     disp=False,
-        #     tol=0.0001,  # zeros seems like a good number from testing. slow, but useful.
-        #     maxiter=self.config.max_iters,
-        #     constraints=nlcs,
-        #     vectorized=True,
-        #     updating="deferred",
-        #     seed=seed
-        # )
-        
-        # return result
     
-    def _construct_bounds(self, stat:str, ndom:int):
+    def _construct_bounds(self, config:SingleProcessPipelineConfig):
         if (
-            stat.lower() == "chisq"
-            or stat.lower() == "l2_moles"
-            or stat.lower() == "l1_moles"
+            config.misfit_stat.lower() == "chisq"
+            or config.misfit_stat.lower() == "l2_moles"
+            or config.misfit_stat.lower() == "l1_moles"
         ):
             moles = True
         else:
@@ -93,20 +79,20 @@ class DiffusionOptimizer:
             )
         )
 
-        if ndom == 1:
+        if config.num_domains == 1:
             if moles == True:
-                return [mole_bound, self.config.ea_bounds, self.config.lnd0aa_bounds]
+                return [mole_bound, config.ea_bounds, config.lnd0aa_bounds]
             else:
-                return [self.config.ea_bounds, self.config.lnd0aa_bounds]
-        elif ndom > 1:
+                return [config.ea_bounds, config.lnd0aa_bounds]
+        elif config.num_domains > 1:
             if moles == True:
                 return (
-                    [mole_bound, self.config.ea_bounds]
-                    + ndom * [self.config.lnd0aa_bounds]
-                    + (ndom - 1) * [frac_bounds]
+                    [mole_bound, config.ea_bounds]
+                    + config.num_domains * [config.lnd0aa_bounds]
+                    + (config.num_domains - 1) * [frac_bounds]
                 )
             else:
-                return [self.config.ea_bounds] + ndom * [self.config.lnd0aa_bounds] + (ndom - 1) * [frac_bounds]
+                return [config.ea_bounds] + config.num_domains * [config.lnd0aa_bounds] + (config.num_domains - 1) * [frac_bounds]
     
        
     def _construct_nlcs(self, ndom:int):

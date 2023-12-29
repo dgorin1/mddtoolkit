@@ -69,6 +69,8 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
         omit_value_indices:list[int]=[],
         max_iters:Union[float,int]=100000,
         punish_degas_early:bool=True,
+        repeat_iterations:int=10,
+        seed:int=0,
     ):
         self.lnd0aa_bounds = lnd0aa_bounds
         self.ea_bounds = ea_bounds
@@ -80,6 +82,8 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
         self.punish_degas_early = punish_degas_early
         self.num_domains = num_domains
         self.misfit_stat = misfit_stat
+        self.repeat_iterations = repeat_iterations
+        self.seed = seed
         self._assert_is_valid()
         
     def _assert_is_valid(self):
@@ -101,6 +105,9 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
         assert self.max_iters > 0, "max_iters must be greater than 0"  
         assert self.num_domains >= 0, "num_domains must be greater than 0"
         assert self.misfit_stat in MISFIT_STAT_LIST, f"misfit_stat must be a valid misfit statistic. got {self.misfit_stat}"  
+        assert self.repeat_iterations > 0, "repeat_iterations must be greater than 0"
+        assert self.repeat_iterations == int(self.repeat_iterations), "repeat_iterations must be an integer"
+        assert self.seed == int(self.seed), "seed must be an integer"
     
     def to_dict(self):
         """ convert the config to a dictionary """

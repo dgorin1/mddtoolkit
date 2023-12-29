@@ -1,16 +1,6 @@
 import pandas as pd
-import numpy as np
-import yaml
-import torch
 from diffusion_kinetics.pipeline import SingleProcessPipelineConfig, PipelineOutput
-from diffusion_kinetics.optimization import (
-    Dataset, 
-    DiffusionObjective,
-    diffEV_multiples,
-)
-from diffusion_kinetics.utils.plot_results import plot_results
-from diffusion_kinetics.utils.organize_x import organize_x
-from diffusion_kinetics.utils.save_results import save_results
+from diffusion_kinetics.optimization import Dataset
 from typing import Union
 from  diffusion_kinetics.optimization import DiffusionOptimizer
 
@@ -19,22 +9,21 @@ class Pipeline:
     def __init__(
         self,
         dataset: Dataset,
-        config: SingleProcessPipelineConfig,
         output: PipelineOutput = None,
     ):
         self.dataset = self._load_dataset(dataset)
-        self.config = self._load_config(config)
+        self.optimizer = DiffusionOptimizer(self.dataset)
         self.output = self._create_output(output)
 
-    def run(self):
+    def run(self, config: Union[str, dict, SingleProcessPipelineConfig]):
         """
         Run the pipeline.
         """
-        optimizer = DiffusionOptimizer(self.dataset, self.config)
-        res = optimizer.run(self.config.misfit_stat, self.config.num_domains)
-        
+        config = self._load_config(config)
+        res = self.optimizer.run(config)
+
         if self.output:
-            self.output.save_results(res, self.config, self.dataset)
+            self.output.save_results(res, config, self.dataset)
             
         res = {
             "x": res.x,
