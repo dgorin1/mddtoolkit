@@ -12,11 +12,16 @@ This app does things.
 ## Installation
 
 1. Clone this repository with `git clone https://github.com/dgorin1/diffusion_code_final`
-2. run `./setup.sh` to install dependencies
+2. Run `pip install -e .` in the root directory of the repository to install the package and its dependencies
 
 ## Usage
 
-Show an example of how to use the app. Both with the GUI and the command line.
+```
+fit_MDD_model \
+    -i /Users/josh/repos/diffusion_code_final/example/tests/N13ksp_python_test.csv \
+    -c /Users/josh/repos/diffusion_code_final/example/tests/test.yaml \
+    -o /Users/josh/repos/ diffusion_code_final/output/test_final
+```
 
 ## Support
 

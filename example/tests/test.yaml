@@ -6,7 +6,7 @@ geometry: plane sheet
 lnd0aa_bounds:
 - -5.0
 - 60.0
-domains_to_model: [5, 8]
+domains_to_model: 8
 misfit_stat_list:
 - chisq
 # - l1_frac
@@ -32,4 +32,3 @@ strategy: best1bin
 mutation: 0.5
 recombination: 0.7
 max_iters: 10000
-init: sobol

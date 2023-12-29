@@ -64,12 +64,26 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
     A class to hold the configuration for a single-processing pipeline.
     
     Args:
-        - lnD0aa_bounds (list[float]): The bounds for the lnD0aa parameter. Defaults to [-5.0,50.0].
-        - Ea_bounds (list[float]): The bounds for the Ea parameter. Defaults to [50.0,500.0].
+    -------
+        - lnd0aa_bounds (list[float]): The bounds for the lnD0aa parameter. Defaults to [-5.0,50.0].
+        - ea_bounds (list[float]): The bounds for the Ea parameter. Defaults to [50.0,500.0].
+        - time_add (list[float]): The times to add to the dataset. Defaults to [].
+        - temp_add (list[float]): The temperatures to add to the dataset. Defaults to [].
+        - num_domains (int): The number of domains to use. Defaults to 1.
+        - misfit_stat (str): The misfit statistic to use. Defaults to "lnd0aa_chisq".
         - geometry (str): The geometry of the model. Defaults to "spherical".
+        - omit_value_indices (list[int]): The indices of the values to omit from the dataset. Defaults to [].
         - max_iters (float): The maximum number of iterations to run. Defaults to 100000.
-        - iteration_repeats (float): The number of times to repeat each iteration. Defaults to 10.
         - punish_degas_early (bool): Whether to punish degassing early. Defaults to True.
+        - repeat_iterations (int): The number of times to repeat each iteration. Defaults to 10.
+        - seed (int): The seed for the optimization. Defaults to None.
+        - tol (float): The tolerance for the optimization. Defaults to 0.0001.
+        - popsize (int): The population size for the optimization. Defaults to 15.
+        - updating (str): The updating method for the optimization. Defaults to "deferred".
+        - strategy (str): The strategy for the optimization. Defaults to "best1bin".
+        - mutation (float): The mutation rate for the optimization. Defaults to 0.5.
+        - recombination (float): The recombination rate for the optimization. Defaults to 0.7.
+        - init (str): The initialization method for the optimization. Defaults to "latinhypercube".
     """
     def __init__(
         self, 
@@ -173,16 +187,26 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
     A class to hold the configuration for a multi-processing pipeline.
     
     Args:
+    -------
         - domains_to_model (int): The maximum number of domains to model. Defaults to 8.
-        - misfit_stat_list (list[str]): The list of misfit statistics to use. Defaults to MISFIT_STAT_LIST.
+        - misfit_stat_list (list[str]): The misfit statistics to use. Defaults to MISFIT_STAT_LIST.
         - lnD0aa_bounds (list[float]): The bounds for the lnD0aa parameter. Defaults to [-5.0,50.0].
         - Ea_bounds (list[float]): The bounds for the Ea parameter. Defaults to [50.0,500.0].
         - time_add (list[float]): The times to add to the dataset. Defaults to [].
         - temp_add (list[float]): The temperatures to add to the dataset. Defaults to [].
         - geometry (str): The geometry of the model. Defaults to "spherical".
-        - omit_value_indices (list[int]): The indices of the values to omit from the dataset. Defaults to [].
         - max_iters (float): The maximum number of iterations to run. Defaults to 100000.
+        - iteration_repeats (float): The number of times to repeat each iteration. Defaults to 10.
         - punish_degas_early (bool): Whether to punish degassing early. Defaults to True.
+        - repeat_iterations (int): The number of times to repeat each iteration. Defaults to 10.
+        - seed (int): The seed for the optimization. Defaults to None.
+        - tol (float): The tolerance for the optimization. Defaults to 0.0001.
+        - popsize (int): The population size for the optimization. Defaults to 15.
+        - updating (str): The updating method for the optimization. Defaults to "deferred".
+        - strategy (str): The strategy for the optimization. Defaults to "best1bin".
+        - mutation (float): The mutation rate for the optimization. Defaults to 0.5.
+        - recombination (float): The recombination rate for the optimization. Defaults to 0.7.
+        - init (str): The initialization method for the optimization. Defaults to "latinhypercube".
     """
     
     def __init__(
@@ -227,7 +251,7 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
         for stat in self.misfit_stat_list:
             self.single_pipeline_configs[stat] = []
             # if max domains to model is an array, then use the first value as the min and the second as the max
-            r = range(self.domains_to_model) if isinstance(self.domains_to_model, int) else range(self.domains_to_model[0], self.domains_to_model[1])
+            r = range(1, self.domains_to_model) if isinstance(self.domains_to_model, int) else range(self.domains_to_model[0], self.domains_to_model[1])
             for i in r:
                 self.single_pipeline_configs[stat].append(
                     SingleProcessPipelineConfig(
@@ -261,6 +285,8 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
             assert len(self.domains_to_model) == 2, "domains_to_model must be an int or a list of length 2 of ints"
             assert isinstance(self.domains_to_model[0], int) and isinstance(self.domains_to_model[1], int), "domains_to_model must be an int or a list of length 2 of ints"
             assert self.domains_to_model[0] < self.domains_to_model[1], "domains_to_model must be in increasing order"
+            # lower bound is 1
+            assert self.domains_to_model[0] > 0, "domains_to_model must be greater than 0"
         assert isinstance(self.misfit_stat_list,list), "misfit_stat_list must be a list"
         assert all([isinstance(stat,str) for stat in self.misfit_stat_list]), "misfit_stat_list must be a list of strings"
         assert all([stat.lower() in MISFIT_STAT_LIST for stat in self.misfit_stat_list]), "misfit_stat_list must be a list of valid misfit statistics"

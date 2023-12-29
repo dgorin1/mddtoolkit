@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
+
+[project]
+name='diffusion_modeller'
+requires-python = ">= 3.9"
+version='0.1.0'
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy",
+    "torch",
+    "scipy",
+    "pandas",
+    "matplotlib",
+    "pyyaml",
+    "pathos",
+    "pytest",
+    "tabulate"
+]
+#author='Andrew Gorin'
+#url='https://github.com/dgorin1/diffusion_code_final'
+description='A package for modelling diffusion processes.'
+readme="README.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+fit_MDD_model = "diffusion_kinetics.cli:main"

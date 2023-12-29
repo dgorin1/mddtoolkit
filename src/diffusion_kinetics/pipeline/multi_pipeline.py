@@ -79,6 +79,15 @@ class MultiPipeline(BasePipeline):
         
     @staticmethod
     def combine_dfs(d1, d2):
+        """Combine two dataframes with different columns.
+
+        Args:
+            d1 (pd.DataFrame): The first dataframe.
+            d2 (pd.DataFrame): The second dataframe.
+
+        Returns:
+            pd.DataFrame: The combined dataframe.
+        """
         col_names = d1.columns if len(d1.columns) > len(d2.columns) else d2.columns
         df_dict = {}
         for col in col_names:
