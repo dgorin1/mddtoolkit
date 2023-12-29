@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from diffusion_kinetics.optimization import Dataset
 from diffusion_kinetics.utils.plot_results import plot_results
+from diffusion_kinetics.utils.organize_x import organize_x
 from diffusion_kinetics.optimization import DiffusionObjective
 from diffusion_kinetics.pipeline import SingleProcessPipelineConfig
 import numpy as np
@@ -40,7 +41,10 @@ class PipelineOutput:
         Returns:
             str: Path to results file.
         """
-        return os.path.join(self.output_dir, config.misfit_stat, f"{config.num_domains}_dom.{file_type}")
+        return os.path.join(self.output_dir, config.misfit_stat, f"{config.num_domains}_dom_optimizer_output.{file_type}")
+    
+    def get_dataframe_path(self, misfit_type:str, file_type:str="csv"):
+        return os.path.join(self.output_dir, misfit_type, f"combined_results.{file_type}")
     
     def serialize_results(self, results:dict, config:dict):
         """serialize the results to a json friendly format
@@ -91,9 +95,9 @@ class PipelineOutput:
             config.geometry,
             config.punish_degas_early
         )
-
+        
         plot_results(
-            results.x,
+            organize_x(results.x),
             dataset,
             objective,
             self.get_plot_path(config),

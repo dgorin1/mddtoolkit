@@ -5,7 +5,7 @@ from typing import Union
 from  diffusion_kinetics.optimization import DiffusionOptimizer
 from diffusion_kinetics.pipeline.base_pipeline import BasePipeline
 import numpy as np
-import pprint
+from diffusion_kinetics.utils.organize_x import organize_x
 
 # hide constraint warning, since it's not relevant
 import warnings
@@ -55,8 +55,8 @@ class SinglePipeline(BasePipeline):
             "nfev": res.nfev,
         }
         
-        # print the result dictionary in a nice way
-        pprint.pprint(res)
+        x = res["x"]
+        print(f"Best Result: {organize_x(x)}")
         return res
     
     @staticmethod

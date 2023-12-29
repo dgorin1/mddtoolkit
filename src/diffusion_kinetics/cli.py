@@ -10,6 +10,7 @@ def parse_args():
 
 def main():
     args = parse_args()
+    
     MultiPipeline(args.input, args.output).run(args.config)
     
 if __name__ == "__main__":
