@@ -17,6 +17,7 @@ def diffEV_multiples(
     Ea_bounds: tuple,
     lnd0aa_bounds: tuple,
     max_iters: int = 30000,
+    x0: np.array = []
 ):
     """
     Run the differential evolution algorithm multiple times and returns the best result.
@@ -41,7 +42,7 @@ def diffEV_multiples(
 
     misfits = []
     params = []
-    seed = random.randint(0, 2 ^ 28)
+    seed = 0#random.randint(0, 2 ^ 28)
     mole_bound = tuple(
         (
             sum(dataset.M) - 1 * torch.sqrt(sum(torch.tensor(dataset.delM) ** 2)),
@@ -67,7 +68,8 @@ def diffEV_multiples(
             vectorized=True,
             updating="deferred",
             seed=seed,
-            popsize= 15
+            popsize= 15,
+     
         )
 
         misfits.append(result.fun)

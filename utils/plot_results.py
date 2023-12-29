@@ -69,7 +69,7 @@ def plot_results(
 
     # Calculate the lndaa from the mdd model
     lnd0aa_MDD = calc_lnd0aa(
-                        Fi_MDD, objective.tsec, objective.geometry, objective.extra_steps, objective.added_steps
+                        Fi_MDD[0:-1], objective.tsec[0:-1], objective.geometry, objective.extra_steps, objective.added_steps
                     )
     
     data = (Fi_MDD.ravel(),lnd0aa_MDD.ravel())
@@ -117,11 +117,11 @@ def plot_results(
     for i in range(ndom):
         
         # Calculate a line representing each domain
-        D = params[i+1]-params[0]/R*(1/(TC[objective.added_steps:]+273.15))
+        D = params[i+1]-params[0]/R*(1/(TC[objective.added_steps:-1]+273.15))
         print(params[i+1])
         # Plot each line
         axes[0, 0].plot(
-            np.linspace(min(10000/(TC[objective.added_steps:]+273.15)), max(10000/(TC[objective.added_steps:]+273.15)), 1000),
+            np.linspace(min(10000/(TC[objective.added_steps:-1]+273.15)), max(10000/(TC[objective.added_steps:-1]+273.15)), 1000),
             np.linspace(max(D), min(D), 1000),
             "--",
             linewidth=frac_weights[i],
@@ -133,7 +133,7 @@ def plot_results(
 
     # Plot the MDD Model lndaa values
     axes[0, 0].plot(
-        T_plot,
+        T_plot[0:-1],
         pd.Series(data[1].tolist())
         .replace(-np.inf, np.inf)
         .fillna(max(data[1]).item()),
@@ -162,8 +162,9 @@ def plot_results(
     
 
     # Label axes
-    axes[0, 0].set_ylabel("ln(D/a^2)")
+    axes[0, 0].set_ylabel("ln(D/a$^2$)")
     axes[0, 0].set_xlabel("10000/T (K)")
+    axes[0,0].set_ylim(-30,0)
     axes[0, 0].set_box_aspect(1)
 
 
@@ -257,11 +258,11 @@ def plot_results(
         # Slope
         m = params[0]/83.14 #Activation energy (kJ/mol) / gas constant
   
-        resid_exp = dataset["ln(D/a^2)"] - (-m.item() * T_plot + params[1].item())
+        resid_exp = dataset["ln(D/a^2)"][0:-1] - (-m.item() * T_plot[0:-1] + params[1].item())
 
-        resid_model = np.array(lnd0aa_MDD.ravel()) - (-m.item() *T_plot + params[1].item())
+        resid_model = np.array(lnd0aa_MDD.ravel()) - (-m.item() *T_plot[0:-1] + params[1].item())
 
-        axes[0, 1].plot(data[0] * 100, 
+        axes[0, 1].plot(data[0][0:-1] * 100, 
                         resid_exp, 'o', markersize=12, 
                         color= (0.69,0.69,0.69), 
                         mec='black', 
@@ -269,7 +270,7 @@ def plot_results(
                         )
         
 
-        axes[0, 1].plot(data[0] * 100, resid_model, 
+        axes[0, 1].plot(data[0][0:-1] * 100, resid_model, 
                         "-o", markersize=5, 
                         color='black', 
                         linestyle='-', 
