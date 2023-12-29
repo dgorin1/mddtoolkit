@@ -13,7 +13,7 @@ class DiffusionOptimizer:
     ):
         self.dataset = dataset
         
-    def run(self, config:SingleProcessPipelineConfig):
+    def run(self, config:SingleProcessPipelineConfig, seed:int=0):
         """
         Run the optimization for a given misfit statistic and number of domains.
         
@@ -21,7 +21,6 @@ class DiffusionOptimizer:
             - misfit_stat (str): The misfit statistic to use.
             - ndom (int): The number of domains to use.
         """
-        print("Running optimization for {} with {} domains".format(config.misfit_stat, config.num_domains))
         bounds = self._construct_bounds(config)
         nlcs = self._construct_nlcs(config.num_domains)
     
@@ -35,32 +34,18 @@ class DiffusionOptimizer:
             config.punish_degas_early
         )
         
-        misfits = []
-        results = []
-        seed = config.seed
-        for i in range(config.repeat_iterations):
-            result = differential_evolution(
-                objective,
-                bounds,
-                disp=False,
-                tol=0.0001,  
-                maxiter=config.max_iters,
-                constraints=nlcs,
-                vectorized=True,
-                updating="deferred",
-                seed=seed,
-                popsize=15
-            )
-
-            misfits.append(result.fun)
-            print(f"misfit: {result.fun}")
-            print(f"number of iterations: {result.nit}")
-            results.append(result)
-
-            seed += 1
-
-        index = np.argmin(misfits)
-        return results[index]
+        return differential_evolution(
+            objective,
+            bounds,
+            disp=False,
+            tol=0.0001,  
+            maxiter=config.max_iters,
+            constraints=nlcs,
+            vectorized=True,
+            updating="deferred",
+            seed=seed,
+            popsize=15
+        )
     
     def _construct_bounds(self, config:SingleProcessPipelineConfig):
         if (

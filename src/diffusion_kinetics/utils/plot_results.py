@@ -8,16 +8,15 @@ from diffusion_kinetics.optimization import (
     forwardModelKinetics, 
     calc_lnd0aa
 )
-from diffusion_kinetics.pipeline import PipelineOutput
 import os
 
 def plot_results(
     params,
     dataset,
     objective,
-    out_struct:PipelineOutput,
+    plot_path:str,
     reference_law=[],
-    quiet=False,
+    quiet=True,
 ):
     """Plot the results of the optimization.
 
@@ -195,7 +194,7 @@ def plot_results(
         axes[0, 1].set_box_aspect(1)
     plt.tight_layout
 
-    plt.savefig(out_struct.get_plot_path(ndom))
+    plt.savefig(plot_path)
 
     if quiet == False:
         plt.show()

@@ -3,6 +3,7 @@ from diffusion_kinetics.pipeline import SingleProcessPipelineConfig, PipelineOut
 from diffusion_kinetics.optimization import Dataset
 from typing import Union
 from  diffusion_kinetics.optimization import DiffusionOptimizer
+import numpy as np
 
 
 class Pipeline:
@@ -20,8 +21,22 @@ class Pipeline:
         Run the pipeline.
         """
         config = self._load_config(config)
-        res = self.optimizer.run(config)
+        misfits = []
+        results = []
+        seed = config.seed
 
+        # run the optimizer multiple times
+        for i in range(config.repeat_iterations):
+            res = self.optimizer.run(config, seed=seed)
+            misfits.append(res.fun)
+            results.append(res)
+            seed += 1
+            print(f"Finished iteration {i+1} of {config.repeat_iterations}. misfit: {res.fun}, iters: {res.nit}")
+            
+        # get the best result
+        index = np.argmin(misfits)
+        res = results[index]
+        
         if self.output:
             self.output.save_results(res, config, self.dataset)
             
@@ -33,7 +48,6 @@ class Pipeline:
             "nit": res.nit,
             "nfev": res.nfev,
         }
-        
         return res
     
     def _load_config(self, config:Union[str, dict, SingleProcessPipelineConfig]):

@@ -1,5 +1,6 @@
 from typing import Union
 import yaml
+import json
 import torch
 
 
@@ -43,6 +44,19 @@ class BasePipelineConfig:
                 string += f"    {attr}: {getattr(self, attr)}\n"
         string += ")"
         return string
+    
+    def serialize(self):
+        """ serialize the config to a dictionary """
+        d = {}
+        for attr in dir(self):
+            if not attr.startswith("_") and not callable(getattr(self, attr)):
+                d[attr] = getattr(self, attr)
+                # make sure the attribute is json serializable
+                try:
+                    json.dumps(d[attr])
+                except TypeError:
+                    d[attr] = d[attr].tolist()
+        return d
     
 
 class SingleProcessPipelineConfig(BasePipelineConfig):

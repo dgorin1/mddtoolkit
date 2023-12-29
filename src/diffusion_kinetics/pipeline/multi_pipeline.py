@@ -18,12 +18,11 @@ class MultiPipeline:
         config = self._load_config(config)
         pipeline = Pipeline(self.dataset, output=self.output)
         for misfit_type in config.single_pipeline_configs.keys():
+            print("Running pipeline for misfit type:", misfit_type)
             configs_for_each_domain_list = config.single_pipeline_configs[misfit_type]
             for single_pipeline_config in configs_for_each_domain_list:
                 res = pipeline.run(single_pipeline_config)
                 results.append(res)
-                if self.output:
-                    self.output.save_results(res, single_pipeline_config, self.dataset)
         return results
     
     def _load_config(self, config:Union[str, dict, MultiProcessPipelineConfig]):
