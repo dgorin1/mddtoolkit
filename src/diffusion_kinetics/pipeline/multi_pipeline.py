@@ -5,16 +5,20 @@ from diffusion_kinetics.optimization import Dataset
 from diffusion_kinetics.pipeline.base_pipeline import BasePipeline
 from diffusion_kinetics.utils.kinetics_dataframe import KineticsDataframe
 from typing import Union
+from diffusion_kinetics.preprocessing.generate_inputs import generate_inputs
 import numpy as np
+from pathlib import Path
 
 class MultiPipeline(BasePipeline):
     def __init__(
         self,
-        dataset:Union[str, pd.DataFrame, Dataset],
+        dataset:str,
         output:Union[str, PipelineOutput]=None,
     ):
-        self.dataset = MultiPipeline._load_dataset(dataset)
         self.output = MultiPipeline._create_output(output)
+        filename = Path(dataset).stem
+        input_dataset = generate_inputs(dataset, self.output.get_generated_input_path(filename))
+        self.dataset = MultiPipeline._load_dataset(input_dataset)
     
     def run(self, config:Union[str, dict, MultiProcessPipelineConfig]):
         results = []

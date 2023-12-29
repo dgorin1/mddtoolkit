@@ -44,7 +44,10 @@ class PipelineOutput:
         return os.path.join(self.output_dir, config.misfit_stat, f"{config.num_domains}_dom_optimizer_output.{file_type}")
     
     def get_dataframe_path(self, misfit_type:str, file_type:str="csv"):
-        return os.path.join(self.output_dir, misfit_type, f"combined_results.{file_type}")
+        return os.path.join(self.output_dir, misfit_type, f"combined_results_{misfit_type}.{file_type}")
+    
+    def get_generated_input_path(self, input_filename:str, file_type:str="csv"):
+        return os.path.join(self.output_dir, f"input_{input_filename}.{file_type}")
     
     def serialize_results(self, results:dict, config:dict):
         """serialize the results to a json friendly format

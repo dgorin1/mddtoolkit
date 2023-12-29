@@ -36,9 +36,9 @@ def generate_inputs(
     # Combine the diffusion parameters with the experimental setup (T, thr, M, delM)
     # to get a final dataframe that will be passed into the optimizer
     diffusionExperimentResults = expData.join(expResults)
-
     # Write dataframe to a .csv file
     diffusionExperimentResults.to_csv(nameOfExperimentalResultsFile)
+    return diffusionExperimentResults
 
 
 # main
