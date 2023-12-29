@@ -22,8 +22,7 @@ class DiffusionOptimizer:
             - ndom (int): The number of domains to use.
         """
         bounds = self._construct_bounds(config)
-        nlcs = self._construct_nlcs(config.num_domains)
-            
+        nlcs = self._construct_nlcs(config.num_domains) 
         objective = DiffusionObjective(
             self.dataset, 
             config.time_add,
@@ -33,7 +32,6 @@ class DiffusionOptimizer:
             config.geometry,
             config.punish_degas_early
         )
-        
         return differential_evolution(
             objective,
             bounds,
