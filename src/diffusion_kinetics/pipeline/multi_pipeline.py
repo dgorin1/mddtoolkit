@@ -30,6 +30,8 @@ class MultiPipeline:
             config = MultiProcessPipelineConfig.load(config)
         elif isinstance(config, dict):
             config = MultiProcessPipelineConfig(**config)
+        elif config == None:
+            config = MultiProcessPipelineConfig()
         elif not isinstance(config, MultiProcessPipelineConfig):
             raise ValueError(f"config must be a path to a yaml file, a dictionary, or a SingleProcessPipelineConfig object. Got: {config.__class__.__name__}")
         return config

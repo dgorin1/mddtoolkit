@@ -59,6 +59,8 @@ class Pipeline:
             config = SingleProcessPipelineConfig.load(config)
         elif isinstance(config, dict):
             config = SingleProcessPipelineConfig(**config)
+        elif config == None:
+            config = SingleProcessPipelineConfig()
         elif not isinstance(config, SingleProcessPipelineConfig):
             raise ValueError(f"config must be a path to a yaml file, a dictionary, or a SingleProcessPipelineConfig object. Got: {config.__class__.__name__}")
         return config
