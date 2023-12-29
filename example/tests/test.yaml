@@ -1,0 +1,30 @@
+ea_bounds:
+- 50.0
+- 500.0
+geometry: plane sheet
+# iteration_repeats: 10
+lnd0aa_bounds:
+- -5.0
+- 60.0
+max_domains_to_model: 8
+max_iters: 10000
+misfit_stat_list:
+- chisq
+# - l1_frac
+# - lnd0aa_chisq
+# - percent_frac
+# - l1_frac_cum
+# - l1_moles
+# - l2_moles
+# - l2_frac
+# - lnd0aa
+omit_value_indices: []
+punish_degas_early: true
+temp_add: []
+time_add: []
+
+repeat_iterations: 5
+seed: 0
+tol: 0.0001
+popsize: 15
+updating: deferred

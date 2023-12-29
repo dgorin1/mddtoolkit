@@ -14,10 +14,11 @@ def generate_inputs(
     and the name of the output file and the desired geometry before you run this code. 
     I suppose this should maybe be a part of the gui?
 
+
     Args:
-        - nameOfInputCSVFile (str): the name of the input .csv file.
-        - nameOfExperimentalResultsFile (str): the name of the output .csv file.
-        - geometry (str, optional): the geometry of the sample. Defaults to "spherical".
+        nameOfInputCSVFile (str): the name of the input .csv file.
+        nameOfExperimentalResultsFile (str): the name of the output .csv file.
+        geometry (str, optional): the geometry of the sample. Defaults to "spherical".
     """
 
     expData = pd.read_csv(nameOfInputCSVFile, header=None)
@@ -35,9 +36,9 @@ def generate_inputs(
     # Combine the diffusion parameters with the experimental setup (T, thr, M, delM)
     # to get a final dataframe that will be passed into the optimizer
     diffusionExperimentResults = expData.join(expResults)
-
     # Write dataframe to a .csv file
     diffusionExperimentResults.to_csv(nameOfExperimentalResultsFile)
+    return diffusionExperimentResults
 
 
 # main
@@ -45,7 +46,7 @@ if __name__ == "__main__":
     # generate some results
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    nameOfInputCSVFile = f"{dir_path}/data/93-ng-39.csv"
-    nameOfExperimentalResultsFile = f"{dir_path}/data/input_93-ng-39.csv"
+    nameOfInputCSVFile = f"{dir_path}/N13ksp_python_test.csv"
+    nameOfExperimentalResultsFile = f"{dir_path}/input_N13ksp_python_test.csv"
     geometry = "plane sheet"
     generate_inputs(nameOfInputCSVFile, nameOfExperimentalResultsFile, geometry)

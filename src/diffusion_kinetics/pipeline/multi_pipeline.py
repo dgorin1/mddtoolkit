@@ -3,19 +3,26 @@ from diffusion_kinetics.pipeline import MultiProcessPipelineConfig, PipelineOutp
 from diffusion_kinetics.pipeline.single_pipeline import SinglePipeline
 from diffusion_kinetics.optimization import Dataset
 from diffusion_kinetics.pipeline.base_pipeline import BasePipeline
+from diffusion_kinetics.utils.kinetics_dataframe import KineticsDataframe
 from typing import Union
+from diffusion_kinetics.preprocessing.generate_inputs import generate_inputs
+import numpy as np
+from pathlib import Path
 
 class MultiPipeline(BasePipeline):
     def __init__(
         self,
-        dataset:Union[str, pd.DataFrame, Dataset],
+        dataset:str,
         output:Union[str, PipelineOutput]=None,
     ):
-        self.dataset = MultiPipeline._load_dataset(dataset)
         self.output = MultiPipeline._create_output(output)
+        filename = Path(dataset).stem
+        input_dataset = generate_inputs(dataset, self.output.get_generated_input_path(filename))
+        self.dataset = MultiPipeline._load_dataset(input_dataset)
     
     def run(self, config:Union[str, dict, MultiProcessPipelineConfig]):
         results = []
+        combined_df = None
         config = MultiPipeline._load_config(config)
         pipeline = SinglePipeline(self.dataset, output=self.output)
         for misfit_type in config.single_pipeline_configs.keys():
@@ -24,6 +31,13 @@ class MultiPipeline(BasePipeline):
             for single_pipeline_config in configs_for_each_domain_list:
                 print(f"Running pipeline with {single_pipeline_config.num_domains} domains")
                 res = pipeline.run(single_pipeline_config)
+                # save the combined csv
+                if combined_df is None:
+                    combined_df = KineticsDataframe(res, single_pipeline_config).df
+                else:
+                    combined_df = self.combine_dfs(combined_df, KineticsDataframe(res, single_pipeline_config).df)
+                combined_df.to_csv(self.output.get_dataframe_path(misfit_type))
+
                 results.append(res)
                 print("")
         return results
@@ -59,3 +73,21 @@ class MultiPipeline(BasePipeline):
         else:
             raise ValueError(f"output must be a path to a directory or a PipelineOutput object. Got: {output.__class__.__name__}")
         return output
+    
+        
+    @staticmethod
+    def combine_dfs(d1, d2):
+        col_names = d1.columns if len(d1.columns) > len(d2.columns) else d2.columns
+        df_dict = {}
+        for col in col_names:
+            if col not in df_dict.keys():
+                df_dict[col] = []
+            if col in d1:
+                df_dict[col] = df_dict[col] + d1[col].tolist()
+            else:
+                df_dict[col] = df_dict[col] + [None for _ in range(len(d1))]
+            if col in d2:
+                df_dict[col] = df_dict[col] + d2[col].tolist()
+            else:
+                df_dict[col] = df_dict[col] + [None for _ in range(len(d2))]
+        return pd.DataFrame.from_dict(df_dict)

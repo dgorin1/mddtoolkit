@@ -121,7 +121,7 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
         assert len(self.ea_bounds) == 2, "ea_bounds must be a list of length 2"
         assert self.lnd0aa_bounds[0] < self.lnd0aa_bounds[1], "lnd0aa_bounds must be in increasing order"
         assert self.ea_bounds[0] < self.ea_bounds[1], "ea_bounds must be in increasing order"        
-        assert self.geometry in ["spherical","plane_sheet"], "geometry must be either 'spherical' or 'plane_sheet'"
+        assert self.geometry in ["spherical","plane sheet"], "geometry must be either 'spherical' or 'plane sheet'"
         assert self.max_iters > 0, "max_iters must be greater than 0"  
         assert self.num_domains >= 0, "num_domains must be greater than 0"
         assert self.misfit_stat in MISFIT_STAT_LIST, f"misfit_stat must be a valid misfit statistic. got {self.misfit_stat}"  
@@ -189,7 +189,7 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
         self.single_pipeline_configs = {}
         for stat in self.misfit_stat_list:
             self.single_pipeline_configs[stat] = []
-            for i in range(1, self.max_domains_to_model):
+            for i in range(1, self.max_domains_to_model + 1):
                 self.single_pipeline_configs[stat].append(
                     SingleProcessPipelineConfig(
                         lnd0aa_bounds=lnd0aa_bounds,
