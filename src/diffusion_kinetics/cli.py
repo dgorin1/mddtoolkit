@@ -12,17 +12,13 @@ def parse_args():
 
 def main():
     args = parse_args()
-    # if MultiProcessPipelineConfig.load(args.config):
-    #     pipeline = MultiPipeline(args.input, args.output)
-    # elif SingleProcessPipelineConfig.load(args.config):
-    #     pipeline = Pipeline(args.input, args.output)
-    # else :
-    #     raise ValueError(f"config must be a path to a yaml file, a dictionary, or a SingleProcessPipelineConfig object. Got: {config.__class__.__name__}")
     try:
         pipeline = MultiPipeline(args.input, args.output)
+        print("Running multi-process pipeline...")
         pipeline.run(args.config)
     except:
         pipeline = Pipeline(args.input, args.output)
+        print("Running single-process pipeline...")
         pipeline.run(args.config)
     
 if __name__ == "__main__":

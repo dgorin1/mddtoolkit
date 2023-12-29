@@ -23,14 +23,15 @@ class Pipeline:
         config = self._load_config(config)
         misfits = []
         results = []
-        seed = config.seed
-
+        
         # run the optimizer multiple times
+        seed = config.seed if config.seed is not None else None
         for i in range(config.repeat_iterations):
             res = self.optimizer.run(config, seed=seed)
             misfits.append(res.fun)
             results.append(res)
-            seed += 1
+            if seed is not None:
+                seed += 1
             print(f"Finished iteration {i+1} of {config.repeat_iterations}. misfit: {res.fun}, iters: {res.nit}")
             
         # get the best result
@@ -48,6 +49,9 @@ class Pipeline:
             "nit": res.nit,
             "nfev": res.nfev,
         }
+        
+        print("Finished pipeline run.")
+        print("best result:", res)
         return res
     
     def _load_config(self, config:Union[str, dict, SingleProcessPipelineConfig]):

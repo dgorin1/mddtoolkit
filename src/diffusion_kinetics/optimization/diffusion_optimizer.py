@@ -23,7 +23,7 @@ class DiffusionOptimizer:
         """
         bounds = self._construct_bounds(config)
         nlcs = self._construct_nlcs(config.num_domains)
-    
+            
         objective = DiffusionObjective(
             self.dataset, 
             config.time_add,
@@ -38,13 +38,13 @@ class DiffusionOptimizer:
             objective,
             bounds,
             disp=False,
-            tol=0.0001,  
+            tol=config.tol,  
             maxiter=config.max_iters,
             constraints=nlcs,
             vectorized=True,
-            updating="deferred",
+            updating=config.updating,
             seed=seed,
-            popsize=15
+            popsize=config.popsize
         )
     
     def _construct_bounds(self, config:SingleProcessPipelineConfig):

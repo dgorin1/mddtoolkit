@@ -84,7 +84,10 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
         max_iters:Union[float,int]=100000,
         punish_degas_early:bool=True,
         repeat_iterations:int=10,
-        seed:int=0,
+        seed:int=None,
+        tol:float=0.0001,
+        popsize:int=15,
+        updating:str="deferred",
     ):
         self.lnd0aa_bounds = lnd0aa_bounds
         self.ea_bounds = ea_bounds
@@ -98,6 +101,9 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
         self.misfit_stat = misfit_stat
         self.repeat_iterations = repeat_iterations
         self.seed = seed
+        self.tol = tol
+        self.popsize = popsize
+        self.updating = updating
         self._assert_is_valid()
         
     def _assert_is_valid(self):
@@ -121,7 +127,10 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
         assert self.misfit_stat in MISFIT_STAT_LIST, f"misfit_stat must be a valid misfit statistic. got {self.misfit_stat}"  
         assert self.repeat_iterations > 0, "repeat_iterations must be greater than 0"
         assert self.repeat_iterations == int(self.repeat_iterations), "repeat_iterations must be an integer"
-        assert self.seed == int(self.seed), "seed must be an integer"
+        assert self.seed == None or self.seed == int(self.seed), "seed must be an integer"
+        assert self.tol > 0, "tol must be greater than 0"
+        assert self.popsize > 0, "popsize must be greater than 0"
+        assert self.updating in ["immediate","deferred"], "updating must be either 'immediate' or 'deferred'"
     
     def to_dict(self):
         """ convert the config to a dictionary """
@@ -168,6 +177,11 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
         omit_value_indices:list[int]=[],
         max_iters:Union[float,int]=100000,
         punish_degas_early:bool=True,
+        repeat_iterations:int=10,
+        seed:int=None,
+        tol:float=0.0001,
+        popsize:int=15,
+        updating:str="deferred",
     ):
         self.max_domains_to_model = max_domains_to_model
         self.misfit_stat_list = misfit_stat_list
@@ -188,6 +202,11 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
                         omit_value_indices=omit_value_indices,
                         max_iters=max_iters,
                         punish_degas_early=punish_degas_early,
+                        repeat_iterations=repeat_iterations,
+                        seed=seed,
+                        tol=tol,
+                        popsize=popsize,
+                        updating=updating,
                     )
                 )
         self._assert_is_valid()

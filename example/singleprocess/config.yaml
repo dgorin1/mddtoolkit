@@ -12,3 +12,7 @@ omit_value_indices: []
 punish_degas_early: true
 temp_add: []
 time_add: []
+seed: 0
+tol: 0.0001
+popsize: 15
+updating: deferred
