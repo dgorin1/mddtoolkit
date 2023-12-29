@@ -3,24 +3,29 @@ from diffusion_kinetics.pipeline import SingleProcessPipelineConfig, PipelineOut
 from diffusion_kinetics.optimization import Dataset
 from typing import Union
 from  diffusion_kinetics.optimization import DiffusionOptimizer
+from diffusion_kinetics.pipeline.base_pipeline import BasePipeline
 import numpy as np
+import pprint
 
+# hide constraint warning, since it's not relevant
+import warnings
+warnings.filterwarnings("ignore", message="delta_grad == 0.0. Check if the approximated function is linear.")
 
-class Pipeline:
+class SinglePipeline(BasePipeline):
     def __init__(
         self,
         dataset: Dataset,
         output: PipelineOutput = None,
     ):
-        self.dataset = self._load_dataset(dataset)
+        self.dataset = SinglePipeline._load_dataset(dataset)
         self.optimizer = DiffusionOptimizer(self.dataset)
-        self.output = self._create_output(output)
+        self.output = SinglePipeline._create_output(output)
 
     def run(self, config: Union[str, dict, SingleProcessPipelineConfig]):
         """
         Run the pipeline.
         """
-        config = self._load_config(config)
+        config = SinglePipeline._load_config(config)
         misfits = []
         results = []
         
@@ -50,11 +55,12 @@ class Pipeline:
             "nfev": res.nfev,
         }
         
-        print("Finished pipeline run.")
-        print("best result:", res)
+        # print the result dictionary in a nice way
+        pprint.pprint(res)
         return res
     
-    def _load_config(self, config:Union[str, dict, SingleProcessPipelineConfig]):
+    @staticmethod
+    def _load_config(config:Union[str, dict, SingleProcessPipelineConfig]):
         if isinstance(config, str):
             config = SingleProcessPipelineConfig.load(config)
         elif isinstance(config, dict):
@@ -65,7 +71,8 @@ class Pipeline:
             raise ValueError(f"config must be a path to a yaml file, a dictionary, or a SingleProcessPipelineConfig object. Got: {config.__class__.__name__}")
         return config
     
-    def _load_dataset(self, dataset:Union[str, pd.DataFrame, Dataset]):
+    @staticmethod
+    def _load_dataset(dataset:Union[str, pd.DataFrame, Dataset]):
         if isinstance(dataset, str):
             dataset = Dataset(pd.read_csv(dataset))
         elif isinstance(dataset, pd.DataFrame):
@@ -74,7 +81,8 @@ class Pipeline:
             raise ValueError(f"dataset must be a path to a csv file, a pandas dataframe, or a Dataset object. Got: {dataset.__class__.__name__}")
         return dataset
 
-    def _create_output(self, output:Union[str, PipelineOutput]):
+    @staticmethod
+    def _create_output(output:Union[str, PipelineOutput]):
         if isinstance(output, PipelineOutput):
             pass
         elif isinstance(output, str):

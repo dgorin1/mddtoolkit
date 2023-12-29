@@ -322,9 +322,9 @@ def forward_model_kinetics_no_extra_heating(
     else:
         ndom = (len(kinetics)) // 2
 
-    # Convert to a tensor for speed
-
-    kinetics = torch.tensor(kinetics)
+    # Convert to a tensor for speed if its not already a tensor
+    if not isinstance(kinetics, torch.Tensor):
+        kinetics = torch.tensor(kinetics)
     Ea = kinetics[
         0
     ]  # Moles isn't passed into this function, so first entry of kinetics is Ea

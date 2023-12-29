@@ -1,7 +1,6 @@
 import argparse
-from diffusion_kinetics.pipeline.pipeline import Pipeline
+from diffusion_kinetics.pipeline.single_pipeline import SinglePipeline
 from diffusion_kinetics.pipeline.multi_pipeline import MultiPipeline
-from diffusion_kinetics.pipeline.pipeline_config import SingleProcessPipelineConfig, MultiProcessPipelineConfig
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Diffusion Kinetics')
@@ -17,7 +16,7 @@ def main():
         print("Running multi-process pipeline...")
         pipeline.run(args.config)
     except:
-        pipeline = Pipeline(args.input, args.output)
+        pipeline = SinglePipeline(args.input, args.output)
         print("Running single-process pipeline...")
         pipeline.run(args.config)
     
