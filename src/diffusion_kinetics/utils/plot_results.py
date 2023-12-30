@@ -279,6 +279,6 @@ def plot_results(
 
     plt.tight_layout
     plt.savefig(plot_path)
-
+    
     if quiet == False:
         plt.show()

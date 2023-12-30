@@ -251,7 +251,7 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
         for stat in self.misfit_stat_list:
             self.single_pipeline_configs[stat] = []
             # if max domains to model is an array, then use the first value as the min and the second as the max
-            r = range(1, self.domains_to_model) if isinstance(self.domains_to_model, int) else range(self.domains_to_model[0], self.domains_to_model[1])
+            r = range(1, self.domains_to_model + 1) if isinstance(self.domains_to_model, int) else range(self.domains_to_model[0], self.domains_to_model[1] + 1)
             for i in r:
                 self.single_pipeline_configs[stat].append(
                     SingleProcessPipelineConfig(

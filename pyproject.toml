@@ -2,8 +2,6 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
-
-
 [project]
 name='diffusion_modeller'
 requires-python = ">= 3.9"
@@ -13,6 +11,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+
 dependencies = [
     "numpy",
     "torch",
