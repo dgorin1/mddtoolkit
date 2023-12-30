@@ -18,8 +18,8 @@ This app does things.
 example cli call:
 ```
 fit_MDD_model \
-    -i /Users/josh/repos/diffusion_code_final/example/tests/N13ksp_python_test.csv \
-    -c /Users/josh/repos/diffusion_code_final/example/tests/test.yaml \
+    -i path_to/diffusion_code_final/example/tests/N13ksp_python_test.csv \
+    -c path_to/diffusion_code_final/example/tests/test.yaml \
     -o /Users/josh/repos/ diffusion_code_final/output/test_final
 ```
 
@@ -57,7 +57,7 @@ updating: deferred
 strategy: best1bin
 mutation: 0.5
 recombination: 0.7
-max_iters: 10000
+max_iters: 100000
 ```
 
 ## Support

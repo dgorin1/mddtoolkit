@@ -31,7 +31,7 @@ class MultiPipeline(BasePipeline):
             print(f"{'='*80}", "\n\033[1mRunning pipeline for misfit type:", misfit_type, "\033[0m", f"\n{'='*80}")
             configs_for_each_domain_list = config.single_pipeline_configs[misfit_type]
             for single_pipeline_config in configs_for_each_domain_list:
-                print(f"\n\033[1m\033[4mRunning pipeline with {single_pipeline_config.num_domains} domains\033[0m")
+                print(f"\n\033[1m\033[4mFitting model with {single_pipeline_config.num_domains} domains\033[0m")
                 res = pipeline.run(single_pipeline_config)
                 # save the combined csv
                 if combined_df is None:

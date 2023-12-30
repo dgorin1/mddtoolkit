@@ -6,7 +6,7 @@ geometry: plane sheet
 lnd0aa_bounds:
 - -5.0
 - 60.0
-domains_to_model: 8
+domains_to_model: [6,8]
 misfit_stat_list:
 - chisq
 # - l1_frac
@@ -24,11 +24,11 @@ time_add: []
 
 # optimization parameters
 repeat_iterations: 10
-seed: 0
+#seed: 0
 tol: 0.0001
 popsize: 15
 updating: deferred
 strategy: best1bin
 mutation: 0.5
 recombination: 0.7
-max_iters: 10000
+max_iters: 20000
