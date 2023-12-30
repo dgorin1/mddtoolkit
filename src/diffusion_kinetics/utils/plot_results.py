@@ -31,7 +31,6 @@ def plot_results(
     # dataset is the dataset class with your data
     # objective is the objective you used
     # reference_law is an array with values [Ea, lnd0aa]
-
     R = 0.008314
     params = torch.tensor(params)
 
@@ -280,6 +279,6 @@ def plot_results(
 
     plt.tight_layout
     plt.savefig(plot_path)
-
+    
     if quiet == False:
         plt.show()

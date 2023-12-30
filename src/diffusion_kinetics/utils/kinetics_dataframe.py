@@ -4,6 +4,13 @@ from diffusion_kinetics.pipeline.pipeline_config import SingleProcessPipelineCon
 from diffusion_kinetics.utils.organize_x import organize_x
 
 class KineticsDataframe:
+    """a dataframe that contains the results of the optimization for a single misfit statistic and number of domains.
+    
+    Args:
+    ------
+        - res (dict): The result of the optimization.
+        - config (SingleProcessPipelineConfig): The configuration for the optimization.
+    """
     def __init__(self, res:dict, config:SingleProcessPipelineConfig):
         self._res = res
         self._config = config

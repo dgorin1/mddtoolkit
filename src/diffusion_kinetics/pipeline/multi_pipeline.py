@@ -25,11 +25,13 @@ class MultiPipeline(BasePipeline):
         combined_df = None
         config = MultiPipeline._load_config(config)
         pipeline = SinglePipeline(self.dataset, output=self.output)
+        print("\n\033[1m\033[4mRunning multi pipeline with config:\033[0m\n")
+        print(config, "\n")
         for misfit_type in config.single_pipeline_configs.keys():
-            print(f"{'='*80}", "\n\033[1mRunning pipeline for misfit type:", misfit_type, "\033[0m\n")
+            print(f"{'='*80}", "\n\033[1mRunning pipeline for misfit type:", misfit_type, "\033[0m", f"\n{'='*80}")
             configs_for_each_domain_list = config.single_pipeline_configs[misfit_type]
             for single_pipeline_config in configs_for_each_domain_list:
-                print(f"Running pipeline with {single_pipeline_config.num_domains} domains")
+                print(f"\n\033[1m\033[4mFitting model with {single_pipeline_config.num_domains} domains\033[0m")
                 res = pipeline.run(single_pipeline_config)
                 # save the combined csv
                 if combined_df is None:
@@ -77,6 +79,15 @@ class MultiPipeline(BasePipeline):
         
     @staticmethod
     def combine_dfs(d1, d2):
+        """Combine two dataframes with different columns.
+
+        Args:
+            d1 (pd.DataFrame): The first dataframe.
+            d2 (pd.DataFrame): The second dataframe.
+
+        Returns:
+            pd.DataFrame: The combined dataframe.
+        """
         col_names = d1.columns if len(d1.columns) > len(d2.columns) else d2.columns
         df_dict = {}
         for col in col_names:
