@@ -98,7 +98,7 @@ class PipelineOutput:
             config.geometry,
             config.punish_degas_early
         )
-        
+
         plot_results(
             organize_x(results.x),
             dataset,

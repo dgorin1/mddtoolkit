@@ -33,7 +33,6 @@ def plot_results(
     # reference_law is an array with values [Ea, lnd0aa]
     R = 0.008314
     params = torch.tensor(params)
-
     if len(params) % 2 != 0:
         tot_moles = params[0]
         params = params[1:]
@@ -64,7 +63,6 @@ def plot_results(
                                      TC, 
                                      geometry = objective.geometry,
                                      added_steps=objective.added_steps)
-
 
     # Calculate the lndaa from the mdd model
     lnd0aa_MDD = calc_lnd0aa(
@@ -114,7 +112,6 @@ def plot_results(
 
 
     for i in range(ndom):
-        
         # Calculate a line representing each domain
         D = params[i+1]-params[0]/R*(1/(TC[objective.added_steps:-1]+273.15))
         # Plot each line

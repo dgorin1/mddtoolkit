@@ -56,7 +56,7 @@ class SinglePipeline(BasePipeline):
             "nit": res.nit,
             "nfev": res.nfev,
         }
-        
+
         x = res["x"]
         df = KineticsDataframe(res, config).df
         df.drop("misfit", axis=1, inplace=True)

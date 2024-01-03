@@ -32,6 +32,7 @@ class DiffusionOptimizer:
             config.geometry,
             config.punish_degas_early
         )
+
         return differential_evolution(
             objective,
             bounds,
