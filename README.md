@@ -1,4 +1,4 @@
-# Diffusion Modeller
+# Diffusion Modeler
 
 This app does things.
 
