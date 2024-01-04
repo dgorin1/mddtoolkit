@@ -104,7 +104,6 @@ def D0calc_MonteCarloErrors(expdata,geometry:str):
 
                 
         elif geometry == "plane sheet":
-        
             # Initialize D/r^2
             DR2_a = np.zeros([nstep])
             DR2_b = np.zeros([nstep])

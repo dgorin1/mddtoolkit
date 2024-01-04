@@ -36,7 +36,7 @@ def organize_x(x, chop_fracs=True):
                 lnd0aa[j], lnd0aa[j + 1] = lnd0aa[j + 1], lnd0aa[j]
                 fracs[j], fracs[j + 1] = fracs[j + 1], fracs[j]
 
-    if "moles" in locals():
+    if ~np.isnan(moles):
         output = np.append(moles, Ea)
     else:
         output = Ea
@@ -47,5 +47,3 @@ def organize_x(x, chop_fracs=True):
         output = np.append(output, fracs)
 
     return output
-
-    
