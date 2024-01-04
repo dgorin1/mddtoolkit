@@ -1,4 +1,4 @@
-# Diffusion Modeler
+# Multi-Diffusion Domain Model Toolkit (mddtoolkit) 
 
 This app does things.
 
@@ -11,10 +11,11 @@ This app does things.
 
 ## Installation
 
-1. Clone this repository with `git clone https://github.com/dgorin1/diffusion_code_final`
-2. Run `pip install -e .` in the root directory of the repository to install the package and its dependencies
+1. Run `pip install -e .` in the root directory of the repository to install the package and its dependencies
+2. Dance
 
 ## Usage
+### Quick Start
 example cli call:
 ```
 fit_MDD_model \
@@ -25,39 +26,19 @@ fit_MDD_model \
 
 example yaml file:
 ```yaml
+domains_to_model: [1,8]
+
+lnd0aa_bounds:
+- -5.0
+- 50.0
+
 ea_bounds:
 - 50.0
 - 500.0
-geometry: plane sheet
-lnd0aa_bounds:
-- -5.0
-- 60.0
-domains_to_model: 8 # number of domains to model
-misfit_stat_list:   # different misfit statistics to try
-- chisq
-- l1_frac
-- lnd0aa_chisq
-- percent_frac
-- l1_frac_cum
-- l1_moles
-- l2_moles
-- l2_frac
-- lnd0aa
-omit_value_indices: []
-punish_degas_early: true
-temp_add: []
-time_add: []
 
-# optimization parameters
-repeat_iterations: 10 # number of times to repeat the optimization per domain/misfit statistic
-seed: 0
-tol: 0.0001
-popsize: 15
-updating: deferred
-strategy: best1bin
-mutation: 0.5
-recombination: 0.7
-max_iters: 100000
+geometry: plane sheet
+omit_value_indices: []
+punish_degas_early: true 
 ```
 
 ## Support

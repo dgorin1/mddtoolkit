@@ -12,21 +12,23 @@ from pathlib import Path
 class MultiPipeline(BasePipeline):
     def __init__(
         self,
-        dataset:str,
         output:Union[str, PipelineOutput]=None,
     ):
         self.output = MultiPipeline._create_output(output)
-        filename = Path(dataset).stem
-        input_dataset = generate_inputs(dataset, self.output.get_generated_input_path(filename))
-        self.dataset = MultiPipeline._load_dataset(input_dataset)
     
-    def run(self, config:Union[str, dict, MultiProcessPipelineConfig]):
+    def run(self, config:Union[str, dict, MultiProcessPipelineConfig], dataset:str):
         results = []
         combined_df = None
         config = MultiPipeline._load_config(config)
+        
+        filename = Path(dataset).stem
+        input_dataset = generate_inputs(dataset, self.output.get_generated_input_path(filename), config.geometry)
+        self.dataset = MultiPipeline._load_dataset(input_dataset)
+        
         pipeline = SinglePipeline(self.dataset, output=self.output)
         print("\n\033[1m\033[4mRunning multi pipeline with config:\033[0m")
         print(config, "\n")
+        
         for misfit_type in config.single_pipeline_configs.keys():
             print(f"{'='*80}", "\n\033[1mRunning pipeline for misfit type:", misfit_type, "\033[0m", f"\n{'='*80}")
             configs_for_each_domain_list = config.single_pipeline_configs[misfit_type]

@@ -93,8 +93,6 @@ class DiffusionObjective:
         self.added_steps = len(time_add)
         self.punish_degas_early = punish_degas_early
 
-
-
     def __call__(self, X):
         return self.objective(X)
 

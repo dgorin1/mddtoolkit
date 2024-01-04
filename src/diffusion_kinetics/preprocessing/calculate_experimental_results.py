@@ -5,7 +5,7 @@ import math as math
 import warnings
 
 
-def D0calc_MonteCarloErrors(expdata,geometry:str = "spherical"):
+def D0calc_MonteCarloErrors(expdata,geometry:str):
     # Function for calculating D0 and D/a^2 from experimental data. Input should be a
     # Pandas DataFrame with columns "TC", "thr",
     # M, and, and delM, which correspond to heating temperature (deg C), 
@@ -104,12 +104,12 @@ def D0calc_MonteCarloErrors(expdata,geometry:str = "spherical"):
 
                 
         elif geometry == "plane sheet":
-
+        
             # Initialize D/r^2
             DR2_a = np.zeros([nstep])
             DR2_b = np.zeros([nstep])
 
-
+            
             #Fechtig and Kalbitzer Equation 5a
             DR2_a[0] = ((((Fi[0]**2) - 0**2))*math.pi)/(4*tsec[0])
             DR2_a[1:] = ((((Fi[1:]**2)-(Fi[0:-1])**2))*math.pi)/(4*tsec[1:])

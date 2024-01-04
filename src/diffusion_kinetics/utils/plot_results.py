@@ -67,7 +67,7 @@ def plot_results(
     # Calculate the lndaa from the mdd model
     lnd0aa_MDD = calc_lnd0aa(
                         Fi_MDD[0:-1], objective.tsec[0:-1], objective.geometry, objective.extra_steps, objective.added_steps
-                    )
+                 )
     
     data = (Fi_MDD.ravel(),lnd0aa_MDD.ravel())
 
