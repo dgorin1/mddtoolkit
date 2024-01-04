@@ -1,0 +1,13 @@
+domains_to_model: [1,8]
+
+lnd0aa_bounds:
+- -5.0
+- 50.0
+
+ea_bounds:
+- 50.0
+- 500.0
+
+geometry: plane sheet
+omit_value_indices: []
+punish_degas_early: true 

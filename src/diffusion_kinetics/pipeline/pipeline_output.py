@@ -57,6 +57,7 @@ class PipelineOutput:
             config (dict): _description_
             dataset (Dataset): _description_
         """
+
         # serialize results
         serialized_results = {
             "fun": results.fun,
@@ -84,7 +85,6 @@ class PipelineOutput:
         """
         if not os.path.exists(os.path.join(self.output_dir, config.misfit_stat)):
             os.makedirs(os.path.join(self.output_dir, config.misfit_stat))
-        
         results_path = self.get_results_path(config)
         res = self.serialize_results(results, config)
         json.dump(res, open(results_path, "w"), indent=4)

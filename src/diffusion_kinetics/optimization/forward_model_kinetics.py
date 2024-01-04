@@ -119,7 +119,7 @@ def forwardModelKinetics(kinetics, tsec, TC, geometry:str = "spherical", added_s
 
 
 def calc_lnd0aa(sumf_MDD,diffti,geometry,extra_steps,added_steps):
-
+    
     if len(sumf_MDD.size())>1: #if there are multiple entries
         diffti = diffti.unsqueeze(1).repeat(1,sumf_MDD.size()[1])
     if extra_steps == True:
@@ -183,7 +183,9 @@ def calc_lnd0aa(sumf_MDD,diffti,geometry,extra_steps,added_steps):
         useb = (sumf_MDD >= 0.6) & (sumf_MDD <= 1)
 
         Daa_MDD = usea*DR2_a + useb*DR2_b
-        
+        if sumf_MDD.shape[0]==41:
+            breakpoint()
+
     lnd0aa_MDD = torch.log(Daa_MDD)
 
 

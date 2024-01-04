@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name='diffusion_modeller'
+name='mddtoolkit'
 requires-python = ">= 3.9"
 version='0.1.0'
 classifiers = [
@@ -32,4 +32,4 @@ readme="README.md"
 where = ["src"]
 
 [project.scripts]
-fit_MDD_model = "diffusion_kinetics.cli:main"
+mddtoolkit = "diffusion_kinetics.cli:main"

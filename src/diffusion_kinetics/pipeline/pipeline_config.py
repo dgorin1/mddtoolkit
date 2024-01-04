@@ -17,7 +17,15 @@ MISFIT_STAT_LIST = [
     "lnd0aa_chisq", 
     "l2_frac"
 ]
-    
+
+DEFAULT_MISFIT_STAT = [
+    "chisq",
+    "l1_frac",
+    "l1_moles",
+    "l1_frac_cum",
+    "percent_frac",
+]
+
     
 class BasePipelineConfig:
     """
@@ -103,7 +111,7 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
         popsize:int=15,
         updating:str="deferred",
         strategy:str="best1bin",
-        mutation:float=0.5,
+        mutation:Union[float, list[float,float]]=[0.5,1.],
         recombination:float=0.7,
         init:str="latinhypercube",
     ):
@@ -212,7 +220,7 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
     def __init__(
         self, 
         domains_to_model:int=8, 
-        misfit_stat_list:list[str]=MISFIT_STAT_LIST,
+        misfit_stat_list:list[str]=DEFAULT_MISFIT_STAT,
         lnd0aa_bounds:list[Union[float,int],Union[float,int]]=[-5.0,50.0],
         ea_bounds:list[Union[float,int],Union[float,int]]=[50.0,500.0],
         time_add:list[Union[float,int]]=[],
@@ -227,7 +235,7 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
         popsize:int=15,
         updating:str="deferred",
         strategy:str="best1bin",
-        mutation:float=0.5,
+        mutation:Union[float, list[float,float]]=[0.5,1.],
         recombination:float=0.7,
         init:str="latinhypercube",
     ):
@@ -246,12 +254,14 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
         self.mutation = mutation
         self.recombination = recombination
         self.init = init
+
+        self._assert_is_valid()
         
         self.single_pipeline_configs = {}
         for stat in self.misfit_stat_list:
             self.single_pipeline_configs[stat] = []
             # if max domains to model is an array, then use the first value as the min and the second as the max
-            r = range(1, self.domains_to_model + 1) if isinstance(self.domains_to_model, int) else range(self.domains_to_model[0], self.domains_to_model[1] + 1)
+            r = range(self.domains_to_model, self.domains_to_model + 1) if isinstance(self.domains_to_model, int) else range(self.domains_to_model[0], self.domains_to_model[1] + 1)
             for i in r:
                 self.single_pipeline_configs[stat].append(
                     SingleProcessPipelineConfig(

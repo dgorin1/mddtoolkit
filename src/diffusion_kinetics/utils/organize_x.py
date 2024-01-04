@@ -2,7 +2,6 @@ import numpy as np
 
 
 def organize_x(x, chop_fracs=True):
-
     """Organize the parameters from the optimization problem into a single array and ensure that the 
     domains are listed in order from least to most retentive.
 
@@ -13,17 +12,17 @@ def organize_x(x, chop_fracs=True):
     Returns:
         np.array: the parameters from the optimization problem.
     """
- 
-    if len(x) % 2 != 0:
-        moles = x[0]
-        x = x[1:]
+    x1 = x.copy()
+    if len(x1) % 2 != 0:
+        moles = x1[0]
+        x1 = x1[1:]
     else:
         moles = np.NaN
 
-    ndom =  (len(x))//2
-    Ea = x[0]
-    lnd0aa = x[1 : 1 + ndom]
-    fracs = x[1 + ndom :]
+    ndom =  (len(x1))//2
+    Ea = x1[0]
+    lnd0aa = x1[1 : 1 + ndom]
+    fracs = x1[1 + ndom :]
     fracs = np.append(fracs, 1 - np.sum(fracs))
 
     n = len(fracs)
@@ -46,6 +45,7 @@ def organize_x(x, chop_fracs=True):
         output = np.append(output, fracs[0:-1])
     else:
         output = np.append(output, fracs)
+
     return output
 
     
