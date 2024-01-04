@@ -1,4 +1,6 @@
 from diffusion_kinetics.pipeline.multi_pipeline import MultiPipeline
+from diffusion_kinetics.optimization import Dataset
+import pandas as pd
 import argparse
 
 def parse_args():
@@ -10,7 +12,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    MultiPipeline(args.input, args.output).run(args.config)
+    MultiPipeline(args.output).run(args.config, args.input)
     
 if __name__ == "__main__":
     main()

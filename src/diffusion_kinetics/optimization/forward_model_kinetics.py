@@ -183,8 +183,6 @@ def calc_lnd0aa(sumf_MDD,diffti,geometry,extra_steps,added_steps):
         useb = (sumf_MDD >= 0.6) & (sumf_MDD <= 1)
 
         Daa_MDD = usea*DR2_a + useb*DR2_b
-        if sumf_MDD.shape[0]==41:
-            breakpoint()
 
     lnd0aa_MDD = torch.log(Daa_MDD)
 

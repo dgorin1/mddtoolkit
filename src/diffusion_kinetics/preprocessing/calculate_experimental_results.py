@@ -6,7 +6,6 @@ import warnings
 
 
 def D0calc_MonteCarloErrors(expdata,geometry:str):
-    breakpoint()
     # Function for calculating D0 and D/a^2 from experimental data. Input should be a
     # Pandas DataFrame with columns "TC", "thr",
     # M, and, and delM, which correspond to heating temperature (deg C), 
