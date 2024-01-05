@@ -1,0 +1,2 @@
+[console_scripts]
+fit_MDD_model = diffusion_kinetics.cli:main

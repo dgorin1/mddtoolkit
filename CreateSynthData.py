@@ -6,18 +6,19 @@ import pandas as pd
 import os 
 
 # Example of well behaved sample
-fracs = 1.2152*torch.tensor([0.0207856400000000,	0.0797348500000000,	0.0677675300000000,	0.1861852500000000	,0.1042001800000000,	0.2246600600000000,	0.1396000400000000	])
-#Ea = torch.tile(200.219193288, (1,len(input.fracs)))
-#input.lnD0aa = [19.4483046687238000	16.1765962791235000	13.9300726859056000	8.8936640020686400	8.6766508832581700	6.8128998005576500	6.1758007797978400];
+breakpoint()
+fracs = torch.tensor([0.0253, 0.0969, 0.0824, 0.2263, 0.1266, 0.2730, 0.1696])
+Ea = torch.tile(torch.tensor(200.219193288), (1,7))
+lnD0aa = [19.4483046687238, 16.1765962791235,	13.9300726859056,	8.89366400206864,	8.67665088325817,	7.51289980055765,	6.97580077979784]
 
 #Example of poorly behaved sample
-gas_moved = np.array(0.01)
-fracs = torch.tensor(np.append(gas_moved, ( fracs*(1-gas_moved))))
+# gas_moved = np.array(0.01)
+# fracs = torch.tensor(np.append(gas_moved, ( fracs*(1-gas_moved))))
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-Ea = torch.tile(torch.tensor(200.219193288), (1,8))
-lnD0aa = torch.tensor([23.8, 19.4483046687238, 16.1765962791235,	13.9300726859056,	8.89366400206864,	8.67665088325817,	7.51289980055765,	6.97580077979784]);
+# Ea = torch.tile(torch.tensor(200.219193288), (1,8))
+# lnD0aa = torch.tensor([23.8, 19.4483046687238, 16.1765962791235,	13.9300726859056,	8.89366400206864,	8.67665088325817,	7.51289980055765,	6.97580077979784])
 #Take gas from all other domains and transfer into a new domain on top...
 
 
@@ -155,6 +156,6 @@ output = pd.DataFrame({"TC": TC.unsqueeze(1).ravel(), "thr": (tsec/3600).unsquee
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-nameOfCSVFile = f"{dir_path}/N13ksp_python_test.csv"
+nameOfCSVFile = f"{dir_path}/N13ksp_good_example.csv"
 
 output.to_csv(nameOfCSVFile)
