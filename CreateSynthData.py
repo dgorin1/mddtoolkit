@@ -156,5 +156,5 @@ output = pd.DataFrame({"TC": TC.unsqueeze(1).ravel(), "thr": (tsec/3600).unsquee
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 nameOfCSVFile = f"{dir_path}/N13ksp_good_example.csv"
-
+breakpoint()
 output.to_csv(nameOfCSVFile)
