@@ -19,9 +19,9 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 # I DID WHAT WAS ABOVE BEFORE, BUT SOMETHING WAS WEIRD WITH HOW TORCH SAVES THE FLOATING POINTS. FIXED IT BY HARD CODING THE RESPONSE.
 
-# fracs = torch.tensor([0.01,	0.024948,	0.095931,	0.081576	,0.224037	,0.125334	,0.27027	]) #0.167904 is last frac
-# added_lnD0aa = torch.tile(torch.tensor(23.8),(1,))
-# lnD0aa = torch.cat((added_lnD0aa,lnD0aa),0)
+fracs = torch.tensor([0.01,	0.024948,	0.095931,	0.081576	,0.224037	,0.125334	,0.27027	]) #0.167904 is last frac
+added_lnD0aa = torch.tile(torch.tensor(23.8),(1,))
+lnD0aa = torch.cat((added_lnD0aa,lnD0aa),0)
 
 
 
@@ -42,7 +42,6 @@ torch.pi = torch.tensor(torch.acos(torch.zeros(1)).item() * 2)
 
 # Convert to a tensor for speed
 
-breakpoint()
 # Check the shape of kinetics and make sure it's a tensor in the shape [num_parameters, num_input_vectors_to_test]
 
 # If dimension is <= 1, then we need to unsqueeze it so it's a 2D tensor
@@ -70,6 +69,7 @@ TK = (TC+273.15).unsqueeze(-1).repeat(1,ndom)
 TK = TK.unsqueeze(2).repeat(1,1,num_vectors)
 
 
+breakpoint()
 # Calculate D/a^2 for each domain
 Daa = torch.exp(lnD0aa)*torch.exp(-Ea/(R*TK))
 
