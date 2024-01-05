@@ -5,21 +5,28 @@ import numpy as np
 import pandas as pd
 import os 
 
-# Example of well behaved sample
-fracs = torch.tensor([0.0253, 0.0969, 0.0824, 0.2263, 0.1266, 0.2730, 0.1696])
-Ea = torch.tile(torch.tensor(200.219193288), (1,7))
-lnD0aa = [19.4483046687238, 16.1765962791235,	13.9300726859056,	8.89366400206864,	8.094775342,	7.51289980055765,	6.97580077979784]
-
-#Example of poorly behaved sample
-# gas_moved = np.array(0.01)
-# fracs = torch.tensor(np.append(gas_moved, ( fracs*(1-gas_moved))))
+# Example of well behaved sample 
+# fracs = torch.tensor([0.0252, 0.0969, 0.0824, 0.2263, 0.1266, 0.2730]) #, 0.1696 is last frac
+Ea = torch.tile(torch.tensor(200.219193288),(1,))
+lnD0aa = torch.tensor([19.4483046687238, 16.1765962791235,	13.9300726859056,	8.89366400206864,	8.094775342,	7.51289980055765,	6.97580077979784])
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-# Ea = torch.tile(torch.tensor(200.219193288), (1,8))
-# lnD0aa = torch.tensor([23.8, 19.4483046687238, 16.1765962791235,	13.9300726859056,	8.89366400206864,	8.67665088325817,	7.51289980055765,	6.97580077979784])
+#Example of poorly behaved sample (Uncomment if you want to produce the badly behaved sample idea)
 #Take gas from all other domains and transfer into a new domain on top...
+# gas_moved = torch.tile(torch.tensor(0.01),(1,))
+# fracs = torch.cat((gas_moved, ( fracs*(1-gas_moved))), 0)
 
+# I DID WHAT WAS ABOVE BEFORE, BUT SOMETHING WAS WEIRD WITH HOW TORCH SAVES THE FLOATING POINTS. FIXED IT BY HARD CODING THE RESPONSE.
+
+fracs = torch.tensor([0.01,	0.024948,	0.095931,	0.081576	,0.224037	,0.125334	,0.27027	]) #0.167904 is last frac
+added_lnD0aa = torch.tile(torch.tensor(23.8),(1,))
+lnD0aa = torch.cat((added_lnD0aa,lnD0aa),0)
+
+
+
+# combine kinetics here
+kinetics = torch.cat((Ea,lnD0aa,fracs),0)
 
 data_input = pd.read_csv(f"{dir_path}/syntheticArArKspar.csv", names = ["T","t"])
 
@@ -27,14 +34,14 @@ total_moles = 5.2129E-12
 
 TC = torch.tensor(data_input["T"])
 tsec = torch.tensor(data_input["t"]*3600)
-kinetics = [200.219193288, 19.4483046687238, 16.1765962791235,	13.9300726859056,	8.89366400206864,	8.67665088325817,	7.51289980055765,	6.97580077979784, 0.0253, 0.0969, 0.0824, 0.2263, 0.1266, 0.2730]
+
  # Define some necessary variables
 R = 0.008314 #gas constant
 torch.pi = torch.tensor(torch.acos(torch.zeros(1)).item() * 2)
 
 
 # Convert to a tensor for speed
-kinetics = torch.tensor(kinetics)
+
 
 # Check the shape of kinetics and make sure it's a tensor in the shape [num_parameters, num_input_vectors_to_test]
 
@@ -155,6 +162,10 @@ output = pd.DataFrame({"TC": TC.unsqueeze(1).ravel(), "thr": (tsec/3600).unsquee
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-nameOfCSVFile = f"{dir_path}/N13ksp_good_example.csv"
-breakpoint()
+nameOfCSVFile = f"{dir_path}/exampleB.csv"
 output.to_csv(nameOfCSVFile)
+
+
+
+#Original kinetics were below..
+#torch.tensor([23.8, 19.4483046687238, 16.1765962791235,	13.9300726859056,	8.89366400206864,	8.67665088325817,	7.51289980055765,	6.97580077979784])
