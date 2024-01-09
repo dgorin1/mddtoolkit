@@ -15,7 +15,6 @@ def plot_results(
     dataset,
     objective,
     plot_path:str,
-    quiet=True,
 ):
     """Plot the results of the optimization.
 
@@ -24,7 +23,6 @@ def plot_results(
         - dataset (Dataset): The dataset for the optimization.
         - objective (DiffusionObjective): The objective function for the optimization.
         - output_path (str): The path to save the plot to.
-        - quiet (bool, optional): Whether to show the plot. Defaults to False.
     """
     # Params is a vector X of the input parameters
     # dataset is the dataset class with your data
@@ -32,12 +30,10 @@ def plot_results(
 
     R = 0.008314
     params = torch.tensor(params)
+
+    # Remove the moles parameter if not needed for plotting
     if len(params) % 2 != 0:
-        tot_moles = params[0]
         params = params[1:]
-        moles_calc = True
-    else:
-        moles_calc = False
 
     # Infer the number of domains from input
     if len(params) <= 3:
@@ -77,7 +73,6 @@ def plot_results(
     mask = torch.isinf(lnd0aa_MDD)
     lnd0aa_MDD[mask] = float("nan")
     lnd0aa_MDD = np.array(lnd0aa_MDD.ravel())
-    T_plot = 10000 / (dataset["TC"] + 273.15)
 
     # Ensure that values from the experimental data aren't infinity also
     dataset["ln(D/a^2)"].replace([np.inf,-np.inf],np.nan, inplace = True)
@@ -85,12 +80,12 @@ def plot_results(
     dataset["ln(D/a^2)+del"].replace([np.inf, -np.inf], np.nan, inplace = True)
     dataset["Fi"].replace([np.inf, -np.inf], np.nan, inplace = True)
 
+    # Recast T_plot T as 10000/T
+    T_plot = 10000 / (dataset["TC"] + 273.15)
 
-    n_plots = 4
 
-
-
-    # Calculate weights proportional to the gas fractions if numdom > 1
+    # Calculate weights proportional to the gas fractions if numdom > 1 to be used in drawing line thicknesses represenging
+    # the domains
     if ndom > 1:
         fracs = params[ndom + 1 :]
         fracs = torch.concat(
@@ -105,27 +100,18 @@ def plot_results(
         fracs = 1
         frac_weights = [2]
 
-
-    
-    # fig, axes = plt.subplots(ncols=3, nrows=1, layout="constrained", figsize=(10, 10))
-
-
-    # Plot figure with subplots of different sizes
+    # Create a figure with subplots of differing sizes and create a subplot grid
     fig = plt.figure(1)
-    # set up subplot grid
     gridspec.GridSpec(2,4)
     
-
-
+    # Begin the first and major plot, the arrhenius plot
     ax = plt.subplot2grid((2,4), (0,0), colspan=2, rowspan=2)
-    ax.set_box_aspect(1)
     for axis in ['top', 'bottom', 'left', 'right']:
         ax.spines[axis].set_linewidth(1.15)
     
+     # Calculate and plot a line representing each domain for visualization in the plot
     for i in range(ndom):
-        # Calculate a line representing each domain for visualization in the plot
         D = params[i+1]-params[0]/R*(1/(TC[objective.added_steps:-1]+273.15))
-        # Plot each line
         plt.plot(
             np.linspace(min(10000/(TC[objective.added_steps:-1]+273.15)), max(10000/(TC[objective.added_steps:-1]+273.15)), 1000),
             np.linspace(max(D), min(D), 1000),
@@ -136,11 +122,11 @@ def plot_results(
             alpha = 0.5
         )
     
-    #Perform type conversions and grab appropriate indices for plotting
+    # Perform type conversions and grab appropriate indices for plotting so that excluded values can be plotted with different symbology
     included = np.array(((1-objective.omitValueIndices) == 1).nonzero().squeeze())
     omitted = np.array((objective.omitValueIndices == 1).nonzero().squeeze())
 
-    # Put into a form that's easy to reference for the indices included in fit and also remove infs
+    # Put into the correct form to be plotted w/ errorbar function for values included
     errors_for_plot_included = np.array(
         pd.concat(
             [
@@ -150,7 +136,7 @@ def plot_results(
             axis=1,
         ).T
     )
-    # Put into a form that's easy to reference for the indices NOT included in fit and also remove infs
+    # Put into the correct form to be plotted w/ errorbar function for values excluded
     errors_for_plot_not_omitted = np.array(
         pd.concat(
             [
@@ -161,7 +147,7 @@ def plot_results(
         ).T
     )
 
-    # Plot the MDD Model lndaa values that were included
+    # Plot the MDD Model ln(D/a^2) values that were included
     plt.plot(
         T_plot[included],
         pd.Series(lnd0aa_MDD[included].tolist()),
@@ -173,7 +159,7 @@ def plot_results(
          zorder = 2
     )
 
-    # Plot the MDD Model lndaa values that were omitted
+    # Plot the MDD Model ln(D/a^2) values that were omitted
     plt.plot(
         T_plot[omitted],
         pd.Series(lnd0aa_MDD[omitted].tolist()),
@@ -186,7 +172,7 @@ def plot_results(
          alpha = 0.4
     )
 
-    # Plot the experimental lndaa values that were included
+    # Plot the experimental ln(D/a^2) values that were included
     plt.errorbar(
         T_plot[included],
         dataset["ln(D/a^2)"].loc[included],
@@ -199,7 +185,7 @@ def plot_results(
         zorder = 1
     )
 
-    # Plot the experimental lndaa values that were omitted
+    # Plot the experimental ln(D/a^2) values that were omitted
     plt.errorbar(
         T_plot[omitted],
         dataset["ln(D/a^2)"].loc[omitted],
@@ -213,52 +199,29 @@ def plot_results(
         alpha = 0.4
     )
 
-    # Label axes
+    # Label and format axes
     plt.ylabel("ln(D/a$^2$)",fontsize = 15.5)
     plt.xlabel("10000/T (K)",fontsize = 15.5)
     plt.xticks(fontsize = 12)
     plt.yticks(fontsize = 12)
-    
-    
-    # plt].set_ylim(-30,0)
+    ax.set_box_aspect(1)
+  # plt].set_ylim(-30,0)
 
 
-    
-    # Make a plot of the gas fractions 
-
-
-   
-    # Put Fi_MDD in non-cumulative space
-    temp = Fi_MDD[1:] - Fi_MDD[0:-1]
-    Fi_MDD = np.insert(temp, 0, Fi_MDD[0])
-
-    # Get gas fractions from actual experiment and put in non-cumulative space
-    Fi = np.array(dataset["Fi"])
-    temp = Fi[1:] - Fi[0:-1]
-    Fi = np.insert(temp, 0, Fi[0])
-
-
-
-
-
-    #     # Plot T_plot vs the gas fraction observed at each step for values that were included
-    # axes[2].errorbar(
-    #     range(0, len(T_plot)),
-    #     Fi,
-    #     fmt='-o', 
-    #     markersize=12, 
-    #     mfc= (0.69,0.69,0.69), 
-    #     mec='black', 
-    #     zorder = 5,
-    #     linewidth = 1,
-    #     color = 'k'
-    # )
-
+    # Create axes for plotting the gas fractions as a function of step #
     ax = plt.subplot2grid((2,4), (1,2), colspan=2, rowspan=1)
     ax.set_box_aspect(1)
     for axis in ['top', 'bottom', 'left', 'right']:
         ax.spines[axis].set_linewidth(1.15)
 
+    # Put Fi_MDD in non-cumulative space
+    temp = Fi_MDD[1:] - Fi_MDD[0:-1]
+    Fi_MDD = np.insert(temp, 0, Fi_MDD[0])
+
+    # Get gas fractions from laboratory experiment and put in non-cumulative space
+    Fi = np.array(dataset["Fi"])
+    temp = Fi[1:] - Fi[0:-1]
+    Fi = np.insert(temp, 0, Fi[0])
 
     # Plot T_plot vs the gas fraction observed at each step for values that were included
     plt.errorbar(
@@ -311,6 +274,8 @@ def plot_results(
                     alpha = 0.55
                     )
 
+    # This loop draws lines between the points and makes them transparent depending on whether 
+    # or not each value was included in the optimization/fitting
     for i in range(len(Fi_MDD)-1):
             if i in omitted or i+1 in omitted:
                 alpha_val = .45
@@ -329,23 +294,21 @@ def plot_results(
                      alpha = alpha_val,
                      zorder = 1
                      )
-
+    # Label axes
     plt.xlabel("step number",fontsize = 12)
     plt.ylabel("Fractional Release (%)", fontsize = 12)
    
 
-
-    # Slope
+    # Create space for the residual plot
+    ax = plt.subplot2grid((2,4), (0,2), colspan=2, rowspan=1)
+    
+    # Calculate the residual using the highest-retentivity domain as a reference for both 
+    # the model and experimental data
     m = params[0]/83.14 #Activation energy (kJ/mol) / gas constant
     resid_exp = dataset["ln(D/a^2)"] - (-m.item() * T_plot + params[1].item())
     resid_model = np.array(lnd0aa_MDD.ravel()) - (-m.item() *T_plot + params[1].item())
 
-    ax = plt.subplot2grid((2,4), (0,2), colspan=2, rowspan=1)
-    ax.set_box_aspect(1)
-    for axis in ['top', 'bottom', 'left', 'right']:
-        ax.spines[axis].set_linewidth(1.15)
-    
-    #Plot the values of residuals that were included in the fit calculated against the experimental results
+    # Plot the values of residuals that were included in the fit calculated against the experimental results
     cum_Fi_MDD = np.cumsum(Fi_MDD)
     cum_Fi_exp = np.cumsum(Fi)
     plt.plot(cum_Fi_exp[included] * 100, 
@@ -355,14 +318,14 @@ def plot_results(
                     alpha = 0.8
                     )
     
-    #Plot the values of residuals that were excluded in the fit calculated against the experimental results
+    # Plot the values of residuals that were excluded in the fit calculated against the experimental results
     plt.plot(cum_Fi_exp[omitted] * 100, 
                     resid_exp[omitted], 'o', markersize=12, 
                     color= (0.69,0.69,0.69), 
                     mec='black', 
                     alpha = 0.3
                     )
-    
+    # Plot the values of residuals that were included in the fit calculated against the model results
     plt.plot(cum_Fi_MDD[included] * 100, 
              resid_model[included], 
                     "o", markersize=5, 
@@ -370,6 +333,8 @@ def plot_results(
                     linewidth=1, 
                     mec='black'
                     )
+    
+    # Plot the values of residuals that were excluded in the fit calculated against the model results
     plt.plot(cum_Fi_MDD[omitted] * 100, 
              resid_model[omitted], 
                 "o", markersize=5, 
@@ -378,7 +343,9 @@ def plot_results(
                 mec='black',
                 alpha = 0.3
                 )
-
+    
+    # This loop draws lines between the points and makes them transparent depending on whether 
+    # or not each value was included in the optimization/fitting
     for i in range(len(cum_Fi_MDD)-1):
             if i in omitted or i+1 in omitted:
                 alpha_val = .45
@@ -398,34 +365,14 @@ def plot_results(
                      zorder = 1
                      )
 
-    breakpoint()
-
-    # #Connect the line segments that were bisected by the omitting of values from the fit
-    # for i in range(len(omitted)):
-    #     #If index is not zero
-    #     #If index is the last in the last in the series
-    #     if omitted[i]+1 == len(resid_model):
-    #         start = omitted[i-1]
-    #         plt.plot(Fi_MDD[start:], resid_model[start:], 'k-', alpha=.1)  # Connect the segments
-
-    #     elif omitted[i] == 0:
-    #         plt.plot(Fi_MDD[0:2], resid_model[0:2], 'k-', alpha=.1)  # Connect the segments
-
-    #     else:
-    #         index = omitted[i]
-    #         print(Fi_MDD[index-1:index+2])
-    #         plt.plot(Fi_MDD[index-1:index+2], resid_model[index-1:index+2], 'k-', alpha=.1)  # Connect the segments
-
-
-
-
-
-
+    # Format plot and label axes
+    ax.set_box_aspect(1)
+    for axis in ['top', 'bottom', 'left', 'right']:
+        ax.spines[axis].set_linewidth(1.15)
     plt.xlabel("Cumulative $^3$He Release (%)",fontsize = 11)
     plt.ylabel("Residual ln(1/s)",fontsize = 11)
     fig.tight_layout()
     fig.set_size_inches(w=15,h=7)
-    plt.savefig(plot_path)
     
-    if quiet == False:
-        plt.show()
+    # Save output
+    plt.savefig(plot_path)
