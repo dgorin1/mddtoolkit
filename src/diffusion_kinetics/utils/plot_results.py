@@ -2,6 +2,7 @@ import torch as torch
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import matplotlib.gridspec as gridspec
 # from utils.get_plot_name import get_plot_name
 from diffusion_kinetics.optimization import (
     forwardModelKinetics, 
@@ -14,7 +15,6 @@ def plot_results(
     dataset,
     objective,
     plot_path:str,
-    reference_law=[],
     quiet=True,
 ):
     """Plot the results of the optimization.
@@ -24,13 +24,12 @@ def plot_results(
         - dataset (Dataset): The dataset for the optimization.
         - objective (DiffusionObjective): The objective function for the optimization.
         - output_path (str): The path to save the plot to.
-        - reference_law (list, optional): The reference law for the optimization. Defaults to [].
         - quiet (bool, optional): Whether to show the plot. Defaults to False.
     """
     # Params is a vector X of the input parameters
     # dataset is the dataset class with your data
     # objective is the objective you used
-    # reference_law is an array with values [Ea, lnd0aa]
+
     R = 0.008314
     params = torch.tensor(params)
     if len(params) % 2 != 0:
@@ -95,27 +94,22 @@ def plot_results(
 
 
     
-    fig, axes = plt.subplots(ncols=2, nrows=2, layout="constrained", figsize=(10, 10))
+    # fig, axes = plt.subplots(ncols=3, nrows=1, layout="constrained", figsize=(10, 10))
 
 
-    # This is going to cause and error and Drew needs to fix
-    errors_for_plot = np.array(
-        pd.concat(
-            [
-                dataset["ln(D/a^2)-del"],
-                dataset["ln(D/a^2)+del"],
-            ],
-            axis=1,
-        ).T
-    )
+    # Plot figure with subplots of different sizes
+    fig = plt.figure(1)
+    # set up subplot grid
+    gridspec.GridSpec(2,4)
 
 
-
+    plt.subplot2grid((2,4), (0,0), colspan=2, rowspan=2)
+    plt.tight_layout
     for i in range(ndom):
-        # Calculate a line representing each domain
+        # Calculate a line representing each domain for visualization in the plot
         D = params[i+1]-params[0]/R*(1/(TC[objective.added_steps:-1]+273.15))
         # Plot each line
-        axes[0, 0].plot(
+        plt.plot(
             np.linspace(min(10000/(TC[objective.added_steps:-1]+273.15)), max(10000/(TC[objective.added_steps:-1]+273.15)), 1000),
             np.linspace(max(D), min(D), 1000),
             "--",
@@ -125,11 +119,35 @@ def plot_results(
             alpha = 0.5
         )
     
+    #Perform type conversions and grab appropriate indices for plotting
+    included = np.array(((1-objective.omitValueIndices) == 1).nonzero().squeeze())
+    omitted = np.array((objective.omitValueIndices == 1).nonzero().squeeze())
 
-    # Plot the MDD Model lndaa values
-    axes[0, 0].plot(
-        T_plot[0:-1],
-        pd.Series(data[1].tolist())
+    # Put into a form that's easy to reference for the indices included in fit
+    errors_for_plot_included = np.array(
+        pd.concat(
+            [
+                dataset["ln(D/a^2)-del"][included],
+                dataset["ln(D/a^2)+del"][included],
+            ],
+            axis=1,
+        ).T
+    )
+    # Put into a form that's easy to reference for the indices NOT included in fit
+    errors_for_plot_not_omitted = np.array(
+        pd.concat(
+            [
+                dataset["ln(D/a^2)-del"][omitted[0:-1]],
+                dataset["ln(D/a^2)+del"][omitted[0:-1]],
+            ],
+            axis=1,
+        ).T
+    )
+
+    # Plot the MDD Model lndaa values that were included
+    plt.plot(
+        T_plot[included],
+        pd.Series(data[1][included].tolist())
         .replace(-np.inf, np.inf)
         .fillna(max(data[1]).item()),
          "o", 
@@ -140,27 +158,53 @@ def plot_results(
          zorder = 2
     )
 
-    # Plot the experimental lndaa values
+    # Plot the MDD Model lndaa values that were omitted
+    plt.plot(
+        T_plot[omitted[0:-1]],
+        pd.Series(data[1][omitted[0:-1]].tolist())
+        .replace(-np.inf, np.inf)
+        .fillna(max(data[1]).item()),
+         "o", 
+         markersize=5, 
+         color='black', 
+         linewidth=1, 
+         mec='black',
+         zorder = 2,
+         alpha = 0.3
+    )
 
-    axes[0, 0].errorbar(
-        T_plot,
-        dataset["ln(D/a^2)"].replace(-np.inf, 0),
-        yerr=errors_for_plot,
+    # Plot the experimental lndaa values that were included
+    plt.errorbar(
+        T_plot[included],
+        dataset["ln(D/a^2)"].replace(-np.inf, 0).loc[included],
+        yerr=errors_for_plot_included,
         fmt = 'o', 
         markersize=12, 
         color= (0.69,0.69,0.69),
         linewidth=1,
          mec='black', 
-        #  alpha = 0.8
         zorder = 1
     )
-    
+
+    # Plot the experimental lndaa values that were omitted
+    plt.errorbar(
+        T_plot[omitted[0:-1]],
+        dataset["ln(D/a^2)"].replace(-np.inf, 0).loc[omitted[0:-1]],
+        yerr=errors_for_plot_not_omitted,
+        fmt = 'o', 
+        markersize=12, 
+        color= (0.69,0.69,0.69),
+        linewidth=1,
+         mec='black', 
+        zorder = 1,
+        alpha = 0.3
+    )
 
     # Label axes
-    axes[0, 0].set_ylabel("ln(D/a$^2$)")
-    axes[0, 0].set_xlabel("10000/T (K)")
-    axes[0,0].set_ylim(-30,0)
-    axes[0, 0].set_box_aspect(1)
+    plt.ylabel("ln(D/a$^2$)")
+    plt.xlabel("10000/T (K)")
+    #plt.box_aspect(1)
+    # plt].set_ylim(-30,0)
 
 
     
@@ -178,23 +222,65 @@ def plot_results(
     temp = Fi[1:] - Fi[0:-1]
     Fi = np.insert(temp, 0, Fi[0])
 
-    # Plot T_plot vs the gas fraction observed at each step
-    axes[1, 0].errorbar(
-        range(0, len(T_plot)),
-        Fi,
+
+
+
+
+    #     # Plot T_plot vs the gas fraction observed at each step for values that were included
+    # axes[2].errorbar(
+    #     range(0, len(T_plot)),
+    #     Fi,
+    #     fmt='-o', 
+    #     markersize=12, 
+    #     mfc= (0.69,0.69,0.69), 
+    #     mec='black', 
+    #     zorder = 5,
+    #     linewidth = 1,
+    #     color = 'k'
+    # )
+
+    plt.subplot2grid((2,4), (0,2), colspan=2, rowspan=1)
+    plt.tight_layout
+    # Plot T_plot vs the gas fraction observed at each step for values that were included
+    plt.errorbar(
+        range(1, len(T_plot[included])+1),
+        Fi[included],
         fmt='-o', 
         markersize=12, 
         mfc= (0.69,0.69,0.69), 
         mec='black', 
-        # alpha = 0.8,
         zorder = 5,
         linewidth = 1,
         color = 'k'
     )
 
-    # Plot T_plot vs the modeled gas fraction observed at each step
-    axes[1, 0].plot(range(0, len(T_plot)), 
-                    Fi_MDD, 
+    # Plot T_plot vs the gas fraction observed at each step for values that were omitted
+    plt.errorbar(
+        omitted+1,
+        Fi[omitted],
+        fmt='-o', 
+        markersize=12, 
+        mfc= (0.69,0.69,0.69), 
+        mec='black', 
+        zorder = 5,
+        linewidth = 1,
+        color = 'k',
+        alpha = 0.3
+    )
+
+    indices_to_change = omitted
+
+    
+    #drew is still trying to figure out how to connect segments 
+    
+
+        
+   
+    # axes[2].plot(T_plot[indices_to_change[-1]:], Fi[indices_to_change[-1]:], 'ro-',zorder = 1, alpha=1.0)
+    
+    # Plot T_plot vs the modeled gas fraction observed at each step that was included
+    plt.plot(included+1, 
+                    Fi_MDD[included], 
                     "-o", 
                     markersize=5.25, 
                     color='black', 
@@ -204,77 +290,109 @@ def plot_results(
                     )
 
 
+    # Plot T_plot vs the modeled gas fraction observed at each step that was omitted
+    plt.plot(omitted+1, 
+                    Fi_MDD[omitted], 
+                    "-o", 
+                    markersize=5.25, 
+                    color='black', 
+                    linewidth=1, 
+                    mec='black',
+                    zorder = 10,
+                    alpha = 0.3
+                    )
 
+    for i in range(len(indices_to_change) - 1):
+        #If index is not zero
+        #If index is the last in the last in the series
+        if indices_to_change[i]+1 == len(Fi):
+            start = indices_to_change[i]-1
+            end = indices_to_change[i]
+            plt.plot(range(start+1,end+1), Fi[start:end+1], 'k-', alpha=.1)  # Connect the segments
+            plt.plot(range(start+1,end+1), Fi_MDD[start:end+1],'k-',alpha=0.1)
+        elif indices_to_change[i] == 0:
+            start = indices_to_change[i]
+            end = indices_to_change[i]+1
+            plt.plot(range(start+1,end+1), Fi[start:end+1], 'k-', alpha=.1)  # Connect the segments
+            plt.plot(range(start+1,end+1), Fi_MDD[start:end+1],'k-',alpha=0.1)
+        else:
+            start = indices_to_change[i]-1
+            end = indices_to_change[i]+1
+            plt.plot(range(start+1,end+2), Fi[start:end+1], 'k-', alpha=.1)  # Connect the segments
+            plt.plot(range(start+1,end+2), Fi_MDD[start:end+1],'k-',alpha=0.1)
+        print(indices_to_change[i])
 
-    axes[1, 0].set_xlabel("step number")
-    axes[1, 0].set_ylabel("Fractional Release (%)")
-    # axes[1].axis('square')
-    axes[1, 0].set_box_aspect(1)
+    plt.xlabel("step number")
+    plt.ylabel("Fractional Release (%)")
+#    plt.box_aspect(1)
 
     # If moles were calculated, make the same plot but with moles
-    if moles_calc == True:
+    # if moles_calc == True:
 
 
-        # Plot the moles measured in experiment at each step
-        axes[1, 1].errorbar(
-            range(0, len(T_plot)),
-            dataset["M"],
-            yerr=dataset["delM"],
-            fmt='-o', 
-            markersize=12, 
-            mfc= (0.69,0.69,0.69), 
-            mec='black', 
-            alpha = 0.8,
-            zorder = 5,
-            linewidth = 1,
-            color = 'k'
+    #     # Plot the moles measured in experiment at each step
+    #     axes[1, 1].errorbar(
+    #         range(0, len(T_plot)),
+    #         dataset["M"],
+    #         yerr=dataset["delM"],
+    #         fmt='-o', 
+    #         markersize=12, 
+    #         mfc= (0.69,0.69,0.69), 
+    #         mec='black', 
+    #         alpha = 0.8,
+    #         zorder = 5,
+    #         linewidth = 1,
+    #         color = 'k'
 
-        )
-        axes[1, 1].plot(
-            range(0, len(T_plot)), 
-            tot_moles * Fi_MDD, 
-            "-o", 
-            markersize=5.25, 
-            color='black', 
-            linewidth=1, 
-            mec='black',
-            zorder = 10
-        )
-        axes[1, 1].set_xlabel("step number")
-        axes[1, 1].set_ylabel("Atoms Released at Each Step")
-        axes[1, 1].set_box_aspect(1)
-        # axes[2].axis('square')
+    #     )
+    #     axes[1, 1].plot(
+    #         range(0, len(T_plot)), 
+    #         tot_moles * Fi_MDD, 
+    #         "-o", 
+    #         markersize=5.25, 
+    #         color='black', 
+    #         linewidth=1, 
+    #         mec='black',
+    #         zorder = 10
+    #     )
+    #     axes[1, 1].xlabel("step number")
+    #     axes[1, 1].ylabel("Atoms Released at Each Step")
+    #     axes[1, 1].set_box_aspect(1)
+    #     # plt.axis('square')
 
-    if n_plots == 4:
-        # Calculate reference law results
+   
+    # Calculate reference law results
 
-        # Slope
-        m = params[0]/83.14 #Activation energy (kJ/mol) / gas constant
-  
-        resid_exp = dataset["ln(D/a^2)"][0:-1] - (-m.item() * T_plot[0:-1] + params[1].item())
+    # Slope
+    m = params[0]/83.14 #Activation energy (kJ/mol) / gas constant
 
-        resid_model = np.array(lnd0aa_MDD.ravel()) - (-m.item() *T_plot[0:-1] + params[1].item())
+    resid_exp = dataset["ln(D/a^2)"][0:-1] - (-m.item() * T_plot[0:-1] + params[1].item())
 
-        axes[0, 1].plot(data[0][0:-1] * 100, 
-                        resid_exp, 'o', markersize=12, 
-                        color= (0.69,0.69,0.69), 
-                        mec='black', 
-                        alpha = 0.8
-                        )
-        
+    resid_model = np.array(lnd0aa_MDD.ravel()) - (-m.item() *T_plot[0:-1] + params[1].item())
 
-        axes[0, 1].plot(data[0][0:-1] * 100, resid_model, 
-                        "-o", markersize=5, 
-                        color='black',  
-                        linewidth=1, 
-                        mec='black'
-                        )
-        
-        axes[0, 1].set_xlabel("Cumulative 3He Release (%)")
-        axes[0, 1].set_ylabel("Residual ln(1/s)")
-        axes[0, 1].set_box_aspect(1)
-
+    plt.subplot2grid((2,4), (1,2), colspan=2, rowspan=1)
     plt.tight_layout
+    plt.plot(data[0][0:-1] * 100, 
+                    resid_exp, 'o', markersize=12, 
+                    color= (0.69,0.69,0.69), 
+                    mec='black', 
+                    alpha = 0.8
+                    )
+    
+
+    plt.plot(data[0][0:-1] * 100, resid_model, 
+                    "-o", markersize=5, 
+                    color='black',  
+                    linewidth=1, 
+                    mec='black'
+                    )
+    
+    plt.xlabel("Cumulative 3He Release (%)")
+    plt.ylabel("Residual ln(1/s)")
+   # plt.box_aspect(1)
+
+    fig.tight_layout()
+    fig.set_size_inches(w=10,h=7)
     plt.savefig(plot_path)
     
     if quiet == False:
