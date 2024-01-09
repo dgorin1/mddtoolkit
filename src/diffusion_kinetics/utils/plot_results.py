@@ -294,7 +294,7 @@ def plot_results(
                      zorder = 1
                      )
     # Label axes
-    plt.xlabel("step number",fontsize = 12)
+    plt.xlabel("Step Number",fontsize = 12)
     plt.ylabel("Fractional Release (%)", fontsize = 12)
    
 
