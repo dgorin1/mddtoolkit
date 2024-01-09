@@ -60,10 +60,7 @@ class DiffusionObjective:
         self.lnd0aa[self.lnd0aa == -np.inf] = 0
         self.lnd0aa[self.lnd0aa == -np.inf] = 0
         self.lnd0aa[torch.isnan(self.lnd0aa)] = 0
-
-        self.omitValueIndices = torch.isin(
-            torch.arange(len(self.dataset)), torch.tensor(omitValueIndices)
-        ).to(torch.int)
+        self.omitValueIndices = torch.isin(   torch.arange(len(self.dataset)), torch.tensor(omitValueIndices)   ).to(torch.int)
         omitValueIndices_lnd0aa = omitValueIndices + (indices[0].tolist())
         self.omitValueIndices_lnd0aa = torch.isin(
             torch.arange(len(self.dataset)), torch.tensor(omitValueIndices_lnd0aa)

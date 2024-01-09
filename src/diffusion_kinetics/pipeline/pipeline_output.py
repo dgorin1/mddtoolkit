@@ -104,6 +104,5 @@ class PipelineOutput:
             dataset,
             objective,
             self.get_plot_path(config),
-            quiet=quiet,
         )
     
