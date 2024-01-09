@@ -146,7 +146,6 @@ def plot_results(
             axis=1,
         ).T
     )
-
     # Plot the MDD Model ln(D/a^2) values that were included
     plt.plot(
         T_plot[included],
@@ -373,6 +372,6 @@ def plot_results(
     plt.ylabel("Residual ln(1/s)",fontsize = 11)
     fig.tight_layout()
     fig.set_size_inches(w=15,h=7)
-    
+
     # Save output
     plt.savefig(plot_path)
