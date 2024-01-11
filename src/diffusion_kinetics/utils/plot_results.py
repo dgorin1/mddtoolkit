@@ -141,16 +141,20 @@ def plot_results(
         ).T
     )
 
+    if len(omitted.shape) == 0:
+        errors_for_plot_not_omitted = [[dataset["ln(D/a^2)-del"].loc[omitted]], [dataset["ln(D/a^2)+del"].loc[omitted]]]
+
+    else:
     # Put into the correct form to be plotted w/ errorbar function for values excluded
-    errors_for_plot_not_omitted = np.array(
-        pd.concat(
-            [
-                dataset["ln(D/a^2)-del"][omitted],
-                dataset["ln(D/a^2)+del"][omitted],
-            ],
-            axis=1
-        ).T
-    )
+        errors_for_plot_not_omitted = np.array(
+            pd.concat(
+                [
+                    dataset[["ln(D/a^2)-del"]].loc[omitted],
+                    dataset[["ln(D/a^2)+del"]].loc[omitted],
+                ],
+                axis=1
+            ).T
+        )
     # Plot the MDD Model ln(D/a^2) values that were included
     plt.plot(
         T_plot[included],
@@ -165,7 +169,7 @@ def plot_results(
 
     # Plot the MDD Model ln(D/a^2) values that were omitted
     plt.plot(
-        T_plot[omitted],
+        T_plot[[omitted]],
         pd.Series(lnd0aa_MDD[omitted].tolist()),
          "o", 
          markersize=5, 
@@ -189,10 +193,11 @@ def plot_results(
         zorder = 1
     )
 
+
     # Plot the experimental ln(D/a^2) values that were omitted
     plt.errorbar(
-        T_plot[omitted],
-        dataset["ln(D/a^2)"].loc[omitted],
+        T_plot[[omitted]],
+        dataset[["ln(D/a^2)"]].loc[omitted],
         yerr=errors_for_plot_not_omitted,
         fmt = 'o', 
         markersize=12, 
