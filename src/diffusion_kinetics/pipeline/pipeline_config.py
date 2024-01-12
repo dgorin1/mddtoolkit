@@ -150,7 +150,7 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
         assert len(self.lnd0aa_bounds) == 2, "lnd0aa_bounds must be a list of length 2"
         assert len(self.ea_bounds) == 2, "ea_bounds must be a list of length 2"
         assert self.lnd0aa_bounds[0] < self.lnd0aa_bounds[1], "lnd0aa_bounds must be in increasing order"
-        assert self.ea_bounds[0] < self.ea_bounds[1], "ea_bounds must be in increasing order"        
+        assert self.ea_bounds[0] <= self.ea_bounds[1], "ea_bounds must be in increasing order, or equal to one another for fixed Ea"        
         assert self.geometry in ["spherical","plane sheet"], "geometry must be either 'spherical' or 'plane sheet'"
         assert self.max_iters > 0, "max_iters must be greater than 0"  
         assert self.num_domains >= 0, "num_domains must be greater than 0"
