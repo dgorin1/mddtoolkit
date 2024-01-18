@@ -105,9 +105,9 @@ def plot_results(
     gridspec.GridSpec(2,4)
     
     # Begin the first and major plot, the arrhenius plot
-    ax = plt.subplot2grid((2,4), (0,0), colspan=2, rowspan=2)
+    ax1 = plt.subplot2grid((2,4), (0,0), colspan=2, rowspan=2)
     for axis in ['top', 'bottom', 'left', 'right']:
-        ax.spines[axis].set_linewidth(1.15)
+        ax1.spines[axis].set_linewidth(1.15)
     
      # Calculate and plot a line representing each domain for visualization in the plot
     for i in range(ndom):
@@ -126,6 +126,10 @@ def plot_results(
     included = np.array(((1-objective.omitValueIndices) == 1).nonzero().squeeze())
     omitted = np.array((objective.omitValueIndices == 1).nonzero().squeeze())
 
+    # Avoid having a value close to inf plot and rescale the plot..
+    if any(dataset["ln(D/a^2)"].isna()):
+        indices = dataset["ln(D/a^2)"].isna()
+        lnd0aa_MDD[indices] = np.nan
     # Put into the correct form to be plotted w/ errorbar function for values included
     errors_for_plot_included = np.array(
         pd.concat(
@@ -136,16 +140,23 @@ def plot_results(
             axis=1,
         ).T
     )
+
+    if len(omitted.shape) == 0:
+        errors_for_plot_not_omitted = [[dataset["ln(D/a^2)-del"].loc[omitted]], [dataset["ln(D/a^2)+del"].loc[omitted]]]
+        omitted = [omitted]
+
+
+    else:
     # Put into the correct form to be plotted w/ errorbar function for values excluded
-    errors_for_plot_not_omitted = np.array(
-        pd.concat(
-            [
-                dataset["ln(D/a^2)-del"][omitted],
-                dataset["ln(D/a^2)+del"][omitted],
-            ],
-            axis=1,
-        ).T
-    )
+        errors_for_plot_not_omitted = np.array(
+            pd.concat(
+                [
+                    dataset[["ln(D/a^2)-del"]].loc[omitted],
+                    dataset[["ln(D/a^2)+del"]].loc[omitted],
+                ],
+                axis=1
+            ).T
+        )
     # Plot the MDD Model ln(D/a^2) values that were included
     plt.plot(
         T_plot[included],
@@ -157,7 +168,7 @@ def plot_results(
          mec='black',
          zorder = 2
     )
-
+  
     # Plot the MDD Model ln(D/a^2) values that were omitted
     plt.plot(
         T_plot[omitted],
@@ -184,6 +195,7 @@ def plot_results(
         zorder = 1
     )
 
+
     # Plot the experimental ln(D/a^2) values that were omitted
     plt.errorbar(
         T_plot[omitted],
@@ -203,15 +215,15 @@ def plot_results(
     plt.xlabel("10000/T (K)",fontsize = 15.5)
     plt.xticks(fontsize = 12)
     plt.yticks(fontsize = 12)
-    ax.set_box_aspect(1)
-  # plt].set_ylim(-30,0)
+    ax1.set_box_aspect(1)
+    # plt.ylim(-30,0)
 
 
     # Create axes for plotting the gas fractions as a function of step #
-    ax = plt.subplot2grid((2,4), (1,2), colspan=2, rowspan=1)
-    ax.set_box_aspect(1)
+    ax2 = plt.subplot2grid((2,4), (1,2), colspan=2, rowspan=1)
+    ax2.set_box_aspect(1)
     for axis in ['top', 'bottom', 'left', 'right']:
-        ax.spines[axis].set_linewidth(1.15)
+        ax2.spines[axis].set_linewidth(1.15)
 
     # Put Fi_MDD in non-cumulative space
     temp = Fi_MDD[1:] - Fi_MDD[0:-1]
@@ -299,7 +311,7 @@ def plot_results(
    
 
     # Create space for the residual plot
-    ax = plt.subplot2grid((2,4), (0,2), colspan=2, rowspan=1)
+    ax3 = plt.subplot2grid((2,4), (0,2), colspan=2, rowspan=1)
     
     # Calculate the residual using the highest-retentivity domain as a reference for both 
     # the model and experimental data
@@ -365,13 +377,14 @@ def plot_results(
                      )
 
     # Format plot and label axes
-    ax.set_box_aspect(1)
+    ax3.set_box_aspect(1)
     for axis in ['top', 'bottom', 'left', 'right']:
-        ax.spines[axis].set_linewidth(1.15)
-    plt.xlabel("Cumulative $^3$He Release (%)",fontsize = 11)
+        ax3.spines[axis].set_linewidth(1.15)
+    plt.xlabel("Cumulative Gas Release (%)",fontsize = 11)
     plt.ylabel("Residual ln(1/s)",fontsize = 11)
     fig.tight_layout()
     fig.set_size_inches(w=15,h=7)
 
     # Save output
     plt.savefig(plot_path)
+    plt.close(fig)
