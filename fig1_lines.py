@@ -66,7 +66,7 @@ plt.plot(range(2,len(slopes_exampleA[:])+2),
         color = (0.69, 0.69, 0.69),
         linewidth = 1,
         mec = 'black',
-        zorder = 100)
+        zorder = 10)
 
 plt.plot(
     6,
@@ -76,7 +76,7 @@ plt.plot(
     color = (0, 0, 0),
     linewidth = 1,
     mec = 'black',
-    zorder = 10
+    zorder = 100
     )
 
 # Show activation Energy on Plot
@@ -92,7 +92,7 @@ plt.plot(range(100),
 plt.xticks(fontsize = 12)
 plt.yticks(fontsize = 12)
 plt.xlabel("Number of Points Included")
-plt.ylabel("Ea (kJ/mol)")
+plt.ylabel("Predicted Ea (kJ/mol)")
 ax2.set_box_aspect(1)
 plt.xlim(1.2,12.7)
 plt.ylim(100,206)
