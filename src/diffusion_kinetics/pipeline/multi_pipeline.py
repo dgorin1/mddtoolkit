@@ -18,7 +18,6 @@ class MultiPipeline(BasePipeline):
     
     def run(self, config:Union[str, dict, MultiProcessPipelineConfig], dataset:str):
         results = []
-        combined_df = None
         config = MultiPipeline._load_config(config)
         
         filename = Path(dataset).stem
@@ -30,6 +29,7 @@ class MultiPipeline(BasePipeline):
         print(config, "\n")
         
         for misfit_type in config.single_pipeline_configs.keys():
+            combined_df = None
             print(f"{'='*80}", "\n\033[1mRunning pipeline for misfit type:", misfit_type, "\033[0m", f"\n{'='*80}")
             configs_for_each_domain_list = config.single_pipeline_configs[misfit_type]
             for single_pipeline_config in configs_for_each_domain_list:
