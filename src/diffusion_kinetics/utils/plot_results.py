@@ -390,3 +390,13 @@ def plot_results(
     # Save output
     plt.savefig(plot_path)
     plt.close(fig)
+
+
+    fig = plt.figure(2)
+    plt.plot(cum_Fi_exp[included],np.abs(Fi_MDD[included] - Fi[included]), 'o')
+    plt.xlabel("Fraction Released")
+    plt.ylabel("Misfit")
+    plt.savefig(plot_path[0:-21]+"misfit_plot.pdf")
+    plt.close(fig)
+
+
