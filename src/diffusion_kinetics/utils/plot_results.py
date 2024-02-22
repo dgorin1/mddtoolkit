@@ -213,12 +213,12 @@ def plot_results(
     )
 
     # Label and format axes
-    plt.ylabel("ln(D/a$^2$)",fontsize = 15.5)
-    plt.xlabel("10000/T (K)",fontsize = 15.5)
-    plt.xticks(fontsize = 12)
-    plt.yticks(fontsize = 12)
+    plt.ylabel("ln(D/a$^2$)",fontsize = 20)
+    plt.xlabel("$10^4/T$ $(K^{-1})$",fontsize = 20)
+    plt.xticks(fontsize = 16)
+    plt.yticks(fontsize = 16)
     ax1.set_box_aspect(1)
-    plt.ylim(-23,0)
+    plt.ylim(-23,-5)
     plt.xlim(5.,14.3)
 
     # Create axes for plotting the gas fractions as a function of step #
