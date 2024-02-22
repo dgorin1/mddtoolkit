@@ -1,0 +1,9 @@
+numpy
+torch
+scipy
+pandas
+matplotlib
+pyyaml
+pathos
+pytest
+tabulate
