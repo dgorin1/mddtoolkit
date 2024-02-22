@@ -2,45 +2,37 @@ import torch as torch
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from utils.get_plot_name import get_plot_name
+import matplotlib.gridspec as gridspec
+# from utils.get_plot_name import get_plot_name
 from optimization.forwardModelKinetics import forwardModelKinetics
+
 from optimization.forwardModelKinetics import calc_lnd0aa
+import os
 
 def plot_results_schematic(
     params,
     dataset,
     objective,
-    sample_name: str = "",
-    moves_type: str = "",
-    misfit_stat: str = "",
-    quiet=False,
+    plot_path:str,
 ):
     """Plot the results of the optimization.
 
     Args:
-        params (torch.tensor): The parameters from the optimization.
-        dataset (Dataset): The dataset for the optimization.
-        objective (DiffusionObjective): The objective function for the optimization.
-        reference_law (list, optional): The reference law for the optimization. Defaults to [].
-        sample_name (str, optional): The name of the sample. Defaults to "".
-        moves_type (str, optional): _description_. Defaults to "".
-        misfit_stat (str, optional): _description_. Defaults to "".
-        quiet (bool, optional): Whether to show the plot. Defaults to False.
+        - params (torch.tensor): The parameters from the optimization.
+        - dataset (Dataset): The dataset for the optimization.
+        - objective (DiffusionObjective): The objective function for the optimization.
+        - output_path (str): The path to save the plot to.
     """
     # Params is a vector X of the input parameters
     # dataset is the dataset class with your data
     # objective is the objective you used
-    # reference_law is an array with values [Ea, lnd0aa]
 
     R = 0.008314
     params = torch.tensor(params)
 
+    # Remove the moles parameter if not needed for plotting
     if len(params) % 2 != 0:
-        tot_moles = params[0]
         params = params[1:]
-        moles_calc = True
-    else:
-        moles_calc = False
 
     # Infer the number of domains from input
     if len(params) <= 3:
@@ -66,22 +58,33 @@ def plot_results_schematic(
                                      geometry = objective.geometry,
                                      added_steps=objective.added_steps)
 
-
     # Calculate the lndaa from the mdd model
     lnd0aa_MDD = calc_lnd0aa(
-                        Fi_MDD[0:-1], objective.tsec[0:-1], objective.geometry, objective.extra_steps, objective.added_steps
-                    )
-    
-    data = (Fi_MDD.ravel(),lnd0aa_MDD.ravel())
+                        Fi_MDD, objective.tsec, objective.geometry, objective.extra_steps, objective.added_steps
+                 )
 
+    # Ensure that values aren't infinity in Fi for plotting purposes
+    mask = torch.isinf(Fi_MDD)
+    Fi_MDD[mask] = float("nan")
+    Fi_MDD = np.array(Fi_MDD.ravel())
+
+    # Ensure that values aren't infinity in lnd0aa_MDD for plotting purposes
+    mask = torch.isinf(lnd0aa_MDD)
+    lnd0aa_MDD[mask] = float("nan")
+    lnd0aa_MDD = np.array(lnd0aa_MDD.ravel())
+
+    # Ensure that values from the experimental data aren't infinity also
+    dataset["ln(D/a^2)"].replace([np.inf,-np.inf],np.nan, inplace = True)
+    dataset["ln(D/a^2)-del"].replace([np.inf, -np.inf], np.nan, inplace = True)
+    dataset["ln(D/a^2)+del"].replace([np.inf, -np.inf], np.nan, inplace = True)
+    dataset["Fi"].replace([np.inf, -np.inf], np.nan, inplace = True)
+
+    # Recast T_plot T as 10000/T
     T_plot = 10000 / (dataset["TC"] + 273.15)
 
 
-    n_plots = 4
-
-
-
-    # Calculate weights proportional to the gas fractions if numdom > 1
+    # Calculate weights proportional to the gas fractions if numdom > 1 to be used in drawing line thicknesses represenging
+    # the domains
     if ndom > 1:
         fracs = params[ndom + 1 :]
         fracs = torch.concat(
@@ -96,33 +99,23 @@ def plot_results_schematic(
         fracs = 1
         frac_weights = [2]
 
-
+    # Create a figure with subplots of differing sizes and create a subplot grid
+    fig = plt.figure(1)
+    gridspec.GridSpec(2,4)
     
-    fig, axes = plt.subplots(ncols=2, nrows=2, layout="constrained", figsize=(10, 10))
+    # Begin the first and major plot, the arrhenius plot
+    ax1 = plt.subplot2grid((2,4), (0,0), colspan=2, rowspan=2)
+    for axis in ['top', 'bottom', 'left', 'right']:
+        ax1.spines[axis].set_linewidth(1.15)
+    
+    x_doms = np.linspace(0,100000, 1000)
 
-
-    # This is going to cause and error and Drew needs to fix
-    errors_for_plot = np.array(
-        pd.concat(
-            [
-                dataset["ln(D/a^2)-del"],
-                dataset["ln(D/a^2)+del"],
-            ],
-            axis=1,
-        ).T
-    )
-
-
-
+     # Calculate and plot a line representing each domain for visualization in the plot
     for i in range(ndom):
-        
-        # Calculate a line representing each domain
-        D = params[i+1]-params[0]/R*(1/(TC[objective.added_steps:-1]+273.15))
-        print(params[i+1])
-        # Plot each line
-        axes[0, 0].plot(
-            np.linspace(min(10000/(TC[objective.added_steps:-1]+273.15)), max(10000/(TC[objective.added_steps:-1]+273.15)), 1000),
-            np.linspace(max(D), min(D), 1000),
+        D = params[i+1]-params[0]/R*(1/(x_doms+273.15))
+        plt.plot(
+            10000/(273+x_doms),
+            D,
             "--",
             linewidth=frac_weights[i],
             zorder=0,
@@ -130,13 +123,45 @@ def plot_results_schematic(
             alpha = 0.5
         )
     
+    # Perform type conversions and grab appropriate indices for plotting so that excluded values can be plotted with different symbology
+    included = np.array(((1-objective.omitValueIndices) == 1).nonzero().squeeze())
+    omitted = np.array((objective.omitValueIndices == 1).nonzero().squeeze())
 
-    # Plot the MDD Model lndaa values
-    axes[0, 0].plot(
-        T_plot[0:-1],
-        pd.Series(data[1].tolist())
-        .replace(-np.inf, np.inf)
-        .fillna(max(data[1]).item()),
+    # Avoid having a value close to inf plot and rescale the plot..
+    if any(dataset["ln(D/a^2)"].isna()):
+        indices = dataset["ln(D/a^2)"].isna()
+        lnd0aa_MDD[indices] = np.nan
+    # Put into the correct form to be plotted w/ errorbar function for values included
+    errors_for_plot_included = np.array(
+        pd.concat(
+            [
+                dataset["ln(D/a^2)-del"][included],
+                dataset["ln(D/a^2)+del"][included],
+            ],
+            axis=1,
+        ).T
+    )
+
+    if len(omitted.shape) == 0:
+        errors_for_plot_not_omitted = [[dataset["ln(D/a^2)-del"].loc[omitted]], [dataset["ln(D/a^2)+del"].loc[omitted]]]
+        omitted = [omitted]
+
+
+    else:
+    # Put into the correct form to be plotted w/ errorbar function for values excluded
+        errors_for_plot_not_omitted = np.array(
+            pd.concat(
+                [
+                    dataset[["ln(D/a^2)-del"]].loc[omitted],
+                    dataset[["ln(D/a^2)+del"]].loc[omitted],
+                ],
+                axis=1
+            ).T
+        )
+    # Plot the MDD Model ln(D/a^2) values that were included
+    plt.plot(
+        T_plot[included],
+        pd.Series(lnd0aa_MDD[included].tolist()),
          "o", 
          markersize=5, 
          color='black', 
@@ -144,64 +169,103 @@ def plot_results_schematic(
          mec='black',
          zorder = 2
     )
+  
+    # Plot the MDD Model ln(D/a^2) values that were omitted
+    plt.plot(
+        T_plot[omitted],
+        pd.Series(lnd0aa_MDD[omitted].tolist()),
+         "o", 
+         markersize=5, 
+         color='black', 
+         linewidth=1, 
+         mec='black',
+         zorder = 2,
+         alpha = 0.4
+    )
 
-    # Plot the experimental lndaa values
-
-    axes[0, 0].errorbar(
-        T_plot,
-        dataset["ln(D/a^2)"].replace(-np.inf, 0),
-        yerr=errors_for_plot,
+    # Plot the experimental ln(D/a^2) values that were included
+    plt.errorbar(
+        T_plot[included],
+        dataset["ln(D/a^2)"].loc[included],
+        yerr=errors_for_plot_included,
         fmt = 'o', 
         markersize=12, 
         color= (0.69,0.69,0.69),
         linewidth=1,
          mec='black', 
-        #  alpha = 0.8
         zorder = 1
     )
-    
-
-    # Label axes
-    axes[0, 0].set_ylabel("ln(D/a$^2$)")
-    axes[0, 0].set_xlabel("10000/T (K)")
-    axes[0,0].set_ylim(-30,0)
-    axes[0, 0].set_box_aspect(1)
 
 
-    
-    # Make a plot of the gas fractions 
+    # Plot the experimental ln(D/a^2) values that were omitted
+    plt.errorbar(
+        T_plot[omitted],
+        dataset["ln(D/a^2)"].loc[omitted],
+        yerr=errors_for_plot_not_omitted,
+        fmt = 'o', 
+        markersize=12, 
+        color= (0.69,0.69,0.69),
+        linewidth=1,
+         mec='black', 
+        zorder = 1,
+        alpha = 0.4
+    )
 
-    # Set Fi_MDD to a variable
-    Fi_MDD = np.array(data[0])
-   
+    # Label and format axes
+    plt.ylabel("ln(D/a$^2$)",fontsize = 20)
+    plt.xlabel("$10^4/T$ $(K^{-1})$",fontsize = 20)
+    plt.xticks(fontsize = 16)
+    plt.yticks(fontsize = 16)
+    ax1.set_box_aspect(1)
+    plt.ylim(-23,-5)
+    plt.xlim(5.,14.3)
+
+    # Create axes for plotting the gas fractions as a function of step #
+    ax2 = plt.subplot2grid((2,4), (1,2), colspan=2, rowspan=1)
+    ax2.set_box_aspect(1)
+    for axis in ['top', 'bottom', 'left', 'right']:
+        ax2.spines[axis].set_linewidth(1.15)
+
     # Put Fi_MDD in non-cumulative space
     temp = Fi_MDD[1:] - Fi_MDD[0:-1]
     Fi_MDD = np.insert(temp, 0, Fi_MDD[0])
 
-    # Get gas fractions from actual experiment and put in non-cumulative space
-    Fi = np.array(dataset.Fi)
+    # Get gas fractions from laboratory experiment and put in non-cumulative space
+    Fi = np.array(dataset["Fi"])
     temp = Fi[1:] - Fi[0:-1]
     Fi = np.insert(temp, 0, Fi[0])
 
-    # Plot T_plot vs the gas fraction observed at each step
-    axes[1, 0].errorbar(
-        range(0, len(T_plot)),
-        Fi,
-        fmt='-o', 
+    # Plot T_plot vs the gas fraction observed at each step for values that were included
+    plt.errorbar(
+        included+1,
+        Fi[included],
+        fmt='o', 
         markersize=12, 
         mfc= (0.69,0.69,0.69), 
         mec='black', 
-        # alpha = 0.8,
         zorder = 5,
         linewidth = 1,
-        linestyle = '--',
         color = 'k'
     )
 
-    # Plot T_plot vs the modeled gas fraction observed at each step
-    axes[1, 0].plot(range(0, len(T_plot)), 
-                    Fi_MDD, 
-                    "-o", 
+    # Plot T_plot vs the gas fraction observed at each step for values that were omitted
+    plt.errorbar(
+        omitted+1,
+        Fi[omitted],
+        fmt='o', 
+        markersize=12, 
+        mfc= (0.69,0.69,0.69), 
+        mec='black', 
+        zorder = 5,
+        linewidth = 1,
+        color = 'k',
+        alpha = 0.3
+    )
+
+    # Plot T_plot vs the modeled gas fraction observed at each step that was included
+    plt.plot(included+1, 
+                    Fi_MDD[included], 
+                    "o", 
                     markersize=5.25, 
                     color='black', 
                     linewidth=1, 
@@ -210,86 +274,129 @@ def plot_results_schematic(
                     )
 
 
+    # Plot T_plot vs the modeled gas fraction observed at each step that was omitted
+    plt.plot(omitted+1, 
+                    Fi_MDD[omitted], 
+                    "o", 
+                    markersize=5.25, 
+                    color='black', 
+                    linewidth=1, 
+                    mec='black',
+                    zorder = 10,
+                    alpha = 0.55
+                    )
+
+    # This loop draws lines between the points and makes them transparent depending on whether 
+    # or not each value was included in the optimization/fitting
+    for i in range(len(Fi_MDD)-1):
+            if i in omitted or i+1 in omitted:
+                alpha_val = .45
+            else:
+                alpha_val = 1.
+            plt.plot(range(i+1,i+3),
+                     Fi_MDD[i:i+2],
+                     'k-',
+                     alpha = alpha_val,
+                     zorder = 10
+                     )
+            plt.plot(range(i+1,i+3),
+                     Fi[i:i+2],
+                     '--',
+                     color = (0.69,0.69,0.69),
+                     alpha = alpha_val,
+                     zorder = 1
+                     )
+    # Label axes
+    plt.xlabel("Step Number",fontsize = 12)
+    plt.ylabel("Fractional Release (%)", fontsize = 12)
+   
+
+    # Create space for the residual plot
+    ax3 = plt.subplot2grid((2,4), (0,2), colspan=2, rowspan=1)
+    
+    # Calculate the residual using the highest-retentivity domain as a reference for both 
+    # the model and experimental data
+    m = params[0]/83.14 #Activation energy (kJ/mol) / gas constant
+    resid_exp = dataset["ln(D/a^2)"] - (-m.item() * T_plot + params[1].item())
+    resid_model = np.array(lnd0aa_MDD.ravel()) - (-m.item() *T_plot + params[1].item())
+
+    # Plot the values of residuals that were included in the fit calculated against the experimental results
+    cum_Fi_MDD = np.cumsum(Fi_MDD)
+    cum_Fi_exp = np.cumsum(Fi)
+    plt.plot(cum_Fi_exp[included] * 100, 
+                    resid_exp[included], 'o', markersize=12, 
+                    color= (0.69,0.69,0.69), 
+                    mec='black', 
+                    alpha = 0.8
+                    )
+    
+    # Plot the values of residuals that were excluded in the fit calculated against the experimental results
+    plt.plot(cum_Fi_exp[omitted] * 100, 
+                    resid_exp[omitted], 'o', markersize=12, 
+                    color= (0.69,0.69,0.69), 
+                    mec='black', 
+                    alpha = 0.3
+                    )
+    # Plot the values of residuals that were included in the fit calculated against the model results
+    plt.plot(cum_Fi_MDD[included] * 100, 
+             resid_model[included], 
+                    "o", markersize=5, 
+                    color='black',  
+                    linewidth=1, 
+                    mec='black'
+                    )
+    
+    # Plot the values of residuals that were excluded in the fit calculated against the model results
+    plt.plot(cum_Fi_MDD[omitted] * 100, 
+             resid_model[omitted], 
+                "o", markersize=5, 
+                color='black',  
+                linewidth=1, 
+                mec='black',
+                alpha = 0.3
+                )
+    
+    # This loop draws lines between the points and makes them transparent depending on whether 
+    # or not each value was included in the optimization/fitting
+    for i in range(len(cum_Fi_MDD)-1):
+            if i in omitted or i+1 in omitted:
+                alpha_val = .45
+            else:
+                alpha_val = 1.
+            plt.plot(cum_Fi_MDD[i:i+2]*100,
+                     resid_model[i:i+2],
+                     'k-',
+                     alpha = alpha_val,
+                     zorder = 250
+                     )
+            plt.plot(cum_Fi_exp[i:i+2]*100,
+                     resid_exp[i:i+2],
+                     '--',
+                     color= (0.69,0.69,0.69),
+                     alpha = alpha_val,
+                     zorder = 1
+                     )
+
+    # Format plot and label axes
+    ax3.set_box_aspect(1)
+    for axis in ['top', 'bottom', 'left', 'right']:
+        ax3.spines[axis].set_linewidth(1.15)
+    plt.xlabel("Cumulative Gas Release (%)",fontsize = 11)
+    plt.ylabel("Residual ln(1/s)",fontsize = 11)
+    fig.tight_layout()
+    fig.set_size_inches(w=15,h=7)
+
+    # Save output
+    plt.savefig(plot_path)
+    plt.close(fig)
 
 
-    axes[1, 0].set_xlabel("step number")
-    axes[1, 0].set_ylabel("Fractional Release (%)")
-    # axes[1].axis('square')
-    axes[1, 0].set_box_aspect(1)
+    fig = plt.figure(2)
+    plt.plot(cum_Fi_exp[included],np.abs(Fi_MDD[included] - Fi[included]), 'o')
+    plt.xlabel("Fraction Released")
+    plt.ylabel("Misfit")
+    plt.savefig(plot_path[0:-21]+"misfit_plot.pdf")
 
-    # If moles were calculated, make the same plot but with moles
-    if moles_calc == True:
+    plt.close(fig)
 
 
-        # Plot the moles measured in experiment at each step
-        axes[1, 1].errorbar(
-            range(0, len(T_plot)),
-            dataset["M"],
-            yerr=dataset["delM"],
-            fmt='-o', 
-            markersize=12, 
-            mfc= (0.69,0.69,0.69), 
-            mec='black', 
-            alpha = 0.8,
-            zorder = 5,
-            linewidth = 1,
-            linestyle = '--',
-            color = 'k'
-
-        )
-        axes[1, 1].plot(
-            range(0, len(T_plot)), 
-            tot_moles * Fi_MDD, 
-            "-o", 
-            markersize=5.25, 
-            color='black', 
-            linewidth=1, 
-            mec='black',
-            zorder = 10
-        )
-        axes[1, 1].set_xlabel("step number")
-        axes[1, 1].set_ylabel("Atoms Released at Each Step")
-        axes[1, 1].set_box_aspect(1)
-        # axes[2].axis('square')
-
-    if n_plots == 4:
-        # Calculate reference law results
-
-        # Slope
-        m = params[0]/83.14 #Activation energy (kJ/mol) / gas constant
-  
-        resid_exp = dataset["ln(D/a^2)"][0:-1] - (-m.item() * T_plot[0:-1] + params[1].item())
-
-        resid_model = np.array(lnd0aa_MDD.ravel()) - (-m.item() *T_plot[0:-1] + params[1].item())
-
-        axes[0, 1].plot(data[0][0:-1] * 100, 
-                        resid_exp, 'o', markersize=12, 
-                        color= (0.69,0.69,0.69), 
-                        mec='black', 
-                        alpha = 0.8
-                        )
-        
-
-        axes[0, 1].plot(data[0][0:-1] * 100, resid_model, 
-                        "-o", markersize=5, 
-                        color='black', 
-                        linestyle='-', 
-                        linewidth=1, 
-                        mec='black'
-                        )
-        
-        axes[0, 1].set_xlabel("Cumulative 3He Release (%)")
-        axes[0, 1].set_ylabel("Residual ln(1/s)")
-        axes[0, 1].set_box_aspect(1)
-
-    plt.tight_layout
-    file_name = get_plot_name(
-        ndom, "fit_plot", sample_name, moves_type=moves_type, misfit_stat=misfit_stat
-    )
-
-    plt.savefig(file_name)
-
-    if quiet == False:
-        plt.show()
-
-  

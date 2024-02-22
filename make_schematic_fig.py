@@ -12,7 +12,7 @@ from utils.organize_x import organize_x
 # get this file's directory
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-data_input = pd.read_csv(f"{dir_path}/data/GR27_feldspar_in.csv")
+data_input = pd.read_csv(f"{dir_path}/input_GR27_feldspar_in.csv")
 lnd0aa_bounds = (
     -5,
     50,
@@ -32,6 +32,7 @@ omit_value_indices = [32,33,34,35,36,37,38
 
 
 dataset = Dataset("diffEV", data_input)
+
 misfit_stat = "chisq"
 objective = DiffusionObjective(
     dataset,
@@ -51,15 +52,10 @@ plot_results_schematic(
     params,
     dataset,
     objective,
-    sample_name=sample_name,
-    quiet=True,
-    misfit_stat=misfit_stat,
+    plot_path = dir_path
 )
 print(sample_name)
 
 
 print(params)
-
-
-
 
