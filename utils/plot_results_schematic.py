@@ -108,14 +108,12 @@ def plot_results_schematic(
     for axis in ['top', 'bottom', 'left', 'right']:
         ax1.spines[axis].set_linewidth(1.15)
     
-    x_doms = np.linspace(0,100000, 1000)
-
      # Calculate and plot a line representing each domain for visualization in the plot
     for i in range(ndom):
-        D = params[i+1]-params[0]/R*(1/(x_doms+273.15))
+        D = params[i+1]-params[0]/R*(1/(TC[objective.added_steps:-1]+273.15))
         plt.plot(
-            10000/(273+x_doms),
-            D,
+            np.linspace(min(10000/(TC[objective.added_steps:-1]+273.15)), max(10000/(TC[objective.added_steps:-1]+273.15)), 1000),
+            np.linspace(max(D), min(D), 1000),
             "--",
             linewidth=frac_weights[i],
             zorder=0,
@@ -212,13 +210,13 @@ def plot_results_schematic(
     )
 
     # Label and format axes
-    plt.ylabel("ln(D/a$^2$)",fontsize = 20)
-    plt.xlabel("$10^4/T$ $(K^{-1})$",fontsize = 20)
-    plt.xticks(fontsize = 16)
-    plt.yticks(fontsize = 16)
+    plt.ylabel("ln(D/a$^2$)",fontsize = 15.5)
+    plt.xlabel("10000/T (K)",fontsize = 15.5)
+    plt.xticks(fontsize = 12)
+    plt.yticks(fontsize = 12)
     ax1.set_box_aspect(1)
-    plt.ylim(-23,-5)
-    plt.xlim(5.,14.3)
+    # plt.ylim(-30,0)
+
 
     # Create axes for plotting the gas fractions as a function of step #
     ax2 = plt.subplot2grid((2,4), (1,2), colspan=2, rowspan=1)
@@ -389,14 +387,3 @@ def plot_results_schematic(
     # Save output
     plt.savefig(plot_path)
     plt.close(fig)
-
-
-    fig = plt.figure(2)
-    plt.plot(cum_Fi_exp[included],np.abs(Fi_MDD[included] - Fi[included]), 'o')
-    plt.xlabel("Fraction Released")
-    plt.ylabel("Misfit")
-    plt.savefig(plot_path[0:-21]+"misfit_plot.pdf")
-
-    plt.close(fig)
-
-
