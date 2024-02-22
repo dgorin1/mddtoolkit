@@ -1,7 +1,6 @@
-import os
-import pandas as pd
-from src.diffusion_kinetics import optimization
-from src.diffusion_kinetics.optimization.dataset import Dataset
+from src import diffusion_kinetics
+
+
 breakpoint()
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
