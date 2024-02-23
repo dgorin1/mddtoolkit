@@ -31,6 +31,7 @@ def plot_results_schematic(
 
     R = 0.008314
     params = torch.tensor(params)
+    params2 = torch.tensor(params2)
 
     # Remove the moles parameter if not needed for plotting
     if len(params) % 2 != 0:
@@ -164,6 +165,7 @@ def plot_results_schematic(
     
     color_best_fit = "black"
     color_else = 'red'
+    color_else_edge = 'black'
     # Plot the MDD Model ln(D/a^2) values that were included
     plt.plot(
         T_plot[included],
@@ -183,7 +185,7 @@ def plot_results_schematic(
         markersize=marker_size_modeled, 
         color=color_else, 
         linewidth=1, 
-        mec=color_else,
+        mec=color_else_edge,
         zorder = 2
     )
   
@@ -193,9 +195,22 @@ def plot_results_schematic(
         pd.Series(lnd0aa_MDD[omitted].tolist()),
          "o", 
          markersize=marker_size_modeled, 
-         color='black', 
+         color=color_best_fit, 
          linewidth=1, 
-         mec='black',
+         mec=color_best_fit,
+         zorder = 2,
+         alpha = 0.4
+    )
+
+        # Plot the MDD Model ln(D/a^2) values that were omitted
+    plt.plot(
+        T_plot[omitted],
+        pd.Series(lnd0aa_MDD2[omitted].tolist()),
+         "o", 
+         markersize=marker_size_modeled, 
+         color=color_else, 
+         linewidth=1, 
+         mec=color_else,
          zorder = 2,
          alpha = 0.4
     )
@@ -252,6 +267,9 @@ def plot_results_schematic(
     temp = Fi_MDD[1:] - Fi_MDD[0:-1]
     Fi_MDD = np.insert(temp, 0, Fi_MDD[0])
 
+    temp = Fi_MDD2[1:] - Fi_MDD2[0:-1]
+    Fi_MDD2 = np.insert(temp, 0, Fi_MDD2[0])
+
     # Get gas fractions from laboratory experiment and put in non-cumulative space
     Fi = np.array(dataset["Fi"])
     temp = Fi[1:] - Fi[0:-1]
@@ -289,11 +307,22 @@ def plot_results_schematic(
                     Fi_MDD[included], 
                     "o", 
                     markersize=marker_size_modeled, 
-                    color='black', 
+                    color=color_best_fit, 
                     linewidth=1, 
-                    mec='black',
+                    mec=color_best_fit,
                     zorder = 10
                     )
+
+    plt.plot(included+1, 
+                    Fi_MDD2[included], 
+                    "o", 
+                    markersize=marker_size_modeled, 
+                    color=color_else, 
+                    linewidth=1, 
+                    mec=color_else,
+                    zorder = 10
+                    )
+
 
 
     # Plot T_plot vs the modeled gas fraction observed at each step that was omitted
@@ -301,11 +330,23 @@ def plot_results_schematic(
                     Fi_MDD[omitted], 
                     "o", 
                     markersize=marker_size_modeled, 
-                    color='black', 
+                    color=color_best_fit, 
                     linewidth=1, 
                     mec='black',
                     zorder = 10,
                     alpha = 0.55
+                    )
+    
+        # Plot T_plot vs the modeled gas fraction observed at each step that was omitted
+    plt.plot(omitted+1, 
+                    Fi_MDD2[omitted], 
+                    "o", 
+                    markersize=marker_size_modeled, 
+                    color=color_else, 
+                    linewidth=1, 
+                    mec=color_else,
+                    zorder = 10,
+                    alpha = 0.6
                     )
 
     # This loop draws lines between the points and makes them transparent depending on whether 
@@ -317,7 +358,8 @@ def plot_results_schematic(
                 alpha_val = 1.
             plt.plot(range(i+1,i+3),
                      Fi_MDD[i:i+2],
-                     'k-',
+                     '-',
+                     color = color_best_fit,
                      alpha = alpha_val,
                      zorder = 10
                      )
@@ -328,6 +370,21 @@ def plot_results_schematic(
                      alpha = alpha_val,
                      zorder = 1
                      )
+            
+
+    for i in range(len(Fi_MDD2)-1):
+        if i in omitted or i+1 in omitted:
+            alpha_val = .45
+        else:
+            alpha_val = 1.
+        plt.plot(range(i+1,i+3),
+                    Fi_MDD2[i:i+2],
+                    '-',
+                    color = color_else,
+                    alpha = alpha_val,
+                    zorder = 10
+                    )
+
     # Label axes
     plt.xlabel("Step Number",fontsize = label_size)
     plt.ylabel("Fractional Release (%)", fontsize = label_size)
@@ -339,12 +396,17 @@ def plot_results_schematic(
     # Calculate the residual using the highest-retentivity domain as a reference for both 
     # the model and experimental data
     m = params[0]/83.14 #Activation energy (kJ/mol) / gas constant
+    m2 = params[0]/83.14
     resid_exp = dataset["ln(D/a^2)"] - (-m.item() * T_plot + params[1].item())
     resid_model = np.array(lnd0aa_MDD.ravel()) - (-m.item() *T_plot + params[1].item())
+    resid_model2 = np.array(lnd0aa_MDD.ravel()) - (-m.item() *T_plot + params2[1].item())
 
     # Plot the values of residuals that were included in the fit calculated against the experimental results
     cum_Fi_MDD = np.cumsum(Fi_MDD)
+    cum_Fi_MDD2 = np.cumsum(Fi_MDD2)
     cum_Fi_exp = np.cumsum(Fi)
+
+
     plt.plot(cum_Fi_exp[included] * 100, 
                     resid_exp[included], 'o', markersize=marker_size_measured, 
                     color= (0.69,0.69,0.69), 
@@ -363,9 +425,18 @@ def plot_results_schematic(
     plt.plot(cum_Fi_MDD[included] * 100, 
              resid_model[included], 
                     "o", markersize=marker_size_modeled, 
-                    color='black',  
+                    color=color_best_fit,  
                     linewidth=1, 
-                    mec='black'
+                    mec=color_best_fit
+                    )
+    
+    # Plot the values of residuals that were included in the fit calculated against the model results
+    plt.plot(cum_Fi_MDD2[included] * 100, 
+             resid_model2[included], 
+                    "o", markersize=marker_size_modeled, 
+                    color=color_else,  
+                    linewidth=1, 
+                    mec=color_else
                     )
     
     # Plot the values of residuals that were excluded in the fit calculated against the model results
@@ -387,10 +458,20 @@ def plot_results_schematic(
                 alpha_val = 1.
             plt.plot(cum_Fi_MDD[i:i+2]*100,
                      resid_model[i:i+2],
-                     'k-',
+                     '-',
+                     color = color_best_fit,
                      alpha = alpha_val,
                      zorder = 250
                      )
+            plt.plot(cum_Fi_MDD2[i:i+2]*100,
+                     resid_model2[i:i+2],
+                     '-',
+                     color = color_else,
+                     alpha = alpha_val,
+                     zorder = 250
+                     )
+
+
             plt.plot(cum_Fi_exp[i:i+2]*100,
                      resid_exp[i:i+2],
                      '--',
