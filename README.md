@@ -16,7 +16,8 @@ This software package is a companion to the paper "Revisiting the MDD Model with
 ### Quick Start
 
 In order to tune a multi-diffusion domain model to the results of your diffusion experiment, you'll need two files:
-1. A .csv with the results of your experiment formatted like our template (source/example/config.yaml). Do not use headers.
+1. A .csv with the results of your experiment formatted like our template (source/example/config.yaml). Columns are as follows: 1. step number (starting at 0). 2. Temperature (°C). 3. Duration (hours, non-cumulative). 4. Moles measured for each step (moles, non-cumulative). 5. Uncertainty on each measurement (moles). 
+
 2. A .yaml file following the example we share below. We recommend that you copy/paste our example and use it as a template to match your specific needs.
 
 example yaml file:
@@ -50,7 +51,7 @@ misfit_stat_list:
 -chisq 
 -percent_frac 
 
-####################################
+#####################################################################################################
 # Advanced settings
 
 # Degassing-too-early punishment: Some optimization-misfit-statistic combinations 
@@ -81,7 +82,7 @@ seed: 0
 tol: 0.00001
 ```
 
-Once you have your files created and organized, and our software installed, use the following command-line interface call:
+Once you have your files created and organized, and our software installed, begin your optimization with the following command-line call:
 ```
 fit_MDD_model \
     -i path_to/diffusion_code_final/example/tests/N13ksp_python_test.csv \
