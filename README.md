@@ -16,7 +16,7 @@ This app does things.
 ## Usage
 ### Quick Start
 
-In order to tune an MDD model to the results of your diffusion experiment, you'll need two files:
+In order to tune a multi-diffusion domain model to the results of your diffusion experiment, you'll need two files:
 1. A .csv with the results of your experiment formatted like our template (source/example/config.yaml).
 2. A .yaml file following the example we share below.
 
@@ -24,11 +24,11 @@ example yaml file:
 ```yaml
 domains_to_model: [1,8]
 
-lnd0aa_bounds: # Same for all domains
+lnd0aa_bounds: # Same for all domains (ln(1/seconds))
 - -5.0
 - 50.0
 
-ea_bounds: # Same for all domains
+ea_bounds: # Same for all domains (kJ/mol)
 - 50.0
 - 500.0
 
@@ -42,10 +42,13 @@ geometry: plane sheet
 # you should write "[25]".
 omit_value_indices: []
 
-# Some optimization-misfit-statistic combinations may incentivize the
-# model to degas far too early, especially when there are many heating steps
-# at the end of the experiment without much gas. 
-punish_degas_early: true 
+# Advanced settings below: 
+
+# Degassing-too-early punishment: Some optimization-misfit-statistic combinations 
+# may incentivize the model to degas far too early, especially when there are many 
+# heating steps at the end of the experiment without much gas. We leave this off by default,
+# but encourage the user to carefully examine the results of their optimzations.
+punish_degas_early: false
 ```
 
 Once you have your files created and organized, and our software installed, use the following command-line interface call:
