@@ -59,8 +59,8 @@ misfit_stat_list:
 -percent_frac 
 
 ##################################################################################
-# Advanced settings (Only adjust if an advanced user with knowledge of the
-# differential evolution algorithm)
+# Advanced settings (Only users with knowledge of the Differential Evolution
+# algorithm should adjust these settings)
 
 # Degassing-too-early punishment: Some optimization-misfit-statistic combinations 
 # may incentivize the model to degas far too early, especially when there are many 
