@@ -52,7 +52,7 @@ misfit_stat_list:
 -chisq 
 -percent_frac 
 
-#####################################################################################################
+##################################################################################
 # Advanced settings
 
 # Degassing-too-early punishment: Some optimization-misfit-statistic combinations 
