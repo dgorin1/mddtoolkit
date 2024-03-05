@@ -152,7 +152,7 @@ def plot_results_schematic(
 
 
     marker_size_measured = 15
-    marker_size_modeled = marker_size_measured-8
+    marker_size_modeled = marker_size_measured-7.5
     # Avoid having a value close to inf plot and rescale the plot..
     if any(dataset["ln(D/a^2)"].isna()):
         indices = dataset["ln(D/a^2)"].isna()
@@ -185,7 +185,7 @@ def plot_results_schematic(
                 axis=1
             ).T
         )
-    
+    alpha1 = 1
     color_best_fit = "black"
     color_else =(4/255, 133/255, 209/255) #'red'
     color_med = (252/255,90/255,80/255)
@@ -197,8 +197,8 @@ def plot_results_schematic(
          markersize=marker_size_modeled, 
          color=color_best_fit, 
          linewidth=1, 
-         mec=color_best_fit,
-         zorder = 2
+         mec=(60/255,62/255,60/255),
+         zorder = 2,
     )
     
     plt.plot(
@@ -208,8 +208,9 @@ def plot_results_schematic(
         markersize=marker_size_modeled, 
         color=color_else, 
         linewidth=1, 
-        mec=color_else,
-        zorder = 2
+        mec='black',
+        zorder = 2,
+        alpha = alpha1
     )
     plt.plot(
         T_plot[included],
@@ -218,7 +219,8 @@ def plot_results_schematic(
         markersize=marker_size_modeled, 
         color=color_med, 
         linewidth=1, 
-        mec=color_med,
+        mec='black',
+        alpha = alpha1,
         zorder = 2
     )
   
@@ -232,7 +234,7 @@ def plot_results_schematic(
          linewidth=1, 
          mec=color_best_fit,
          zorder = 2,
-         alpha = 0.4
+         alpha = 0.3
     )
 
         # Plot the MDD Model ln(D/a^2) values that were omitted
@@ -245,7 +247,7 @@ def plot_results_schematic(
          linewidth=1, 
          mec=color_else,
          zorder = 2,
-         alpha = 0.4
+         alpha = 0.3
     )
 
     plt.plot(
@@ -257,7 +259,7 @@ def plot_results_schematic(
          linewidth=1, 
          mec=color_med,
          zorder = 2,
-         alpha = 0.4
+         alpha = 0.3
     )
 
 
@@ -275,10 +277,6 @@ def plot_results_schematic(
     )
 
 
-
-
-
-
     # Plot the experimental ln(D/a^2) values that were omitted
     plt.errorbar(
         T_plot[omitted],
@@ -290,11 +288,11 @@ def plot_results_schematic(
         linewidth=1,
          mec='black', 
         zorder = 1,
-        alpha = 0.4
+        alpha = 0.3
     )
 
 
-    label_size = 15
+    label_size = 17
     tick_text_size = label_size-2
 
     # Label and format axes
@@ -342,15 +340,20 @@ def plot_results_schematic(
     temp = Fi[1:] - Fi[0:-1]
     Fi = np.insert(temp, 0, Fi[0])
 
-    # Plot T_plot vs the gas fraction observed at each step for values that were included
+
+
+
+    marker_size_measured_fig2 = 19
+    marker_size_modeled_fig2 = marker_size_measured_fig2-8
+    # Plot T_plot vs the gas fraction observed at each step 1for values that were included
     plt.errorbar(
         included+1,
         Fi[included],
         fmt='o', 
-        markersize=marker_size_measured, 
+        markersize=marker_size_measured_fig2, 
         mfc= (0.69,0.69,0.69), 
         mec='black', 
-        zorder = 5,
+        zorder = 2,
         linewidth = 1,
         color = 'k'
     )
@@ -360,10 +363,10 @@ def plot_results_schematic(
         omitted+1,
         Fi[omitted],
         fmt='o', 
-        markersize=marker_size_measured, 
+        markersize=marker_size_measured_fig2, 
         mfc= (0.69,0.69,0.69), 
         mec='black', 
-        zorder = 5,
+        zorder = 2,
         linewidth = 1,
         color = 'k',
         alpha = 0.3
@@ -373,68 +376,43 @@ def plot_results_schematic(
     plt.plot(included+1, 
                     Fi_MDD[included], 
                     "o", 
-                    markersize=marker_size_modeled, 
+                    markersize=marker_size_modeled_fig2, 
                     color=color_best_fit, 
                     linewidth=1, 
                     mec=color_best_fit,
-                    zorder = 10
+                    zorder = 4
                     )
 
     line, = plt.plot(included+1, 
                     Fi_MDD2[included], 
                     "o", 
-                    markersize=marker_size_modeled, 
+                    markersize=marker_size_modeled_fig2, 
                     color=color_else, 
-                    linewidth=.5, 
-                    mec=color_else,
-                    zorder = 10
+                    linewidth=1, 
+                    mec='black',
+                    zorder = 6
                     )
-
-    plt.plot(included+1, 
-                    Fi_MDD3[included], 
-                    "o", 
-                    markersize=marker_size_modeled, 
-                    color=color_med, 
-                    linewidth=.5, 
-                    mec=color_med,
-                    zorder = 10
-                    )
-
-
-    # Plot T_plot vs the modeled gas fraction observed at each step that was omitted
-    # plt.plot(omitted+1, 
-    #                 Fi_MDD[omitted], 
-    #                 "o", 
-    #                 markersize=marker_size_modeled, 
-    #                 color=color_best_fit, 
-    #                 linewidth=1, 
-    #                 mec='black',
-    #                 zorder = 10,
-    #                 alpha = 0.55
-    #                 )
     
-        # Plot T_plot vs the modeled gas fraction observed at each step that was omitted
-    # plt.plot(omitted+1, 
-    #                 Fi_MDD2[omitted], 
+    # plt.plot(included+1, 
+    #                 Fi_MDD2[included], 
     #                 "o", 
     #                 markersize=marker_size_modeled, 
     #                 color=color_else, 
     #                 linewidth=1, 
-    #                 mec=color_else,
-    #                 zorder = 15,
-    #                 alpha = 0.6
+    #                 mec='black',
+    #                 zorder = 10
     #                 )
     
-    # plt.plot(omitted+1, 
-    #                 Fi_MDD3[omitted], 
-    #                 "o", 
-    #                 markersize=marker_size_modeled, 
-    #                 color=color_med, 
-    #                 linewidth=1, 
-    #                 mec=color_med,
-    #                 zorder = 15,
-    #                 alpha = 0.6
-    #                 )
+    plt.plot(included+1, 
+                    Fi_MDD3[included], 
+                    "o", 
+                    markersize=marker_size_modeled_fig2, 
+                    color=color_med, 
+                    linewidth=1, 
+                    mec='black',
+                    zorder = 8
+                    )
+
 
     # This loop draws lines between the points and makes them transparent depending on whether 
     # or not each value was included in the optimization/fitting
@@ -448,7 +426,7 @@ def plot_results_schematic(
                      '-',
                      color = color_best_fit,
                      alpha = alpha_val,
-                     zorder = 10
+                     zorder = 3
                      )
             plt.plot(range(i+1,i+3),
                      Fi[i:i+2],
@@ -470,7 +448,7 @@ def plot_results_schematic(
                     color = "black",
                     alpha = alpha_val,
                     linewidth = 1,
-                    zorder = 15
+                    zorder = 5
                     )
         plt.plot(range(i+1,i+3),
                     Fi_MDD3[i:i+2],
@@ -478,14 +456,14 @@ def plot_results_schematic(
                     color = "black",
                     alpha = alpha_val,
                     linewidth = 1,
-                    zorder = 15
+                    zorder = 7
                     )
 
     # Label axes
-    plt.xlabel("Step Number",fontsize = 15)
-    plt.ylabel("Fractional Release (%)", fontsize = 15)
+    plt.xlabel("Step Number",fontsize = label_size)
+    plt.ylabel("Fractional Release (%)", fontsize = label_size)
     plt.xlim(0,33)
-    plt.ylim(-.003,0.08)
+    plt.ylim(-.003,0.06)
     plt.xticks(fontsize = tick_text_size)
     plt.yticks(fontsize = tick_text_size)
 
