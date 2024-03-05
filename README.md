@@ -67,10 +67,11 @@ punish_degas_early: false
 # or decrease this number
 repeat_iterations: 10
 
-# Population Size: This is the number of vectors the differential evoltion algorithm attempts to improve
-# simultaneously. Convergence time decreases as population size decreases, but the likelihood of getting 
-# stuck in a local minimum decreases. We have found through trial and error that we produce the best results
-# by repeating optimizations with a population size of ~15 about 10 times instead of making this number higher.
+# Population Size: This is the number of vectors the differential evoltion algorithm attempts 
+# to improve simultaneously. Convergence time decreases as population size decreases, but the 
+# likelihood of getting stuck in a local minimum decreases. We have found through trial 
+# and error that we produce the best results by repeating optimizations with a population 
+# size of ~15 about 10 times instead of making this number higher.
 popsize: 15
 
 # Seed: Due to the stochastic nature of the algorithm, we set a seed so that you are returned
