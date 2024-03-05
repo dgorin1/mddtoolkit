@@ -51,7 +51,7 @@ misfit_stat_list:
 -percent_frac 
 
 ####################################
-# Advanced settings:
+# Advanced settings
 
 # Degassing-too-early punishment: Some optimization-misfit-statistic combinations 
 # may incentivize the model to degas far too early, especially when there are many 
