@@ -68,7 +68,7 @@ misfit_stat_list:
 # but encourage the user to carefully examine the results of their optimzations.
 punish_degas_early: false
 
-# Number of iterations to repeat: Because of the stochastic nature of the differential
+# Number of Times to Repeat Optimization: Because of the stochastic nature of the differential
 # evolution algorithm, we run each optimization 10x by default and return the only
 # the results from the best optimization. Adjust this value if you'd like to increase 
 # or decrease this number
@@ -91,6 +91,15 @@ seed: 0
 # necessary for the average user to adjust. Smaller values typically lead 
 # to longer convergence times, while larger values lead to shorter times.
 tol: 0.00001
+
+
+
+# Maximum allowed iterations: This is the number of generations the 
+# differential evoltion algorithm is allowed to generate before it is 
+# forced to return its best-fitting individual. If your optimization 
+# run is consistently hitting 100k iterations, you may want to 
+# increase this value.
+max_iters: 100000
 ```
 
 Once you have your files created and organized, and our software installed, begin your optimization with the following command-line call:
