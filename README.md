@@ -1,6 +1,6 @@
 # Multi-Diffusion Domain Model Toolkit (mddtoolkit) 
 
-This software package is a companion to the paper, "Revisiting the MDD Model with Modern Optimization Techniques", and offers a set of tools for understanding the results of step-heating diffusion experiments (McDougall and Harrison, 1999) through the lens of the Multi-Diffusion Domain Model (Harrison, 2013). We utilize SciPy's implementation of Differential Evolution in order to search for all MDD-model parameters simultaneously. Advanced users may feel free to experiment with the optimization parameters for customized results, but beginner users should feel comfortable using our software without detailed knowledge of the Differential Evolution algorithm.
+This software package is a companion to the paper, \emph{"Revisiting the MDD Model with Modern Optimization Techniques"}, and offers a set of tools for understanding the results of step-heating diffusion experiments (McDougall and Harrison, 1999) through the lens of the Multi-Diffusion Domain Model (Harrison, 2013). We utilize SciPy's implementation of Differential Evolution in order to search for all MDD-model parameters simultaneously. Advanced users may feel free to experiment with the optimization parameters for customized results, but beginner users should feel comfortable using our software without detailed knowledge of the Differential Evolution algorithm.
 ## Table of Contents
 
 - [Installation](#installation)
@@ -16,8 +16,8 @@ This software package is a companion to the paper, "Revisiting the MDD Model wit
 ### Quick Start
 
 In order to tune a multi-diffusion domain model to the results of your diffusion experiment, you'll need two files:
-1. A .csv with the results of your experiment formatted like our template (source/example/config.yaml).
-2. A .yaml file following the example we share below.
+1. A .csv with the results of your experiment formatted like our template (source/example/config.yaml). Do not use headers.
+2. A .yaml file following the example we share below. We recommend that you copy/paste our example and use it as a template to match your specific needs.
 
 example yaml file:
 ```yaml
@@ -34,12 +34,12 @@ ea_bounds: # Same for all domains (kJ/mol)
 - 50.0
 - 500.0
 
-# Below, indicate the diffusion geometry you'd like to use. Currently-supported options 
+# Geometry: The geometry to be used by all diffusion domains. Currently-supported options 
 # are "plane sheet" and "spherical"
 geometry: plane sheet
 
-# Indicate the values you'd like to omit from the fitting exercise. 
-# We use standard python indexing here--indexing begins at 0. 
+# Omitted Values: Indicate the values you'd like to omit from the fitting exercise. 
+# We use standard python indexing--indexing begins at 0. 
 # E.g. if you'd like to omit the 26th heating step in your experiment,
 # you should write "[25]".
 omit_value_indices: []
