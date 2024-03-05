@@ -16,9 +16,7 @@ This software package is a companion to the paper "Revisiting the MDD Model with
 ### Quick Start
 
 In order to tune a multi-diffusion domain model to the results of your diffusion experiment, you'll need two files:
-1. A .csv with the results of your experiment formatted like our template (Found at: source/example/config.yaml). Do not include headers!
-
-Columns for the input are as follows: i. step number (starting at 0). ii. Temperature (°C). iii. Duration (hours, non-cumulative). iv. Moles measured for each step (moles, non-cumulative). v. Uncertainty on each measurement (moles). 
+1. A .csv with the results of your experiment formatted like our template (Found at: source/example/config.yaml). Do not include headers! Columns for the input are as follows: i. step number (starting at 0). ii. Temperature (°C). iii. Duration (hours, non-cumulative). iv. Moles measured for each step (moles, non-cumulative). v. Uncertainty on each measurement (moles). 
 
 
 2. A .yaml file following the example we share below. We recommend that you copy/paste our example and use it as a template to match your specific needs.
