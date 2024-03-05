@@ -61,9 +61,10 @@ misfit_stat_list:
 # but encourage the user to carefully examine the results of their optimzations.
 punish_degas_early: false
 
-# Number of iterations to repeat: Because of the stochastic nature of the differential evolution
-# algorithm, we run each optimization 10x by default and return the only the results from the
-# best optimization. Adjust this value if you'd like to increase or decrease this number
+# Number of iterations to repeat: Because of the stochastic nature of the differential
+# evolution algorithm, we run each optimization 10x by default and return the only
+# the results from the best optimization. Adjust this value if you'd like to increase 
+# or decrease this number
 repeat_iterations: 10
 
 # Population Size: This is the number of vectors the differential evoltion algorithm attempts to improve
