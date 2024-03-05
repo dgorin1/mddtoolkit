@@ -23,16 +23,22 @@ In order to tune a multi-diffusion domain model to the results of your diffusion
 
 example yaml file:
 ```yaml
-# Number of domains to model: User should specify this as a range. E.g. [1,8] means to fit
+##################################################################################
+# All users should examine and potentially these settings
+
+# Number of Domains to Model: User should specify this as a range. E.g. [1,8] means to fit
 # a 1, 2, 3, and 4 domain model. [4] specifies that only a 4 domain model is fit.
 domains_to_model: [1,4] 
 
-# Lnd0aa Bounds: 
-lnd0aa_bounds: # Same for all domains (ln(1/seconds))
+# Lnd0aa Bounds: This sets the range of values the optimizer can search for the 
+# lnd0aa value for each domain in units of ln(1/seconds).
+lnd0aa_bounds: 
 - -5.0
 - 50.0
 
-ea_bounds: # Same for all domains (kJ/mol)
+# Activation Energy Bounds: This sets the range of values the optimizer can search
+# for the activation energy in units of kJ/mol.
+ea_bounds: 
 - 50.0
 - 500.0
 
@@ -53,7 +59,8 @@ misfit_stat_list:
 -percent_frac 
 
 ##################################################################################
-# Advanced settings
+# Advanced settings (Only adjust if an advanced user with knowledge of the
+# differential evolution algorithm)
 
 # Degassing-too-early punishment: Some optimization-misfit-statistic combinations 
 # may incentivize the model to degas far too early, especially when there are many 
