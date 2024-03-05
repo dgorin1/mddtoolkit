@@ -83,7 +83,7 @@ popsize: 15
 
 # Seed: Due to the stochastic nature of the algorithm, we set a seed so that you are returned
 # the same results each time you run it. If you'd like to see slightly different results,
-# you may want to alter this value. Values 0-2^32 are accepted.
+# you may want to alter this value. Values 0 -- 2^32 are accepted.
 seed: 0
 
 # Tolerance: This is the criteria the differential evolution algorithm uses
