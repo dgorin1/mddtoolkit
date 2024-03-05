@@ -79,9 +79,10 @@ popsize: 15
 # you may want to alter this value. Values 0-2^32 are accepted.
 seed: 0
 
-# Tolerance: This is the criteria the differential evolution algorithm uses to determine when
-# it has fully converged. We don't think this will be necessary for the average user to adjust.
-# Smaller values typically lead to longer convergence times, while larger values lead to shorter times.
+# Tolerance: This is the criteria the differential evolution algorithm uses
+# to determine when it has fully converged. We don't think this will be 
+# necessary for the average user to adjust. Smaller values typically lead 
+# to longer convergence times, while larger values lead to shorter times.
 tol: 0.00001
 ```
 
