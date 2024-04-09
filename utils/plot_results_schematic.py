@@ -67,7 +67,7 @@ def plot_results_schematic(
                                      geometry = objective.geometry,
                                      added_steps=objective.added_steps)
 
-    
+
     Fi_MDD2, punishmentFlag2 = forwardModelKinetics(params2,
                                                     tsec,
                                                     TC,
