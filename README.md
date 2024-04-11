@@ -24,35 +24,24 @@ In order to tune a multi-diffusion domain model to the results of your diffusion
 example yaml file:
 ```yaml
 ##################################################################################
-# All users should examine and potentially these settings
-
+# All users should examine and potentially adjust these settings.
 
 domains_to_model: [1,4] 
 
-# Lnd0aa Bounds: This sets the range of values the optimizer can search for the 
-# lnd0aa value for each domain in units of ln(1/seconds).
 lnd0aa_bounds: 
 - -5.0
 - 50.0
 
-# Activation Energy Bounds: This sets the range of values the optimizer can search
-# for the activation energy in units of kJ/mol.
+
 ea_bounds: 
 - 50.0
 - 500.0
 
-# Geometry: The geometry to be used by all diffusion domains. Currently-supported options 
-# are "plane sheet" and "spherical"
 geometry: plane sheet
 
-# Omitted Values: Indicate the values you'd like to omit from the fitting exercise. 
-# We use standard python indexing--indexing begins at 0. 
-# E.g. if you'd like to omit the 26th heating step in your experiment,
-# you should write "[25]".
 omit_value_indices: []
 
-# Misfit Statistics: List either "chisq", "percent_frac", or both in the manner shown below. 
-# These are both of the misfit statistics presented in Gorin (2024).
+
 misfit_stat_list:
 -chisq 
 -percent_frac 
@@ -61,47 +50,45 @@ misfit_stat_list:
 # Advanced settings (Only users with knowledge of the Differential Evolution
 # algorithm should adjust these settings)
 
-# Degassing-too-early punishment: Some optimization-misfit-statistic combinations 
-# may incentivize the model to degas far too early, especially when there are many 
-# heating steps at the end of the experiment without much gas. We leave this off by default,
-# but encourage the user to carefully examine the results of their optimzations.
 punish_degas_early: false
 
-# Number of Times to Repeat Optimization: Because of the stochastic nature of the differential
-# evolution algorithm, we run each optimization 10x by default and return the only
-# the results from the best optimization. Adjust this value if you'd like to increase 
-# or decrease this number
 repeat_iterations: 10
 
-# Population Size: This is the number of vectors the differential evoltion algorithm attempts 
-# to improve simultaneously. Convergence time decreases as population size decreases, but the 
-# likelihood of getting stuck in a local minimum decreases. We have found through trial 
-# and error that we produce the best results by repeating optimizations with a population 
-# size of ~15 about 10 times instead of making this number higher.
+
 popsize: 15
 
-# Seed: Due to the stochastic nature of the algorithm, we set a seed so that you are returned
-# the same results each time you run it. If you'd like to see slightly different results,
-# you may want to alter this value. Values 0 -- 2^32 are accepted.
 seed: 0
 
-# Tolerance: This is the criteria the differential evolution algorithm uses
-# to determine when it has fully converged. We don't think this will be 
-# necessary for the average user to adjust. Smaller values typically lead 
-# to longer convergence times, while larger values lead to shorter times.
 tol: 0.00001
 
-
-
-# Maximum allowed iterations: This is the number of generations the 
-# differential evoltion algorithm is allowed to generate before it is 
-# forced to return its best-fitting individual. If your optimization 
-# run is consistently hitting 100k iterations, you may want to 
-# increase this value.
 max_iters: 100000
 ```
+### basic settings
 
 **domains_to_model:** Number of Domains to Model: User should specify this as a range. E.g. [1,8] means to fit a 1, 2, 3, and 4 domain model. [4] specifies that only a 4 domain model is fit.
+
+**lnd0aa_bounds:** This sets the range of values the optimizer can search for the lnd0aa value for each domain in units of ln(1/seconds).
+
+**geometry:** The geometry to be used by all diffusion domains. Currently-supported options are "plane sheet" and "spherical"
+
+**omit_value_indices:** Indicate the values you'd like to omit from the fitting exercise. We use standard python indexing--indexing begins at 0. E.g. if you'd like to omit the 26th heating step in your experiment, you should write "[25]".
+
+**misfit_stat_list:** List either "chisq", "percent_frac", or both in the manner shown below. These are both of the misfit statistics presented in Gorin et al., 2024.
+
+### Advanced Settings
+
+**punish_degas_early:** Some optimization-misfit-statistic combinations may incentivize the model to degas far too early, especially when there are many heating steps at the end of the experiment without much gas. We leave this off by default, but encourage the user to carefully examine the results of their optimzations.
+
+**repeat_iterations:** Number of Times to Repeat Optimization: Because of the stochastic nature of the differential evolution algorithm, we run each optimization 10x by default and return the only the results from the best optimization. Adjust this value if you'd like to increase or decrease this number.
+
+**popsize:** Population Size: This is the number of vectors the differential evoltion algorithm attempts to improve simultaneously. Convergence time decreases as population size decreases, but the likelihood of getting stuck in a local minimum decreases. We have found through trial and error that we produce the best results by repeating optimizations with a population size of ~15 about 10 times instead of making this number higher.
+
+**seed:** Due to the stochastic nature of the algorithm, we set a seed so that you are returned the same results each time you run it. If you'd like to see slightly different results, you may want to alter this value. Values 0 -- 2^32 are accepted.
+
+**tol:** This is the criteria the differential evolution algorithm uses to determine when it has fully converged. We don't think this will be necessary for the average user to adjust. Smaller values typically lead to longer convergence times, while larger values lead to shorter times.
+
+
+**max_iters:** This is the number of generations the differential evoltion algorithm is allowed to generate before it is forced to return its best-fitting individual. If your optimization run is consistently hitting 100k iterations, you may want to increase this value.
 
 
 
