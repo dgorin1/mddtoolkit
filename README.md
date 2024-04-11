@@ -101,7 +101,7 @@ tol: 0.00001
 max_iters: 100000
 ```
 
-~domains_to_model: # Number of Domains to Model: User should specify this as a range. E.g. [1,8] means to fit a 1, 2, 3, and 4 domain model. [4] specifies that only a 4 domain model is fit.
+**domains_to_model:** Number of Domains to Model: User should specify this as a range. E.g. [1,8] means to fit a 1, 2, 3, and 4 domain model. [4] specifies that only a 4 domain model is fit.
 
 
 
