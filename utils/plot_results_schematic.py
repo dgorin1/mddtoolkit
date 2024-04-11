@@ -462,8 +462,8 @@ def plot_results_schematic(
     # Label axes
     plt.xlabel("Step Number",fontsize = label_size)
     plt.ylabel("Fractional Release (%)", fontsize = label_size)
-    plt.xlim(0,33)
-    plt.ylim(-.003,0.06)
+    plt.xlim(0,34)
+    plt.ylim(-.003,0.063)
     plt.xticks(fontsize = tick_text_size)
     plt.yticks(fontsize = tick_text_size)
 
