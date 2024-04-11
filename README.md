@@ -15,18 +15,18 @@ This software package is a companion to the paper "Revisiting the MDD Model with
 ## Usage
 ### Quick Start
 
-In order to tune a multi-diffusion domain model to the results of your diffusion experiment, you'll need two files:
+In order to tune a multi-diffusion domain model to the results of your diffusion experiment, you'll need two files which can be located anywhere on your computer:
 1. A .csv with the results of your diffusion experiment formatted like our template (Found at: source/example/config.yaml). Do not include headers! Columns for the input are as follows: i. step number (starting at 0). ii. Temperature (°C). iii. Duration (hours, non-cumulative). iv. Moles measured for each step (moles, non-cumulative). v. Uncertainty on each measurement (moles). 
 
 
-2. A .yaml file following the example we share below. We recommend that you copy/paste our example and use it as a template to match your specific needs.
+2. A .yaml file which will supply the software with details about the optimization configuration.  We recommend copying and pasting the example we share below and customizing it to your needs if necessary.
 
 example yaml file:
 ```yaml
 ##################################################################################
 # All users should examine and potentially adjust these settings.
 
-domains_to_model: [1,4] 
+domains_to_model: [1,8] 
 
 lnd0aa_bounds: 
 - -5.0
@@ -63,7 +63,7 @@ tol: 0.00001
 
 max_iters: 100000
 ```
-### basic settings
+### Basic Settings
 
 **domains_to_model:** Number of Domains to Model: User should specify this as a range. E.g. [1,8] means to fit a 1, 2, 3, and 4 domain model. [4] specifies that only a 4 domain model is fit.
 
