@@ -104,7 +104,14 @@ fit_MDD_model \
 -c is a file pathway to the input .yaml file with settings for the optimizer \
 -o is a file pathway for the output.
 
+## Output
+**input_samplename.csv:** A file containing the calculated diffusivities resulting from the input file.
 
+**N_dom_best_params.pdf:** A pdf with plots showing the results of the optimization.
+
+**combined_results_misfit_type.csv:** A csv file containing the best-fit MDD parameters.
+
+**N_dom_optimizer_output.json:** A less readable, but more detailed, output from the optimizer containing standard metrics about the optimization run.
 
 
 ## Support
