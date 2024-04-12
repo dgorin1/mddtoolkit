@@ -32,7 +32,6 @@ lnd0aa_bounds:
 - -5.0
 - 50.0
 
-
 ea_bounds: 
 - 50.0
 - 500.0
@@ -40,7 +39,6 @@ ea_bounds:
 geometry: plane sheet
 
 omit_value_indices: []
-
 
 misfit_stat_list:
 -chisq 
@@ -53,7 +51,6 @@ misfit_stat_list:
 punish_degas_early: false
 
 repeat_iterations: 10
-
 
 popsize: 15
 
