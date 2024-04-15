@@ -25,9 +25,9 @@ fit_MDD_model \
     -o /Users/username/repos/diffusion_code_final/output/test_final
 ```
 The pathways required for this command are as follows: \
-    - i is a file pathway to the input .csv file with the experimental data 
-    - c is a file pathway to the input .yaml file with settings for the optimizer 
-    - o is a file pathway for the output.
+* -i is a file pathway to the input .csv file with the experimental data \
+* -c is a file pathway to the input .yaml file with settings for the optimizer \
+* -o is a file pathway for the output.
 
 
 
