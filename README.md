@@ -84,7 +84,7 @@ max_iters: 100000
 
 **domains_to_model:** This is the number of domains to model. Since it is not often clear how many domains to model, we recommend that the user specify a range. In this case, the software will return a unique model for each number of domains specified in that range. E.g. [1,4] means to fit a 1, 2, 3, and 4 domain model. [4] means to fit only a 4-domain model.
 
-**lnd0aa_bounds:** This sets the range of $\ln(\frac{D_0}{a^2})$ values that the optimizer can search for each domain in units of $\ln\frac{1}{sec}$.
+**lnd0aa_bounds:** This sets the range of $\ln(\frac{D_0}{a^2})$ values that the optimizer can search for each domain in units of $\ln(\frac{1}{sec})$.
 
 **geometry:** The geometry to be used by all diffusion domains. Currently-supported options are "plane sheet" and "spherical"
 
