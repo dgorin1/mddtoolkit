@@ -107,7 +107,7 @@ max_iters: 100000
 **max_iters:** This is the number of generations the differential evoltion algorithm is allowed to generate before it is forced to return its best-fitting individual. If your optimization run is consistently hitting 100k iterations, you may want to increase this value or check whether your input data are formatted correctly.
 
 
-## Output
+## Optimization Outputs
 **input_samplename.csv:** A file containing the calculated diffusivities resulting from the input file.
 
 **N_dom_best_params.pdf:** A pdf with plots showing the results of the optimization.
