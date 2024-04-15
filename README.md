@@ -25,10 +25,9 @@ fit_MDD_model \
     -o /Users/username/repos/diffusion_code_final/output/test_final
 ```
 The following pathways are required for this command: 
-* **-i**: a file pathway to the input .csv file with the experimental data 
-* **-c**: a file pathway to the input .yaml file with settings for the optimizer 
-* **-o**: a file pathway for the output
-
+* **-i**: a file pathway to the input .csv file with the experimental data.
+* **-c**: a file pathway to the input .yaml file with settings for the optimizer.
+* **-o**: a file pathway for the output.
 
 
 In order to tune a multi-diffusion domain model to the results of your diffusion experiment, you'll need two files which can be located anywhere on your computer:
@@ -83,9 +82,9 @@ max_iters: 100000
 ```
 ### Basic Settings
 
-**domains_to_model:** Number of Domains to Model: User should specify this as a range. E.g. [1,8] means to fit a 1, 2, 3, and 4 domain model. [4] specifies that only a 4 domain model is fit.
+**domains_to_model:** This is the number of domains to model. Since it is not often clear how many domains to model, we recommend that the user specify a range. In this case, the software will return a unique model for each number of domains specified in that range. E.g. [1,4] means to fit a 1, 2, 3, and 4 domain model. [4] means to fit only a 4-domain model.
 
-**lnd0aa_bounds:** This sets the range of values the optimizer can search for the lnd0aa value for each domain in units of ln(1/seconds).
+**lnd0aa_bounds:** This sets the range of $\ln(\frac{D_0}{a^2})$ values that the optimizer can search for each domain in units of ln(1/seconds).
 
 **geometry:** The geometry to be used by all diffusion domains. Currently-supported options are "plane sheet" and "spherical"
 
