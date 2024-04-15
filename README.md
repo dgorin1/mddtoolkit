@@ -15,7 +15,7 @@ This software package is a companion to the paper "Revisiting the MDD Model with
 ## Usage
 ### Quick Start
 
-To begin an optimization run, the MDD_toolkit uses a command-line interface. The command for starting such an optimization is shown below:
+The MDD_toolkit utilizes a command-line interface to configure and begin an optimization run. The command for starting such an optimization is shown below:
 
 
 ```
@@ -24,7 +24,7 @@ fit_MDD_model \
     -c path_to/diffusion_code_final/example/tests/test.yaml \
     -o /Users/username/repos/diffusion_code_final/output/test_final
 ```
-The pathways that are required as as follows:
+The pathways required for this command are as follows:
 -i is a file pathway to the input .csv file with the experimental data \
 -c is a file pathway to the input .yaml file with settings for the optimizer \
 -o is a file pathway for the output.
