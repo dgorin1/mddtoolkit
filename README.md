@@ -27,7 +27,7 @@ fit_MDD_model \
 The following pathways are required for this command: 
 * **-i**: a file pathway to the input .csv file with the experimental data 
 * **-c**: a file pathway to the input .yaml file with settings for the optimizer 
-* **-o**: a file pathway for the output.
+* **-o**: a file pathway for the output
 
 
 
@@ -40,7 +40,7 @@ In order to tune a multi-diffusion domain model to the results of your diffusion
     - v. Uncertainty on each measurement (moles). 
 
 
-2. A .yaml file which will supply the software with details about the optimization configuration.  We recommend copying and pasting the example we share below and customizing it to your needs if necessary.
+2. A .yaml file which will supply the MDD_toolkit with details about the optimization configuration.  We recommend copying and pasting the example we share below and--if necessary-- customizing it to your needs.
 
 example yaml file:
 ```yaml
