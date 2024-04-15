@@ -33,11 +33,11 @@ The pathways required for this command are as follows: \
 
 In order to tune a multi-diffusion domain model to the results of your diffusion experiment, you'll need two files which can be located anywhere on your computer:
 1. A .csv with the results of your diffusion experiment formatted like our template (found at: source/example/config.yaml). Do not include headers! Columns for the input need to be supplied in the correct order and are as follows:
-    _ i. step number (starting at 0). 
-    _ ii. Temperature (°C). 
-    _ iii. Duration (hours, non-cumulative). 
-    _ iv. Moles measured for each step (moles, non-cumulative). 
-    _ v. Uncertainty on each measurement (moles). 
+    - i. step number (starting at 0). 
+    - ii. Temperature (°C). 
+    - iii. Duration (hours, non-cumulative). 
+    - iv. Moles measured for each step (moles, non-cumulative). 
+    - v. Uncertainty on each measurement (moles). 
 
 
 2. A .yaml file which will supply the software with details about the optimization configuration.  We recommend copying and pasting the example we share below and customizing it to your needs if necessary.
