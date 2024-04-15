@@ -80,7 +80,7 @@ tol: 0.00001
 
 max_iters: 100000
 ```
-### Basic Settings
+### Basic Settings included in the .yaml
 
 **domains_to_model:** This is the number of domains to model. Since it is not often clear how many domains to model, we recommend that the user specify a range. In this case, the software will return a unique model for each number of domains specified in that range. E.g. [1,4] means to fit a 1, 2, 3, and 4 domain model. [4] means to fit only a 4-domain model.
 
@@ -92,7 +92,7 @@ max_iters: 100000
 
 **misfit_stat_list:** List either "chisq", "percent_frac", or both in the manner shown below. These are both of the misfit statistics presented in Gorin et al., 2024.
 
-### Advanced Settings
+### Advanced Settings included in the .yaml
 
 **punish_degas_early:** Some optimization-misfit-statistic combinations may incentivize the model to degas far too early, especially when there are many heating steps at the end of the experiment without much gas. We leave this off by default, but encourage the user to carefully examine the results of their optimzations.
 
