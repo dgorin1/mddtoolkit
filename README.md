@@ -1,6 +1,6 @@
-# Multi-Diffusion Domain Model Toolkit (mddtoolkit) 
+# Multiple-Diffusion Domain Model Toolkit (MDD_toolkit) 
 
-This software package is a companion to the paper "Revisiting the MDD Model with Modern Optimization Techniques", and offers tools for understanding the results of step-heating diffusion experiments (McDougall and Harrison, 1999) through the lens of the Multi-Diffusion Domain Model (Harrison, 2013). We utilize SciPy's implementation of Differential Evolution in order to search for all MDD-model parameters simultaneously. This software returns plots with the best-fitting model parameters, as well as the parameters themselves. These values can then be used to forward-model thermal histories with other popular programs like Arvert 4.0 (Harrison et al., 2005). Advanced users may feel free to experiment with the optimization parameters for customized results, but beginner users should feel comfortable using our software without detailed knowledge of the Differential Evolution algorithm.
+This software package is a companion to the paper "Revisiting the MDD Model with Modern Optimization Techniques", and offers tools for understanding the results of stepwise degassing experiments (McDougall and Harrison, 1999) through the lens of the Multi-Diffusion Domain Model (Harrison, 2013). We utilize SciPy's implementation of Differential Evolution in order to search for all MDD-model parameters simultaneously. This software returns plots with the best-fitting model parameters, as well as the parameters themselves. These values can then be used to forward-model thermal histories with other popular programs like Arvert 4.0 (Zeitler., 2004). Advanced users may feel free to experiment with the optimization parameters for customized results, but beginner users should feel comfortable using our software using the default configuration.
 ## Table of Contents
 
 - [Installation](#installation)
@@ -14,6 +14,22 @@ This software package is a companion to the paper "Revisiting the MDD Model with
 
 ## Usage
 ### Quick Start
+
+To begin an optimization run, the MDD_toolkit uses a command-line interface. The command for starting such an optimization is shown below:
+
+
+```
+fit_MDD_model \
+    -i path_to/diffusion_code_final/example/tests/N13ksp_python_test.csv \
+    -c path_to/diffusion_code_final/example/tests/test.yaml \
+    -o /Users/username/repos/diffusion_code_final/output/test_final
+```
+The pathways that are required as as follows:
+-i is a file pathway to the input .csv file with the experimental data \
+-c is a file pathway to the input .yaml file with settings for the optimizer \
+-o is a file pathway for the output.
+
+
 
 In order to tune a multi-diffusion domain model to the results of your diffusion experiment, you'll need two files which can be located anywhere on your computer:
 1. A .csv with the results of your diffusion experiment formatted like our template (Found at: source/example/config.yaml). Do not include headers! Columns for the input are as follows: i. step number (starting at 0). ii. Temperature (°C). iii. Duration (hours, non-cumulative). iv. Moles measured for each step (moles, non-cumulative). v. Uncertainty on each measurement (moles). 
@@ -89,17 +105,7 @@ max_iters: 100000
 
 
 
-Once you have your files created and organized, and our software installed, begin your optimization with the following command-line call:
-```
-fit_MDD_model \
-    -i path_to/diffusion_code_final/example/tests/N13ksp_python_test.csv \
-    -c path_to/diffusion_code_final/example/tests/test.yaml \
-    -o /Users/username/repos/diffusion_code_final/output/test_final
-```
- 
--i is a file pathway to the input .csv file with the experimental data \
--c is a file pathway to the input .yaml file with settings for the optimizer \
--o is a file pathway for the output.
+
 
 ## Output
 **input_samplename.csv:** A file containing the calculated diffusivities resulting from the input file.
