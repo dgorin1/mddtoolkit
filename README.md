@@ -15,11 +15,11 @@ This software package is a companion to the paper "Revisiting the MDD Model with
 ## Usage
 ### Quick Start
 
-The MDD_toolkit utilizes a command-line interface to configure and begin an optimization run. The command for starting such an optimization is shown below:
+The MDD toolkit utilizes a command-line interface to configure and begin an optimization run. The command for starting such an optimization is shown below:
 
 
 ```
-fit_MDD_model \
+mddtoolkit \
     -i path_to/diffusion_code_final/example/tests/N13ksp_python_test.csv \
     -c path_to/diffusion_code_final/example/tests/test.yaml \
     -o /Users/username/repos/diffusion_code_final/output/test_final
@@ -39,7 +39,7 @@ In order to tune a multi-diffusion domain model to the results of your diffusion
     - v. Uncertainty on each measurement (moles). 
 
 
-2. A .yaml file which will supply the MDD_toolkit with details about the optimization configuration.  We recommend copying and pasting the example we share below and--if necessary-- customizing it to your needs.
+2. A .yaml file which will supply the MDD toolkit with details about the optimization configuration.  We recommend copying and pasting the example we share below and--if necessary-- customizing it to your needs.
 
 example yaml file:
 ```yaml
