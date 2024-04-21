@@ -10,7 +10,15 @@ This software package is a companion to the paper "Revisiting the MDD Model with
 
 ## Installation
 
-1. Run `pip install -e .` in the root directory of the repository to install the package and its dependencies
+The easiest way to install the MDD toolkit is through `pip`. You can install the package by running the following command in your terminal:
+```
+pip install mddtoolkit
+```
+
+Or you can install the package from source by cloning the repository and running the following command in the root directory:
+```
+pip install -e .
+```
 
 ## Usage
 ### Quick Start
