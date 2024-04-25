@@ -11,15 +11,16 @@ class BasePipeline:
     data : :obj:`dict`
         Dictionary containing the data to be processed.
     """
+
     def __init__(self, data):
         self.data = data
 
     def run(self):
         """Runs the pipeline."""
         raise NotImplementedError
-    
+
     @staticmethod
-    def _load_config(config:Union[str, dict, BasePipelineConfig]):
+    def _load_config(config: Union[str, dict, BasePipelineConfig]):
         """Loads the configuration.
 
         Parameters
@@ -33,9 +34,9 @@ class BasePipeline:
             Loaded configuration.
         """
         raise NotImplementedError
-    
+
     @staticmethod
-    def _load_dataset(dataset:Union[str, dict, BasePipelineConfig]):
+    def _load_dataset(dataset: Union[str, dict, BasePipelineConfig]):
         """Loads the dataset.
 
         Parameters
@@ -49,9 +50,9 @@ class BasePipeline:
             Loaded dataset.
         """
         raise NotImplementedError
-    
+
     @staticmethod
-    def _create_output(output:Union[str, PipelineOutput]):
+    def _create_output(output: Union[str, PipelineOutput]):
         """Creates the output.
 
         Parameters
