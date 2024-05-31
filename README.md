@@ -91,7 +91,7 @@ max_iters: 100000
 ```
 ### Basic Settings included in the .yaml
 
-**domains_to_model:** This is the number of domains to model. Since it is not often clear how many domains to model, we recommend that the user specify a range. In this case, the software will return a unique model for each number of domains specified in that range. E.g. [1,4] means to fit a 1, 2, 3, and 4 domain model. [4] means to fit only a 4-domain model.
+**domains_to_model:** This is the number of domains to model. Since it is not often clear how many domains to model, we recommend that the user specify a range. In this case, the software will return a unique model for each number of domains specified in that range. E.g. [1,4] means to fit a 1, 2, 3, and 4 domain model. 4 means to fit only a 4-domain model. If you use just a single integer, do not put it in square brackets.
 
 **lnd0aa_bounds:** This sets the range of $\ln(\frac{D_0}{a^2})$ values that the optimizer can search for each domain in units of $\ln(\frac{1}{sec})$.
 
