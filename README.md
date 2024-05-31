@@ -118,7 +118,7 @@ max_iters: 100000
 ## Optimization Outputs
 **input_samplename.csv:** A file containing the calculated diffusivities resulting from the input file.
 
-**N_dom_best_params.pdf:** A pdf with plots showing the results of the optimization.
+**N_dom_best_params.pdf:** A pdf with plots showing the results of the optimization. There are three plots. One is a traditional arrhenius plot, another is a plot of the step number vs the fraction of the total gas released at each heating step, and the final plot is the difference between a 1-domain model and the MDD model. The chosen 1-domain model which we compare to is the most retentive domain, or one with the highest y-intercept.
 
 **combined_results_misfit_type.csv:** A csv file containing the best-fit MDD parameters.
 
