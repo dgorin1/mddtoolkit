@@ -69,8 +69,8 @@ geometry: plane sheet
 omit_value_indices: []
 
 misfit_stat_list:
--chisq 
--percent_frac 
+- chisq 
+- percent_frac 
 
 ##################################################################################
 # Advanced settings (Only users with knowledge of the Differential Evolution
