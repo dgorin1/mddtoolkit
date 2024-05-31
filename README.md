@@ -1,4 +1,5 @@
 # Multiple-Diffusion Domain Model Toolkit (mddtoolkit) 
+Updates: 5/31--we discovered a bug in the example .yaml file that caused the software not to run. This issue has now been resolved.
 
 This software package is a companion to the paper "Revisiting the MDD Model with Modern Optimization Techniques", and offers tools for understanding the results of stepwise degassing experiments (McDougall and Harrison, 1999) through the lens of the Multi-Diffusion Domain Model (Harrison, 2013). We utilize SciPy's implementation of Differential Evolution in order to search for all MDD-model parameters simultaneously. This software returns plots with the best-fitting model parameters, as well as the parameters themselves. These values can then be used to forward-model thermal histories with other popular programs like Arvert 4.0 (Zeitler., 2004). Advanced users may feel free to experiment with the optimization parameters for customized results, but beginner users should feel comfortable using our software using the default configuration.
 ## Table of Contents
