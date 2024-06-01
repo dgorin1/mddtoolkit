@@ -247,6 +247,12 @@ def plot_results(
         color = 'k'
     )
 
+    # Fix bug where types don't communicate properly if user only enters a single value to omit
+    if isinstance(omitted, list):
+        if omitted[0].shape==():
+            omitted = 1+np.array(omitted.copy())
+
+
     # Plot T_plot vs the gas fraction observed at each step for values that were omitted
     plt.errorbar(
         omitted+1,
