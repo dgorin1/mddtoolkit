@@ -11,6 +11,7 @@ ea_bounds: # Same for all domains (kJ/mol)
 - 50.0
 - 500.0
 
+
 # Below, indicate the diffusion geometry you'd like to use. Currently-supported options 
 # are "plane sheet" and "spherical"
 geometry: plane sheet
