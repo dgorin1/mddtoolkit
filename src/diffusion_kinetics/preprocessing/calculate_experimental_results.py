@@ -133,7 +133,7 @@ def D0calc_MonteCarloErrors(expdata,geometry:str):
                     (Fi[i]*(1-Fi[i]) + Fi[i-1]**2)**2 * delM[i]**2 + 
                     (Fi[i-1]**2-Fi[i]**2)**2 * np.sum(delM[i+1:]**2)))
 
-                # Equation XXX from Ginster 2018
+                # Equation from Ginster 2018
                 uncert_c[i] = (4/(math.pi**2*(cumtsec[i]-cumtsec[i-1])*np.sum(M))) * np.sqrt((1+Fi[i-1]/(1-Fi[i-1]))**2 * delM[i]**2 + ((Fi[i-1]/(1-Fi[i-1])) - (Fi[i]/(1-Fi[i])))**2 * np.sum(delM[i+1:]**2))
 
                 
