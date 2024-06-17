@@ -13,7 +13,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "numpy",
+    "numpy<2.0",
     "torch",
     "scipy",
     "pandas",
