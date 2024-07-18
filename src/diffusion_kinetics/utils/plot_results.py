@@ -111,17 +111,27 @@ def plot_results(
     
      # Calculate and plot a line representing each domain for visualization in the plot
     for i in range(ndom):
-        D = params[i+1]-params[0]/R*(1/(TC[objective.added_steps:-1]+273.15))
+
+        # D = params[i+1]-params[0]/R*(1/(TC[objective.added_steps:-1]+273.15))
+        # plt.plot(
+        #     np.linspace(min(10000/(TC[objective.added_steps:-1]+273.15)), max(10000/(TC[objective.added_steps:-1]+273.15)), 1000),
+        #     np.linspace(max(D), min(D), 1000),
+        #     "--",
+        #     linewidth=frac_weights[i],
+        #     zorder=0,
+        #     color = (0.6,0,0),
+        #     alpha = 0.5
+        # )
+        D = params[i+1]-params[0]/R*(1/(np.linspace(400,2000,1000)))
         plt.plot(
-            np.linspace(min(10000/(TC[objective.added_steps:-1]+273.15)), max(10000/(TC[objective.added_steps:-1]+273.15)), 1000),
-            np.linspace(max(D), min(D), 1000),
-            "--",
-            linewidth=frac_weights[i],
-            zorder=0,
-            color = (0.6,0,0),
-            alpha = 0.5
+        np.linspace(min(10000/(np.linspace(400,2000,1000))), max(10000/(np.linspace(400,2000,1000))), 1000),
+        np.linspace(max(D), min(D), 1000),
+        "--",
+        linewidth=frac_weights[i],
+        zorder=0,
+        color = (0.6,0,0),
+        alpha = 0.5
         )
-    
     # Perform type conversions and grab appropriate indices for plotting so that excluded values can be plotted with different symbology
     included = np.array(((1-objective.omitValueIndices) == 1).nonzero().squeeze())
     omitted = np.array((objective.omitValueIndices == 1).nonzero().squeeze())
@@ -216,8 +226,8 @@ def plot_results(
     plt.xticks(fontsize = 12)
     plt.yticks(fontsize = 12)
     ax1.set_box_aspect(1)
-    # plt.ylim(-30,0)
-
+    plt.ylim(-23.5,0)
+    plt.xlim(5.2,14.5)
 
     # Create axes for plotting the gas fractions as a function of step #
     ax2 = plt.subplot2grid((2,4), (1,2), colspan=2, rowspan=1)
