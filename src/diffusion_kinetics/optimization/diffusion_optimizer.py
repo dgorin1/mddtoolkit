@@ -21,10 +21,16 @@ class DiffusionOptimizer:
             - misfit_stat (str): The misfit statistic to use.
             - ndom (int): The number of domains to use.
         """
+
         bounds = self._construct_bounds(config)
         nlcs = self._construct_nlcs(config.num_domains) 
+
+        print(config.time_add)
+        print(config.temp_add)
+
         objective = DiffusionObjective(
             self.dataset, 
+            config._production_to_production_plus_diffusion_ratio_table,
             config.time_add,
             config.temp_add,
             config.omit_value_indices,

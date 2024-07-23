@@ -57,6 +57,7 @@ def plot_results(
                                      tsec, 
                                      TC, 
                                      geometry = objective.geometry,
+                                     production_to_production_plus_diffusion_ratio_table=objective.production_to_production_plus_diffusion_ratio_table,
                                      added_steps=objective.added_steps)
 
     # Calculate the lndaa from the mdd model

@@ -91,6 +91,7 @@ class PipelineOutput:
         
         objective = DiffusionObjective(
             dataset, 
+            config._production_to_production_plus_diffusion_ratio_table,
             config.time_add,
             config.temp_add,
             config.omit_value_indices,

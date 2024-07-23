@@ -4,12 +4,14 @@ from diffusion_kinetics.optimization.dataset import Dataset
 import math as math
 import torch as torch
 import numpy as np
+import pandas as pd
 
 
 class DiffusionObjective:
     def __init__(
         self,
         data: Dataset,
+        production_to_production_plus_diffusion_ratio_table:pd.DataFrame,
         time_add: list,
         temp_add: list,
         omitValueIndices=[],
@@ -46,7 +48,10 @@ class DiffusionObjective:
         time = self.dataset._thr * 3600
         if time_add.numel() > 0:
             self.tsec = torch.cat([time_add, time])
+            # try:
             self._TC = torch.cat([temp_add, self.dataset._TC])
+            # except:
+            #     breakpoint()
             self.extra_steps = True
         else:
             self.tsec = time
@@ -89,6 +94,7 @@ class DiffusionObjective:
         self.exp_moles = torch.tensor(data.M)
         self.added_steps = len(time_add)
         self.punish_degas_early = punish_degas_early
+        self.production_to_production_plus_diffusion_ratio_table = production_to_production_plus_diffusion_ratio_table
 
     def __call__(self, X):
         return self.objective(X)
@@ -122,6 +128,7 @@ class DiffusionObjective:
             X,
             self.tsec,
             self._TC,
+            self.production_to_production_plus_diffusion_ratio_table,
             geometry=self.geometry,
             added_steps=self.added_steps,
         )

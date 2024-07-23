@@ -6,8 +6,9 @@ import math as math
 
 
 def forwardModelKinetics(
-    kinetics, tsec, TC, geometry: str = "spherical", added_steps: int = 0
+    kinetics, tsec, TC, production_to_production_plus_diffusion_ratio_table:pd.DataFrame, geometry: str = "spherical", added_steps: int = 0
 ):  # I NEED TO FIX THE ADDED STEPS PROBLEM HERE STILL
+
     # Define some necessary variables
     R = 0.008314  # gas constant
     torch.pi = torch.tensor(torch.acos(torch.zeros(1)).item() * 2)

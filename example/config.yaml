@@ -58,9 +58,3 @@ seed: 0
 # Smaller values typically lead to longer convergence times, while larger values lead to shorter times.
 tol: 0.00001
 
-
-
-
-
-
-

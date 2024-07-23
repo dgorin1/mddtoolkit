@@ -2,6 +2,8 @@ from typing import Union
 import yaml
 import json
 import torch
+import os
+import pandas as pd
 
 
 # hardcoded list of possible misfit stats...
@@ -114,6 +116,7 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
         mutation:Union[float, list[float,float]]=[0.5,1.],
         recombination:float=0.7,
         init:str="latinhypercube",
+        production_to_production_plus_diffusion_ratio_table_path:str = f"{os.path.dirname(__file__)}/production_to_production_plus_diffusion_ratio_table.csv"
     ):
         self.lnd0aa_bounds = lnd0aa_bounds
         self.ea_bounds = ea_bounds
@@ -134,7 +137,10 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
         self.mutation = mutation
         self.recombination = recombination
         self.init = init
+        self.production_to_production_plus_diffusion_ratio_table_path = production_to_production_plus_diffusion_ratio_table_path
         self._assert_is_valid()
+        self._production_to_production_plus_diffusion_ratio_table = pd.read_csv(self.production_to_production_plus_diffusion_ratio_table_path)
+
         
     def _assert_is_valid(self):
         """ assert that the config is valid """
@@ -173,6 +179,9 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
         else:
             raise ValueError("mutation must be a float or a list")
         assert self.init in ["latinhypercube","sobol", "halton", "random"], "init must be a valid init method"
+        assert type(self.production_to_production_plus_diffusion_ratio_table_path) is str
+        assert os.path.exists(self.production_to_production_plus_diffusion_ratio_table_path)
+
     
     def to_dict(self):
         """ convert the config to a dictionary """
