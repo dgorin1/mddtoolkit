@@ -17,7 +17,8 @@ def diffEV_multiples(
     Ea_bounds: tuple,
     lnd0aa_bounds: tuple,
     max_iters: int = 30000,
-    x0: np.array = []
+    x0: np.array = [],
+    vectorized :bool = True
 ):
     """
     Run the differential evolution algorithm multiple times and returns the best result.
@@ -56,7 +57,7 @@ def diffEV_multiples(
         Ea_bounds=Ea_bounds,
         lnd0aa_bounds=lnd0aa_bounds,
     )
-
+    breakpoint()
     for i in range(num_iters):
         result = differential_evolution(
             objective,
@@ -65,10 +66,10 @@ def diffEV_multiples(
             tol=0.0001,  
             maxiter=max_iters,
             constraints=nlc,
-            vectorized=True,
-            updating="deferred",
+            vectorized=vectorized,
             seed=seed,
             popsize= 15,
+            x0 = x0
      
         )
 

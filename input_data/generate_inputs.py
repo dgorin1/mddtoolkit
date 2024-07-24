@@ -45,8 +45,8 @@ def generate_inputs(
 if __name__ == "__main__":
     # generate some results
     dir_path = os.path.dirname(os.path.realpath(__file__))
-
-    nameOfInputCSVFile = f"{dir_path}/N13ksp_python_test.csv"
-    nameOfExperimentalResultsFile = f"{dir_path}/input_N13ksp_python_test.csv"
-    geometry = "plane sheet"
+    breakpoint()
+    nameOfInputCSVFile = f"{dir_path}/DiffusionExptInput_KM95-15-Dgwith_blanks_for_schematic.csv"
+    nameOfExperimentalResultsFile = f"{dir_path}/input_DiffusionExptInput_KM95-15-Dgwith_blanks_for_schematic.csv"
+    geometry = "spherical"
     generate_inputs(nameOfInputCSVFile, nameOfExperimentalResultsFile, geometry)
