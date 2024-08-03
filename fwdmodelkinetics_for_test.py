@@ -8,7 +8,8 @@ import math as math
 def forwardModelKinetics(
     kinetics, tsec, TC, production_to_production_plus_diffusion_ratio_table:pd.DataFrame, geometry: str = "spherical", added_steps: int = 0
 ):  # I NEED TO FIX THE ADDED STEPS PROBLEM HERE STILL
-
+    Dtaa_table = torch.tensor(production_to_production_plus_diffusion_ratio_table["Dtaa"])
+    ratio_table = torch.tensor(production_to_production_plus_diffusion_ratio_table["ratio"])
     # Define some necessary variables
     R = 0.008314  # gas constant
     torch.pi = torch.tensor(torch.acos(torch.zeros(1)).item() * 2)
@@ -74,6 +75,18 @@ def forwardModelKinetics(
             -(torch.pi**2) * Dtaa[Bt > 1.401]
         )
 
+        if added_steps > 0:
+            irrad_rows = f[0,:,:]
+            for i in range(ndom):
+                for j in range(len(Dtaa[0,0,:])):
+                    index = torch.argmin(torch.abs(Dtaa_table-Dtaa[0,i,j]))
+                    f[0,i,j] = f[0,i,j]*ratio_table[index]
+
+                
+
+                
+            
+            #f[0,:,:] = f[0,:,:]
 
     elif geometry == "plane sheet":
 
@@ -121,11 +134,10 @@ def forwardModelKinetics(
 
     # Turn all nans into zeros so that
     nan_mask = torch.isnan(sumf_MDD).all(dim=0)
-
     if sum(nan_mask > 0):
         pass
     sumf_MDD[:, nan_mask] = 0.0
-    breakpoint()
+
     return sumf_MDD, punishmentFlag
 
 
