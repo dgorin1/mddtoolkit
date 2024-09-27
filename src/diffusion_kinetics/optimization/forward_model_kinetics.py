@@ -73,8 +73,29 @@ def forwardModelKinetics(
         f[Bt > 1.401] = 1 - (6 / (torch.pi**2)) * torch.exp(
             -(torch.pi**2) * Dtaa[Bt > 1.401]
         )
+        irradiation_step = Dtaa[0,:,:].unsqueeze(0)
+        irradiation_step = irradiation_step.repeat(production_to_production_plus_diffusion_ratio_table.shape[0],1,1)
 
 
+ 
+        dtaa_table = torch.tensor(production_to_production_plus_diffusion_ratio_table["Dtaa"])
+        dtaa_table = dtaa_table.unsqueeze(1).unsqueeze(2)
+        dtaa_table = dtaa_table.repeat(1,Dtaa.shape[1],f.shape[2])
+
+        corrections_table = torch.tensor(production_to_production_plus_diffusion_ratio_table["ratio"])
+
+
+
+        # Get indices to use for correction factor... these are the right indices for the correction factor needed.
+        values,indices = torch.min(torch.abs(irradiation_step-dtaa_table), axis=0)
+        correction_factor = corrections_table[indices]
+
+        f[0,:,:] = f[0,:,:]* correction_factor
+
+
+        # torch.tensor(production_to_production_plus_diffusion_ratio_table["Dtaa"])-irradiation_step
+
+        breakpoint()
     elif geometry == "plane sheet":
 
         Dtaa = torch.cumsum(DtaaForSum, axis=0)
@@ -130,6 +151,7 @@ def forwardModelKinetics(
 
 
 def calc_lnd0aa(sumf_MDD, diffti, geometry, extra_steps, added_steps):
+
 
     if len(sumf_MDD.size()) > 1:  # if there are multiple entries
         diffti = diffti.unsqueeze(1).repeat(1, sumf_MDD.size()[1])
