@@ -64,7 +64,6 @@ def forwardModelKinetics(
 
     if geometry == "spherical":
         Dtaa = torch.cumsum(DtaaForSum, axis=0)
-
         # Calculate f at each step
         Bt = Dtaa * torch.pi**2  # Use tabulation from XXXX to calculate
         f[Bt <= 1.401] = 6 / (torch.pi ** (3 / 2)) * (
@@ -73,29 +72,21 @@ def forwardModelKinetics(
         f[Bt > 1.401] = 1 - (6 / (torch.pi**2)) * torch.exp(
             -(torch.pi**2) * Dtaa[Bt > 1.401]
         )
+
+  
         irradiation_step = Dtaa[0,:,:].unsqueeze(0)
-        irradiation_step = irradiation_step.repeat(production_to_production_plus_diffusion_ratio_table.shape[0],1,1)
-
-
- 
-        dtaa_table = torch.tensor(production_to_production_plus_diffusion_ratio_table["Dtaa"])
-        dtaa_table = dtaa_table.unsqueeze(1).unsqueeze(2)
-        dtaa_table = dtaa_table.repeat(1,Dtaa.shape[1],f.shape[2])
-
-        corrections_table = torch.tensor(production_to_production_plus_diffusion_ratio_table["ratio"])
-
-
+        dtaa_table = production_to_production_plus_diffusion_ratio_table[:,0].unsqueeze(1).unsqueeze(2)
 
         # Get indices to use for correction factor... these are the right indices for the correction factor needed.
         values,indices = torch.min(torch.abs(irradiation_step-dtaa_table), axis=0)
-        correction_factor = corrections_table[indices]
+        correction_factor = production_to_production_plus_diffusion_ratio_table[:,1][indices]
 
-        f[0,:,:] = f[0,:,:]* correction_factor
+        f[0,:,:].mul_(correction_factor)
 
 
-        # torch.tensor(production_to_production_plus_diffusion_ratio_table["Dtaa"])-irradiation_step
 
-        breakpoint()
+
+
     elif geometry == "plane sheet":
 
         Dtaa = torch.cumsum(DtaaForSum, axis=0)
@@ -146,7 +137,7 @@ def forwardModelKinetics(
     if sum(nan_mask > 0):
         pass
     sumf_MDD[:, nan_mask] = 0.0
-    breakpoint()
+
     return sumf_MDD, punishmentFlag
 
 

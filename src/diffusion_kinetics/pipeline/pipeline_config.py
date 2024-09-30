@@ -139,7 +139,8 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
         self.init = init
         self.production_to_production_plus_diffusion_ratio_table_path = production_to_production_plus_diffusion_ratio_table_path
         self._assert_is_valid()
-        self._production_to_production_plus_diffusion_ratio_table = pd.read_csv(self.production_to_production_plus_diffusion_ratio_table_path)
+
+        self._production_to_production_plus_diffusion_ratio_table = torch.tensor(pd.read_csv(self.production_to_production_plus_diffusion_ratio_table_path).values)
 
         
     def _assert_is_valid(self):

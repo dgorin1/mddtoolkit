@@ -25,8 +25,7 @@ class DiffusionOptimizer:
         bounds = self._construct_bounds(config)
         nlcs = self._construct_nlcs(config.num_domains) 
 
-        print(config.time_add)
-        print(config.temp_add)
+
 
         objective = DiffusionObjective(
             self.dataset, 
@@ -54,6 +53,7 @@ class DiffusionOptimizer:
             mutation=config.mutation,
             recombination=config.recombination,
             init=config.init,
+            
         )
     
     def _construct_bounds(self, config:SingleProcessPipelineConfig):
