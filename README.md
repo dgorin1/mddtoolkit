@@ -29,8 +29,8 @@ The MDD toolkit utilizes a command-line interface to configure and begin an opti
 
 ```
 mddtoolkit \
-    -i path_to/diffusion_code_final/example/tests/N13ksp_python_test.csv \
-    -c path_to/diffusion_code_final/example/tests/test.yaml \
+    -i path_to/diffusion_code_final/example/example/sample_synthetic_data.csv \
+    -c path_to/diffusion_code_final/example/example/config.yaml \
     -o /Users/username/repos/diffusion_code_final/output/test_final
 ```
 The following pathways are required for this command: 
