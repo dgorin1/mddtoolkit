@@ -31,7 +31,7 @@ class DiffusionObjective:
             data (Dataset): The experimental dataset containing temperatures, times, and gas yields.
             omitValueIndices (list): Indices of experimental steps to exclude from misfit calculation.
             stat (str): The misfit statistic to use ('chisq' or 'l1_moles').
-            geometry (str): Diffusion geometry ('spherical', 'cylindrical', or 'planar').
+            geometry (str): Diffusion geometry ('spherical', or 'planar').
             punish_degas_early (bool): If True, heavily penalizes models that exhaust gas before the experiment ends.
         """
         
@@ -104,8 +104,9 @@ class DiffusionObjective:
             total_moles = X[0]
             X = X[1:]
 
-        # Run the physics engine: forward model the kinetics for thousands of 
-        # proposed thermal histories simultaneously using PyTorch.
+        # Run the physics engine: forward model the diffusivities from 
+        # a given heating schedule for thousands of diffusion kinetics 
+        # simultaneously using PyTorch.
         Fi_MDD, punishmentFlag = forwardModelKinetics(
             X, self.tsec, self._TC, geometry=self.geometry
         )
@@ -146,16 +147,7 @@ class DiffusionObjective:
                 axis=0,
             )
 
-        elif self.stat.lower() == "l2_frac":
-            multiplier = 1 - torch.tile(
-                self.omitValueIndices.unsqueeze(1), [1, trueFracMDD.shape[1]]
-            )
-            # L2 Norm (Fractional): Sum of squared errors
-            misfit = torch.sum(
-                (multiplier * (trueFracFi - trueFracMDD) ** 2), axis=0
-            )
-
-        elif self.stat.lower() == "percent_frac":
+        else: # self.stat.lower() == "percent_frac":
             multiplier = 1 - torch.tile(
                 self.omitValueIndices.unsqueeze(1), [1, trueFracMDD.shape[1]]
             )
