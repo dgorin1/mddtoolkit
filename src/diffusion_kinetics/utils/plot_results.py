@@ -125,6 +125,7 @@ def plot_results(
     # Perform type conversions and grab appropriate indices for plotting so that excluded values can be plotted with different symbology
     included = np.array(((1-objective.omitValueIndices) == 1).nonzero().squeeze())
     omitted = np.array((objective.omitValueIndices == 1).nonzero().squeeze())
+    breakpoint()
 
     # Avoid having a value close to inf plot and rescale the plot..
     if any(dataset["ln(D/a^2)"].isna()):
