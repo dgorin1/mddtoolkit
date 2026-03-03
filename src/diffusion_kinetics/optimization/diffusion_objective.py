@@ -7,6 +7,15 @@ import numpy as np
 
 
 class DiffusionObjective:
+    """
+    Calculates the objective function (misfit) between experimental diffusion data 
+    and a Multi-Domain Diffusion (MDD) forward model.
+    
+    This class handles the transformation of MDD parameters into predicted fractional 
+    releases and moles, compares them against observed data using various statistics, 
+    and applies penalties for physical inconsistencies (e.g., early degassing).
+    """
+    
     def __init__(
         self,
         data: Dataset,
@@ -18,16 +27,16 @@ class DiffusionObjective:
         punish_degas_early:bool = True
     ):
         """
-        This function forward models a set of MDD parameters and returns a residual based on the specified misfit statistic.
+        Initializes the objective function with experimental data and modeling constraints.
         
         Args:
-            data (Dataset): the dataset to be used for the objective function.
-            time_add (list): the times of the extra heating steps to be added to the dataset.
-            temp_add array (list): the temperatures of the extra heating steps to be added to the dataset.
-            omitValueIndices (list, optional): the indices of the values to be omitted from the objective function. Defaults to [].
-            stat (str, optional): the statistic to be used for the objective function. Defaults to "chisq".
-            geometry (str, optional): the geometry of the sample. Defaults to "spherical".
-            punish_degas_early(bool, optional): Tells the model whether to punish proposed fits that degas before the modeled experiment is complete
+            data (Dataset): The experimental dataset containing temperatures, times, and gas yields.
+            time_add (list): Durations (hours) of extra heating steps (e.g., storage, irradiation).
+            temp_add (list): Temperatures (°C) of extra heating steps.
+            omitValueIndices (list): Indices of experimental steps to exclude from misfit calculation.
+            stat (str): The misfit statistic to use (e.g., 'chisq', 'l1_moles', 'lnd0aa').
+            geometry (str): Diffusion geometry ('spherical', 'cylindrical', or 'planar').
+            punish_degas_early (bool): If True, heavily penalizes models that exhaust gas before the experiment ends.
         """
 
         self.dataset = data
