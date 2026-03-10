@@ -4,10 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib.gridspec as gridspec
 # from utils.get_plot_name import get_plot_name
-from diffusion_kinetics.optimization import (
-    forwardModelKinetics, 
-    calc_lnd0aa
-)
+from diffusion_kinetics.optimization.forward_model_kinetics import forwardModelKinetics, calc_lnd0aa
 import os
 
 def plot_results(
@@ -41,28 +38,16 @@ def plot_results(
     else:
         ndom = (len(params)) // 2
 
-    # Reconstruct the time-added and temp-added inputs
-    time = torch.tensor(dataset.thr * 3600)
+    tsec = objective.tsec
     TC = torch.tensor(dataset.TC)
-    
-    # If adding extra input steps to ignore..
-    if objective.extra_steps == True:
-        tsec = torch.cat([torch.tensor(np.array(objective.time_add)), time])
-        TC = torch.cat([torch.tensor(np.array(objective.temp_add)), TC])
-    else:
-        tsec = objective.tsec
 
     # Calculate the cumulative fractions from the MDD model
-    Fi_MDD, punishmentFlag = forwardModelKinetics(params,
-                                     tsec, 
-                                     TC, 
-                                     geometry = objective.geometry,
-                                     added_steps=objective.added_steps)
+    Fi_MDD, punishmentFlag = forwardModelKinetics(
+        params, tsec, TC, geometry=objective.geometry, added_steps=0
+    )
 
-    # Calculate the lndaa from the mdd model
-    lnd0aa_MDD = calc_lnd0aa(
-                        Fi_MDD, objective.tsec, objective.geometry, objective.extra_steps, objective.added_steps
-                 )
+    # Calculate lnD/a² from the MDD model for the Arrhenius plot
+    lnd0aa_MDD = calc_lnd0aa(Fi_MDD, objective.tsec, objective.geometry, False, 0)
 
     # Ensure that values aren't infinity in Fi for plotting purposes
     mask = torch.isinf(Fi_MDD)
@@ -111,9 +96,9 @@ def plot_results(
     
      # Calculate and plot a line representing each domain for visualization in the plot
     for i in range(ndom):
-        D = params[i+1]-params[0]/R*(1/(TC[objective.added_steps:-1]+273.15))
+        D = params[i+1]-params[0]/R*(1/(TC[:-1]+273.15))
         plt.plot(
-            np.linspace(min(10000/(TC[objective.added_steps:-1]+273.15)), max(10000/(TC[objective.added_steps:-1]+273.15)), 1000),
+            np.linspace(min(10000/(TC[:-1]+273.15)), max(10000/(TC[:-1]+273.15)), 1000),
             np.linspace(max(D), min(D), 1000),
             "--",
             linewidth=frac_weights[i],

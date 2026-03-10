@@ -90,13 +90,11 @@ class PipelineOutput:
         json.dump(res, open(results_path, "w"), indent=4)
         
         objective = DiffusionObjective(
-            dataset, 
-            config.time_add,
-            config.temp_add,
+            dataset,
             config.omit_value_indices,
             config.misfit_stat,
             config.geometry,
-            config.punish_degas_early
+            config.punish_degas_early,
         )
 
         plot_results(

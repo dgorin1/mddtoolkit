@@ -1,8 +1,7 @@
 import pandas as pd
 from diffusion_kinetics.pipeline import SingleProcessPipelineConfig, PipelineOutput
-from diffusion_kinetics.optimization import Dataset
+from diffusion_kinetics.optimization.dataset import Dataset
 from typing import Union
-from  diffusion_kinetics.optimization import DiffusionOptimizer
 from diffusion_kinetics.pipeline.base_pipeline import BasePipeline
 import numpy as np
 from diffusion_kinetics.utils.kinetics_dataframe import KineticsDataframe
@@ -19,6 +18,7 @@ class SinglePipeline(BasePipeline):
         dataset: Dataset,
         output: PipelineOutput = None,
     ):
+        from diffusion_kinetics.optimization.diffusion_optimizer import DiffusionOptimizer
         self.dataset = SinglePipeline._load_dataset(dataset)
         self.optimizer = DiffusionOptimizer(self.dataset)
         self.output = SinglePipeline._create_output(output)
