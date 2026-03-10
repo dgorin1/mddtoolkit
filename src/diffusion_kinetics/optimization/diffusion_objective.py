@@ -7,15 +7,7 @@ import numpy as np
 
 
 class DiffusionObjective:
-    """
-    Calculates the objective function (misfit) between experimental diffusion data 
-    and a Multi-Domain Diffusion (MDD) forward model.
-    
-    This class handles the transformation of MDD parameters into predicted fractional 
-    releases and moles, compares them against observed data using various statistics, 
-    and applies penalties for physical inconsistencies (e.g., early degassing).
-    """
-    
+ # ... [Docstrings omitted for brevity] ...
     def __init__(
         self,
         data: Dataset,
@@ -87,23 +79,13 @@ class DiffusionObjective:
     def __call__(self, X):
         return self.objective(X)
 
-    def grad(self, X):
-        return self.grad(X)
-
     def objective(self, X):
         """
         The core engine: Forward models the physical diffusion kinetics for a set of parameters (X) 
         and calculates the statistical misfit against the observed experimental data.
         """
-        if X.size == 0:
-            return []
-
-        # 1. PARAMETER EXTRACTION & FORWARD MODELING
-        # Extract total moles if X contains an odd number of parameters
-        if len(X) % 2 != 0:
-            total_moles = X[0]
-            X = X[1:]
-
+        #[omitted for brevity...]
+        
         # Run the physics engine: forward model the diffusivities from 
         # a given heating schedule for thousands of diffusion kinetics 
         # simultaneously using PyTorch.
