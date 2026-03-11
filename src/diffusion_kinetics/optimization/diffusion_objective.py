@@ -1,281 +1,126 @@
-from diffusion_kinetics.optimization.forward_model_kinetics import forwardModelKinetics
-from diffusion_kinetics.optimization.forward_model_kinetics import calc_lnd0aa
+from diffusion_kinetics.optimization.forward_model_kinetics import forward_model_kinetics
 from diffusion_kinetics.optimization.dataset import Dataset
-import math as math
-import torch as torch
+import torch
 import numpy as np
 
 
 class DiffusionObjective:
     """
-    Calculates the objective function (misfit) between experimental diffusion data 
+    Calculates the objective function (misfit) between experimental diffusion data
     and a Multi-Domain Diffusion (MDD) forward model.
-    
-    This class handles the transformation of MDD parameters into predicted fractional 
-    releases and moles, compares them against observed data using various statistics, 
-    and applies penalties for physical inconsistencies (e.g., early degassing).
+
+    Supported misfit statistics:
+        - ``"chisq"``:        chi-squared on measured moles vs. predicted moles.
+        - ``"percent_frac"``: mean absolute fractional-release residual, normalised
+                              by the observed fractional release at each step.
     """
-    
+
     def __init__(
         self,
         data: Dataset,
-        time_add: list,
-        temp_add: list,
-        omitValueIndices=[],
+        omit_value_indices: list = [],
         stat: str = "chisq",
         geometry: str = "spherical",
-        punish_degas_early:bool = True
+        punish_degas_early: bool = True,
     ):
         """
-        Initializes the objective function with experimental data and modeling constraints.
-        
         Args:
-            data (Dataset): The experimental dataset containing temperatures, times, and gas yields.
-            time_add (list): Durations (hours) of extra heating steps (e.g., storage, irradiation).
-            temp_add (list): Temperatures (°C) of extra heating steps.
-            omitValueIndices (list): Indices of experimental steps to exclude from misfit calculation.
-            stat (str): The misfit statistic to use (e.g., 'chisq', 'l1_moles', 'lnd0aa').
-            geometry (str): Diffusion geometry ('spherical', 'cylindrical', or 'planar').
-            punish_degas_early (bool): If True, heavily penalizes models that exhaust gas before the experiment ends.
+            data (Dataset): Experimental dataset.
+            omit_value_indices (list): Indices of steps to exclude from the misfit.
+            stat (str): Misfit statistic (``"chisq"`` or ``"percent_frac"``).
+            geometry (str): Diffusion geometry (``"spherical"`` or ``"plane sheet"``).
+            punish_degas_early (bool): If ``True``, penalises models that exhaust
+                gas before the final heating step.
         """
-
         self.dataset = data
-
-        self.time_add = time_add
-        self.temp_add = temp_add
-
-        # Add total moles information for priors
-        self.total_moles = torch.sum(torch.tensor(self.dataset.M))
-        self.total_moles_del = torch.sqrt(
-            torch.sum(torch.tensor(self.dataset.delM) ** 2)
-        )
-
-        
         self.stat = stat
-        time = self.dataset._thr * 3600
-        if time_add.numel() > 0:
-            self.tsec = torch.cat([time_add, time])
-            self._TC = torch.cat([temp_add, self.dataset._TC])
-            self.extra_steps = True
-        else:
-            self.tsec = time
-            self._TC = self.dataset._TC
-            self.extra_steps = False
-
-        self.lnd0aa = torch.tensor(self.dataset["ln(D/a^2)"])
-        self.lnd0aa[-1] = 0
-
-        indices = np.where(np.isinf(self.lnd0aa))
-        self.lnd0aa[self.lnd0aa == -np.inf] = 0
-        self.lnd0aa[self.lnd0aa == -np.inf] = 0
-        self.lnd0aa[torch.isnan(self.lnd0aa)] = 0
-        self.omitValueIndices = torch.isin(   torch.arange(len(self.dataset)), torch.tensor(omitValueIndices)   ).to(torch.int)
-        omitValueIndices_lnd0aa = omitValueIndices + (indices[0].tolist())
-        self.omitValueIndices_lnd0aa = torch.isin(
-            torch.arange(len(self.dataset)), torch.tensor(omitValueIndices_lnd0aa)
-        ).to(torch.int)
-
-        # Add locations where uncertainty (and measurement value) is zero to the list of values to ignore
-        indices_chisq = np.where(data.uncert == 0)
-        omitValueIndices_chisq = omitValueIndices + (indices_chisq[0].tolist())
-        self.omitValueIndices_chisq = torch.isin(
-            torch.arange(len(self.dataset)), torch.tensor(omitValueIndices_chisq)
-        ).to(torch.int)
-
-        self.plateau = torch.sum(
-            ((torch.tensor(self.dataset.M) - torch.zeros(len(self.dataset.M))) ** 2)
-            / (data.uncert**2)
-        )
-        self.Fi = torch.tensor(data.Fi)
-        self.trueFracFi = self.Fi[1:] - self.Fi[0:-1]
-        self.trueFracFi = torch.concat((torch.unsqueeze(self.Fi[0], dim=-0), self.trueFracFi), dim=-1)
         self.geometry = geometry
-        self.Daa_uncertainty = torch.tensor(self.dataset["Daa uncertainty"])
-        self.Daa_uncertainty[self.Daa_uncertainty == -np.inf] = 0
-        self.Daa_uncertainty[self.Daa_uncertainty == -np.inf] = 0
-        self.Daa_uncertainty[torch.isnan(self.Daa_uncertainty)] = 0
+        self.punish_degas_early = punish_degas_early
+
+        self.tsec = data._thr * 3600
+        self._tc = data._tc
+
+        self.omit_value_indices = torch.isin(
+            torch.arange(len(data)), torch.tensor(omit_value_indices)
+        ).to(torch.int)
+
+        # For chisq: also exclude steps where uncertainty is zero
+        indices_zero_uncert = np.where(data.uncert == 0)[0].tolist()
+        omit_value_indices_chisq = omit_value_indices + indices_zero_uncert
+        self.omit_value_indices_chisq = torch.isin(
+            torch.arange(len(data)), torch.tensor(omit_value_indices_chisq)
+        ).to(torch.int)
+
         data.uncert[data.uncert == 0] = torch.min(data.uncert[data.uncert != 0]) * 0.1
         self.exp_moles = torch.tensor(data.M)
-        self.added_steps = len(time_add)
-        self.punish_degas_early = punish_degas_early
+
+        self.fi = torch.tensor(data.Fi)
+        self.true_frac_fi = torch.concat(
+            (self.fi[:1], self.fi[1:] - self.fi[:-1]), dim=0
+        )
 
     def __call__(self, X):
         return self.objective(X)
 
-    def grad(self, X):
-        return self.grad(X)
-
     def objective(self, X):
-        
-        # This function calculates the fraction of gas released from each domain
-        # in an MDD model during the heating schedule used in the diffusion
-        # experiment. Then the fractions released from each domain are combined in
-        # proportion to one another as specified by the MDD model, and the
-        # diffusivity of each step is calculated. A residual is calculated as prescribed by the user.
-        # If the constraint function removes all possible models for this step, return empty list
-
         if X.size == 0:
-            return([])
+            return []
 
-
-        # Determine whether or not moles are being calculated and save to variable if yes
+        # chisq prepends total_moles, giving an odd-length parameter vector
+        total_moles = None
         if len(X) % 2 != 0:
             total_moles = X[0]
             X = X[1:]
 
-        # Forward model the results so that we can calculate the misfit.
-
-        # If the mineral is diffusive enough that we're correcting for laboratory storage and irradiation:
-        # if self.extra_steps == True:
-        Fi_MDD, punishmentFlag = forwardModelKinetics(
+        fi_mdd, punishment_flag = forward_model_kinetics(
             X,
             self.tsec,
-            self._TC,
+            self._tc,
             geometry=self.geometry,
-            added_steps=self.added_steps,
+            added_steps=0,
         )
 
-        # Create a punishment flag if the user specified. If the experiment degassed before the end of the temperature steps,
-        # then we add an extra value to the misfit calculated at each step. We do this by multiplying the misfit value 
-        # at each step that degassed too early by 10. This punishes the model and "teaches" it that we don't want the experiment
-        # to degas too early. This is not recommended for experiments where the sample was fused or melted in final steps.
-        if self.punish_degas_early == True:
-            punishmentFlag = punishmentFlag * 10 + 1
+        if self.punish_degas_early:
+            punishment_flag = punishment_flag * 10 + 1
         else:
-            punishmentFlag = 1
+            punishment_flag = 1
 
-        
-        # Objective function calculates Fi in cumulative form. Switch into non-cumulative space for calculations.               
-        trueFracMDD = Fi_MDD[1:] - Fi_MDD[0:-1]
-        trueFracMDD = torch.concat(
-            (torch.unsqueeze(Fi_MDD[0], dim=0), trueFracMDD), dim=0
+        # Convert cumulative → differential fractional release
+        true_frac_mdd = torch.concat(
+            (fi_mdd[:1], fi_mdd[1:] - fi_mdd[:-1]), dim=0
         )
 
-        # If only one history was tested in a 1D shape, we need to put it into a column shape in 2-d so that 
-        # it is the correct dimensions for the calculations below. If only one history was tested, 
-        # trueFracMDD will have just 1 dimension.
-        if len(trueFracMDD.shape) < 2:
-            trueFracMDD = torch.unsqueeze(trueFracMDD, 1)
+        if len(true_frac_mdd.shape) < 2:
+            true_frac_mdd = torch.unsqueeze(true_frac_mdd, 1)
 
-        # Assign to a variable since we need to modify the shape of this variable depending on the size of X
-        trueFracFi = self.trueFracFi
-      
-      
-        if (
-            self.stat.lower() == "l1_frac"
-            or self.stat.lower() == "l2_frac"
-            or self.stat.lower() == "percent_frac"
-            or self.stat == "lnd0aa"
-            or self.stat == "lnd0aa_chisq"
-        ):
-            
-            trueFracFi = torch.tile(
-                trueFracFi.unsqueeze(1), [1, trueFracMDD.shape[1]]
-            )
-
-            # If you're using percent_frac, we'll reassign all the values that are 0 to 
-            # 10% of the minimum size in seen in the experiment to avoid "divide by zero" errors.
-            # We ignore zero steps when calculating the misfit anyway.
-            if self.stat == "percent_frac":
-                trueFracFi[trueFracFi == 0] = (
-                    torch.min(trueFracFi[trueFracFi != 0]) * 0.1
-                )
-        # If using l1_frac_cum, make that variable the correct shape.
-        elif self.stat.lower() == "l1_frac_cum":
-            Fi = torch.tile(self.Fi.unsqueeze(1), [1, Fi_MDD.shape[1]])
-        
-        # If nothing above is true, then you're using a calc that involves moles and you'll need to calculate
-        # the predicted moles for each step.
-        else:
-            moles_MDD = trueFracMDD * total_moles
-
-        # Create the multiplier mask which will show values of 1 for values we want to include in the misfit, and 
-        # zero for those we don't. 
-
-        # This one is specific for lnd0aa (DREW TO ADD BETTER COMMENT)
-        if self.stat.lower() == "lnd0aa" or self.stat.lower() == "lnd0aa_chisq":
-            multiplier = 1 - torch.tile(
-                self.omitValueIndices_lnd0aa.unsqueeze(1),
-                [1, trueFracMDD.shape[1]],
-            )
-
-        
-        # This one is specific for chi_sq (DREW TO ADD BETTER COMMENT)
-        elif self.stat.lower() == "chisq":
-            multiplier = 1 - torch.tile(
-                self.omitValueIndices_chisq.unsqueeze(1),
-                [1, trueFracMDD.shape[1]],
-            )
-
-        # This is the last multiplier contianing user-specified indices.
-        else:
-            multiplier = 1 - torch.tile(
-                self.omitValueIndices.unsqueeze(1), [1, trueFracMDD.shape[1]]
-            )
-
-        
-        # This is a giant if statement to decide which misfit statistic you're using. 
-        # It calculates the misfit as appropriate.
         if self.stat.lower() == "chisq":
+            if total_moles is None:
+                raise ValueError(
+                    "chisq requires an odd-length parameter vector with total_moles prepended"
+                )
+            multiplier = 1 - torch.tile(
+                self.omit_value_indices_chisq.unsqueeze(1),
+                [1, true_frac_mdd.shape[1]],
+            )
+            moles_mdd = true_frac_mdd * total_moles
             misfit = torch.sum(
                 multiplier
-                * ((self.exp_moles.unsqueeze(1) - moles_MDD) ** 2)
+                * ((self.exp_moles.unsqueeze(1) - moles_mdd) ** 2)
                 / (self.dataset.uncert.unsqueeze(1) ** 2),
                 axis=0,
             )
-        elif self.stat.lower() == "l1_moles":
-            misfit = misfit = torch.sum(
-                multiplier * (torch.abs(self.exp_moles.unsqueeze(1) - moles_MDD)),
-                axis=0,
-            )
-        elif self.stat.lower() == "l2_moles":
-            misfit = torch.sum(
-                (multiplier * ((self.exp_moles.unsqueeze(1) - moles_MDD) ** 2)),
-                axis=0,
-            )
-        elif self.stat.lower() == "l1_frac":
-            misfit = torch.sum(
-                multiplier * (torch.abs(trueFracFi - trueFracMDD)), axis=0
-            )
-        elif self.stat.lower() == "l1_frac_cum":
-            misfit = torch.sum(multiplier * (torch.abs(Fi - Fi_MDD)), axis=0)
-        elif self.stat.lower() == "l2_frac":
-            misfit = torch.sum(
-                (multiplier * (trueFracFi - trueFracMDD) ** 2), axis=0
-            )
+
         elif self.stat.lower() == "percent_frac":
+            multiplier = 1 - torch.tile(
+                self.omit_value_indices.unsqueeze(1), [1, true_frac_mdd.shape[1]]
+            )
+            true_frac_fi = torch.tile(
+                self.true_frac_fi.unsqueeze(1), [1, true_frac_mdd.shape[1]]
+            )
+            true_frac_fi[true_frac_fi == 0] = torch.min(true_frac_fi[true_frac_fi != 0]) * 0.1
             misfit = torch.sum(
-                multiplier * (torch.abs(trueFracFi - trueFracMDD)) / trueFracFi,
+                multiplier * torch.abs(true_frac_fi - true_frac_mdd) / true_frac_fi,
                 axis=0,
             )
-        elif self.stat.lower() == "lnd0aa":
-            lnd0aa_MDD = calc_lnd0aa(
-                Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps
-            )
-            lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
-            lnd0aa_MDD[lnd0aa_MDD == np.inf] = 0
-            lnd0aa_MDD[torch.isnan(lnd0aa_MDD)] = 0
 
-            misfit = torch.sum(
-                multiplier * ((lnd0aa_MDD - self.lnd0aa.unsqueeze(1)) ** 2),
-                axis=0,
-            )
-        
-        elif self.stat.lower() == "lnd0aa_chisq":
-            lnd0aa_MDD = calc_lnd0aa(
-                Fi_MDD, self.tsec, self.geometry, self.extra_steps, self.added_steps
-            )
-            lnd0aa_MDD[lnd0aa_MDD == -np.inf] = 0
-            lnd0aa_MDD[lnd0aa_MDD == np.inf] = 0
-            lnd0aa_MDD[torch.isnan(lnd0aa_MDD)] = 0
-            if len(lnd0aa_MDD.shape) < 2: 
-                lnd0aa_MDD = torch.unsqueeze(lnd0aa_MDD ,1)
-            
-            misfit = multiplier * ((torch.exp(lnd0aa_MDD) - torch.exp(self.lnd0aa.unsqueeze(1)))** 2/ self.Daa_uncertainty.unsqueeze(1))
-            nan_rows = (torch.isnan(misfit).any(dim=1)) | (torch.isinf(misfit).any(dim=1))
-            misfit = torch.sum(misfit[~nan_rows], axis=0)
-
-        return misfit * punishmentFlag
-    
-
-   
+        return misfit * punishment_flag

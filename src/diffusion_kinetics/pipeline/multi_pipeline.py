@@ -6,18 +6,31 @@ from diffusion_kinetics.pipeline.base_pipeline import BasePipeline
 from diffusion_kinetics.utils.kinetics_dataframe import KineticsDataframe
 from typing import Union
 from diffusion_kinetics.preprocessing.generate_inputs import generate_inputs
-import numpy as np
 from pathlib import Path
 
 
 class MultiPipeline(BasePipeline):
-    def __init__(
-        self,
-        output: Union[str, PipelineOutput] = None,
-    ):
+    """Orchestrates MDD fitting across multiple domain counts and misfit statistics.
+
+    For each combination of misfit statistic and domain count specified in the
+    config, a :class:`SinglePipeline` run is performed and its result is appended
+    to a cumulative CSV file under the output directory.
+    """
+
+    def __init__(self, output: Union[str, PipelineOutput] = None):
         self.output = MultiPipeline._create_output(output)
 
     def run(self, config: Union[str, dict, MultiProcessPipelineConfig], dataset: str):
+        """Run the full multi-domain, multi-statistic optimization.
+
+        Args:
+            config: Path to a YAML config file, a plain dict, or a
+                :class:`MultiProcessPipelineConfig` instance.
+            dataset (str): Path to the raw input CSV file.
+
+        Returns:
+            list: All optimizer result objects, in the order they were produced.
+        """
         results = []
         config = MultiPipeline._load_config(config)
 
@@ -31,94 +44,74 @@ class MultiPipeline(BasePipeline):
         print("\n\033[1m\033[4mRunning multi pipeline with config:\033[0m")
         print(config, "\n")
 
-        for misfit_type in config.single_pipeline_configs.keys():
+        for misfit_type, configs_for_domain in config.single_pipeline_configs.items():
             combined_df = None
             print(
                 f"{'='*80}",
-                "\n\033[1mRunning pipeline for misfit type:",
-                misfit_type,
-                "\033[0m",
+                f"\n\033[1mRunning pipeline for misfit type: {misfit_type}\033[0m",
                 f"\n{'='*80}",
             )
-            configs_for_each_domain_list = config.single_pipeline_configs[misfit_type]
-            for single_pipeline_config in configs_for_each_domain_list:
-                print(
-                    f"\n\033[1m\033[4mFitting model with {single_pipeline_config.num_domains} domains\033[0m"
-                )
-                res = pipeline.run(single_pipeline_config)
-                # save the combined csv
-                if combined_df is None:
-                    combined_df = KineticsDataframe(res, single_pipeline_config).df
-                else:
-                    combined_df = self.combine_dfs(
-                        combined_df, KineticsDataframe(res, single_pipeline_config).df
-                    )
+            for single_config in configs_for_domain:
+                print(f"\n\033[1m\033[4mFitting model with {single_config.num_domains} domains\033[0m")
+                res = pipeline.run(single_config)
+                kdf = KineticsDataframe(res, single_config).df
+                combined_df = kdf if combined_df is None else self._combine_dfs(combined_df, kdf)
                 combined_df.to_csv(self.output.get_dataframe_path(misfit_type))
-
                 results.append(res)
                 print("")
+
         return results
 
     @staticmethod
     def _load_config(config: Union[str, dict, MultiProcessPipelineConfig]):
         if isinstance(config, str):
-            config = MultiProcessPipelineConfig.load(config)
+            return MultiProcessPipelineConfig.load(config)
         elif isinstance(config, dict):
-            config = MultiProcessPipelineConfig(**config)
-        elif config == None:
-            config = MultiProcessPipelineConfig()
-        elif not isinstance(config, MultiProcessPipelineConfig):
+            return MultiProcessPipelineConfig(**config)
+        elif config is None:
+            return MultiProcessPipelineConfig()
+        elif isinstance(config, MultiProcessPipelineConfig):
+            return config
+        else:
             raise ValueError(
-                f"config must be a path to a yaml file, a dictionary, or a SingleProcessPipelineConfig object. Got: {config.__class__.__name__}"
+                f"config must be a YAML path, dict, or MultiProcessPipelineConfig. "
+                f"Got: {config.__class__.__name__}"
             )
-        return config
 
     @staticmethod
     def _load_dataset(dataset: Union[str, pd.DataFrame, Dataset]):
         if isinstance(dataset, str):
-            dataset = Dataset(pd.read_csv(dataset))
+            return Dataset(pd.read_csv(dataset))
         elif isinstance(dataset, pd.DataFrame):
-            dataset = Dataset(dataset)
-        elif not isinstance(dataset, Dataset):
+            return Dataset(dataset)
+        elif isinstance(dataset, Dataset):
+            return dataset
+        else:
             raise ValueError(
-                f"dataset must be a path to a csv file, a pandas dataframe, or a Dataset object. Got: {dataset.__class__.__name__}"
+                f"dataset must be a CSV path, DataFrame, or Dataset. "
+                f"Got: {dataset.__class__.__name__}"
             )
-        return dataset
 
     @staticmethod
     def _create_output(output: Union[str, PipelineOutput]):
         if isinstance(output, PipelineOutput):
-            pass
+            return output
         elif isinstance(output, str):
-            output = PipelineOutput(output)
+            return PipelineOutput(output)
         else:
             raise ValueError(
-                f"output must be a path to a directory or a PipelineOutput object. Got: {output.__class__.__name__}"
+                f"output must be a directory path or PipelineOutput. "
+                f"Got: {output.__class__.__name__}"
             )
-        return output
 
     @staticmethod
-    def combine_dfs(d1, d2):
-        """Combine two dataframes with different columns.
+    def _combine_dfs(d1: pd.DataFrame, d2: pd.DataFrame) -> pd.DataFrame:
+        """Concatenate two result DataFrames that may have different column sets.
 
-        Args:
-            d1 (pd.DataFrame): The first dataframe.
-            d2 (pd.DataFrame): The second dataframe.
-
-        Returns:
-            pd.DataFrame: The combined dataframe.
+        The wider DataFrame's column order is used so that results are always
+        presented with all lnD0/a² columns first, followed by all fraction
+        columns — matching the order produced by the highest-domain-count run.
+        Columns missing from either frame are filled with NaN.
         """
-        col_names = d1.columns if len(d1.columns) > len(d2.columns) else d2.columns
-        df_dict = {}
-        for col in col_names:
-            if col not in df_dict.keys():
-                df_dict[col] = []
-            if col in d1:
-                df_dict[col] = df_dict[col] + d1[col].tolist()
-            else:
-                df_dict[col] = df_dict[col] + [None for _ in range(len(d1))]
-            if col in d2:
-                df_dict[col] = df_dict[col] + d2[col].tolist()
-            else:
-                df_dict[col] = df_dict[col] + [None for _ in range(len(d2))]
-        return pd.DataFrame.from_dict(df_dict)
+        col_order = d2.columns if len(d2.columns) >= len(d1.columns) else d1.columns
+        return pd.concat([d1, d2], ignore_index=True)[col_order]

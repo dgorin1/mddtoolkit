@@ -1,43 +1,42 @@
-
-from diffusion_kinetics.optimization import DiffusionObjective, Dataset
-from diffusion_kinetics.pipeline import SingleProcessPipelineConfig
+from diffusion_kinetics.optimization.diffusion_objective import DiffusionObjective
+from diffusion_kinetics.optimization.dataset import Dataset
+from diffusion_kinetics.pipeline.pipeline_config import SingleProcessPipelineConfig
+from diffusion_kinetics.optimization.con_he_param import con_he_param
 from scipy.optimize import differential_evolution, NonlinearConstraint
-from diffusion_kinetics.optimization.conHe_Param import conHe_Param
 import numpy as np
 import torch
 
+
 class DiffusionOptimizer:
-    def __init__(
-        self, 
-        dataset:Dataset, 
-    ):
+    """Wraps scipy's ``differential_evolution`` with MDD-specific bounds and
+    constraints derived from a :class:`SingleProcessPipelineConfig`.
+    """
+
+    def __init__(self, dataset: Dataset):
         self.dataset = dataset
-        
-    def run(self, config:SingleProcessPipelineConfig, seed:int=0):
-        """
-        Run the optimization for a given misfit statistic and number of domains.
-        
+
+    def run(self, config: SingleProcessPipelineConfig, seed: int = 0):
+        """Run the optimization for a given configuration.
+
         Args:
-            - misfit_stat (str): The misfit statistic to use.
-            - ndom (int): The number of domains to use.
+            config (SingleProcessPipelineConfig): Optimization configuration.
+            seed (int): Random seed passed to ``differential_evolution``.
         """
         bounds = self._construct_bounds(config)
-        nlcs = self._construct_nlcs(config.num_domains) 
+        nlcs = self._construct_nlcs(config.num_domains)
         objective = DiffusionObjective(
-            self.dataset, 
-            config.time_add,
-            config.temp_add,
+            self.dataset,
             config.omit_value_indices,
             config.misfit_stat,
             config.geometry,
-            config.punish_degas_early
+            config.punish_degas_early,
         )
 
         return differential_evolution(
             objective,
             bounds,
             disp=False,
-            tol=config.tol,  
+            tol=config.tol,
             maxiter=config.max_iters,
             constraints=nlcs,
             vectorized=True,
@@ -49,43 +48,37 @@ class DiffusionOptimizer:
             recombination=config.recombination,
             init=config.init,
         )
-    
-    def _construct_bounds(self, config:SingleProcessPipelineConfig):
-        if (
-            config.misfit_stat.lower() == "chisq"
-            or config.misfit_stat.lower() == "l2_moles"
-            or config.misfit_stat.lower() == "l1_moles"
-        ):
-            moles = True
-        else:
-            moles = False
+
+    def _construct_bounds(self, config: SingleProcessPipelineConfig):
+        # chisq optimises total_moles jointly with the kinetic parameters
+        uses_moles = config.misfit_stat.lower() == "chisq"
 
         frac_bounds = (0, 1)
-        mole_bound = tuple((
-                sum(self.dataset.M) - 1 * torch.sqrt(sum(torch.tensor(self.dataset.delM) ** 2)),
-                sum(self.dataset.M) + 1 * torch.sqrt(sum(torch.tensor(self.dataset.delM) ** 2)),
-            )
-        )
+        del_m_unc = torch.sqrt(torch.sum(torch.tensor(self.dataset.delM) ** 2))
+        total_m = sum(self.dataset.M)
+        mole_bound = (total_m - del_m_unc, total_m + del_m_unc)
 
         if config.num_domains == 1:
-            if moles == True:
+            if uses_moles:
                 return [mole_bound, config.ea_bounds, config.lnd0aa_bounds]
             else:
                 return [config.ea_bounds, config.lnd0aa_bounds]
-        elif config.num_domains > 1:
-            if moles == True:
+        else:
+            if uses_moles:
                 return (
                     [mole_bound, config.ea_bounds]
                     + config.num_domains * [config.lnd0aa_bounds]
                     + (config.num_domains - 1) * [frac_bounds]
                 )
             else:
-                return [config.ea_bounds] + config.num_domains * [config.lnd0aa_bounds] + (config.num_domains - 1) * [frac_bounds]
-    
-       
-    def _construct_nlcs(self, ndom:int):
-        if ndom > 1:
-            return NonlinearConstraint(conHe_Param, lb=[0], ub=[np.inf])
+                return (
+                    [config.ea_bounds]
+                    + config.num_domains * [config.lnd0aa_bounds]
+                    + (config.num_domains - 1) * [frac_bounds]
+                )
+
+    def _construct_nlcs(self, n_dom: int):
+        if n_dom > 1:
+            return NonlinearConstraint(con_he_param, lb=[0], ub=[np.inf])
         else:
             return []
-        
