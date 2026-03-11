@@ -116,41 +116,69 @@ class SingleProcessPipelineConfig(BasePipelineConfig):
         self._assert_is_valid()
 
     def _assert_is_valid(self):
-        assert isinstance(self.lnd0aa_bounds, list), "lnd0aa_bounds must be a list"
-        assert isinstance(self.ea_bounds, list), "ea_bounds must be a list"
-        assert isinstance(self.geometry, str), "geometry must be a string"
-        assert isinstance(self.omit_value_indices, list), "omit_value_indices must be a list"
-        assert isinstance(self.max_iters, (float, int)), "max_iters must be a float or int"
-        assert isinstance(self.punish_degas_early, bool), "punish_degas_early must be a bool"
-        assert len(self.lnd0aa_bounds) == 2, "lnd0aa_bounds must be a list of length 2"
-        assert len(self.ea_bounds) == 2, "ea_bounds must be a list of length 2"
-        assert self.lnd0aa_bounds[0] < self.lnd0aa_bounds[1], "lnd0aa_bounds must be in increasing order"
-        assert self.ea_bounds[0] <= self.ea_bounds[1], "ea_bounds must be in increasing order, or equal for fixed Ea"
-        assert self.geometry in ["spherical", "plane sheet"], "geometry must be 'spherical' or 'plane sheet'"
-        assert self.max_iters > 0, "max_iters must be greater than 0"
-        assert self.num_domains >= 0, "num_domains must be greater than 0"
-        assert self.misfit_stat in MISFIT_STAT_LIST, f"misfit_stat must be one of {MISFIT_STAT_LIST}, got '{self.misfit_stat}'"
-        assert self.repeat_iterations > 0, "repeat_iterations must be greater than 0"
-        assert self.repeat_iterations == int(self.repeat_iterations), "repeat_iterations must be an integer"
-        assert self.seed is None or self.seed == int(self.seed), "seed must be an integer"
-        assert self.tol > 0, "tol must be greater than 0"
-        assert self.popsize > 0, "popsize must be greater than 0"
-        assert self.updating in ["immediate", "deferred"], "updating must be 'immediate' or 'deferred'"
-        assert self.strategy in [
+        if not isinstance(self.lnd0aa_bounds, list):
+            raise ValueError("lnd0aa_bounds must be a list")
+        if not isinstance(self.ea_bounds, list):
+            raise ValueError("ea_bounds must be a list")
+        if not isinstance(self.geometry, str):
+            raise ValueError("geometry must be a string")
+        if not isinstance(self.omit_value_indices, list):
+            raise ValueError("omit_value_indices must be a list")
+        if not isinstance(self.max_iters, (float, int)):
+            raise ValueError("max_iters must be a float or int")
+        if not isinstance(self.punish_degas_early, bool):
+            raise ValueError("punish_degas_early must be a bool")
+        if len(self.lnd0aa_bounds) != 2:
+            raise ValueError("lnd0aa_bounds must be a list of length 2")
+        if len(self.ea_bounds) != 2:
+            raise ValueError("ea_bounds must be a list of length 2")
+        if self.lnd0aa_bounds[0] >= self.lnd0aa_bounds[1]:
+            raise ValueError("lnd0aa_bounds must be in increasing order")
+        if self.ea_bounds[0] > self.ea_bounds[1]:
+            raise ValueError("ea_bounds must be in increasing order, or equal for fixed Ea")
+        if self.geometry not in ["spherical", "plane sheet"]:
+            raise ValueError("geometry must be 'spherical' or 'plane sheet'")
+        if self.max_iters <= 0:
+            raise ValueError("max_iters must be greater than 0")
+        if self.num_domains < 0:
+            raise ValueError("num_domains must be greater than 0")
+        if self.misfit_stat not in MISFIT_STAT_LIST:
+            raise ValueError(f"misfit_stat must be one of {MISFIT_STAT_LIST}, got '{self.misfit_stat}'")
+        if self.repeat_iterations <= 0:
+            raise ValueError("repeat_iterations must be greater than 0")
+        if self.repeat_iterations != int(self.repeat_iterations):
+            raise ValueError("repeat_iterations must be an integer")
+        if self.seed is not None and self.seed != int(self.seed):
+            raise ValueError("seed must be an integer")
+        if self.tol <= 0:
+            raise ValueError("tol must be greater than 0")
+        if self.popsize <= 0:
+            raise ValueError("popsize must be greater than 0")
+        if self.updating not in ["immediate", "deferred"]:
+            raise ValueError("updating must be 'immediate' or 'deferred'")
+        _valid_strategies = [
             "best1bin", "best1exp", "rand1exp", "randtobest1exp", "currenttobest1exp",
             "best2exp", "rand2exp", "randtobest1bin", "currenttobest1bin",
             "best2bin", "rand2bin", "rand1bin",
-        ], "strategy must be a valid differential-evolution strategy"
-        assert 0 < self.recombination < 1, "recombination must be between 0 and 1"
+        ]
+        if self.strategy not in _valid_strategies:
+            raise ValueError("strategy must be a valid differential-evolution strategy")
+        if not (0 < self.recombination < 1):
+            raise ValueError("recombination must be between 0 and 1")
         if isinstance(self.mutation, float):
-            assert 0 < self.mutation < 2, "mutation must be between 0 and 2"
+            if not (0 < self.mutation < 2):
+                raise ValueError("mutation must be between 0 and 2")
         elif isinstance(self.mutation, list):
-            assert len(self.mutation) == 2, "mutation must be a list of length 2"
-            assert 0 < self.mutation[0] < 2, "mutation[0] must be between 0 and 2"
-            assert 0 < self.mutation[1] < 2, "mutation[1] must be between 0 and 2"
+            if len(self.mutation) != 2:
+                raise ValueError("mutation must be a list of length 2")
+            if not (0 < self.mutation[0] < 2):
+                raise ValueError("mutation[0] must be between 0 and 2")
+            if not (0 < self.mutation[1] < 2):
+                raise ValueError("mutation[1] must be between 0 and 2")
         else:
             raise ValueError("mutation must be a float or a list")
-        assert self.init in ["latinhypercube", "sobol", "halton", "random"], "init must be a valid init method"
+        if self.init not in ["latinhypercube", "sobol", "halton", "random"]:
+            raise ValueError("init must be a valid init method")
 
     def to_dict(self):
         return {
@@ -171,7 +199,9 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
 
     Args:
     -------
-        - domains_to_model (int | list[int]): Number of domains, or [min, max] range. Defaults to 8.
+        - domains_to_model (int | list[int]): Number of domains to fit. Accepts a plain integer
+          (e.g. ``4``), a single-element list (e.g. ``[4]``), or a two-element ``[min, max]``
+          range that fits every count from min to max inclusive. Defaults to 8.
         - misfit_stat_list (list[str]): Misfit statistics to use. Defaults to ["chisq", "percent_frac"].
         - lnd0aa_bounds (list[float]): Bounds for lnD0aa (ln(1/s)). Defaults to [-5.0, 50.0].
         - ea_bounds (list[float]): Bounds for Ea (kJ/mol). Defaults to [50.0, 500.0].
@@ -210,6 +240,9 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
         recombination: float = 0.7,
         init: str = "latinhypercube",
     ):
+        # Normalise [4] → 4 so a single-element list behaves identically to a plain int.
+        if isinstance(domains_to_model, list) and len(domains_to_model) == 1:
+            domains_to_model = domains_to_model[0]
         self.domains_to_model = domains_to_model
         self.misfit_stat_list = misfit_stat_list
         self.geometry = geometry
@@ -261,16 +294,24 @@ class MultiProcessPipelineConfig(BasePipelineConfig):
         self._assert_is_valid()
 
     def _assert_is_valid(self):
-        assert isinstance(self.domains_to_model, (int, list)), "domains_to_model must be an int or a list of ints"
+        if not isinstance(self.domains_to_model, (int, list)):
+            raise ValueError("domains_to_model must be an int or a [min, max] list")
         if isinstance(self.domains_to_model, list):
-            assert len(self.domains_to_model) == 2, "domains_to_model must be an int or a list of length 2"
-            assert all(isinstance(d, int) for d in self.domains_to_model), "domains_to_model entries must be ints"
-            assert self.domains_to_model[0] < self.domains_to_model[1], "domains_to_model must be in increasing order"
-            assert self.domains_to_model[0] > 0, "domains_to_model lower bound must be greater than 0"
-        assert isinstance(self.misfit_stat_list, list), "misfit_stat_list must be a list"
-        assert all(isinstance(s, str) for s in self.misfit_stat_list), "misfit_stat_list must be a list of strings"
-        assert all(s.lower() in MISFIT_STAT_LIST for s in self.misfit_stat_list), (
-            f"misfit_stat_list must only contain {MISFIT_STAT_LIST}"
-        )
-        assert len(set(self.misfit_stat_list)) == len(self.misfit_stat_list), "misfit_stat_list must not contain duplicates"
-        assert len(self.misfit_stat_list) > 0, "misfit_stat_list must contain at least one statistic"
+            if len(self.domains_to_model) != 2:
+                raise ValueError("domains_to_model list must have exactly 2 elements: [min, max]")
+            if not all(isinstance(d, int) for d in self.domains_to_model):
+                raise ValueError("domains_to_model entries must be ints")
+            if self.domains_to_model[0] >= self.domains_to_model[1]:
+                raise ValueError("domains_to_model must be in increasing order")
+            if self.domains_to_model[0] <= 0:
+                raise ValueError("domains_to_model lower bound must be greater than 0")
+        if not isinstance(self.misfit_stat_list, list):
+            raise ValueError("misfit_stat_list must be a list")
+        if not all(isinstance(s, str) for s in self.misfit_stat_list):
+            raise ValueError("misfit_stat_list must be a list of strings")
+        if not all(s.lower() in MISFIT_STAT_LIST for s in self.misfit_stat_list):
+            raise ValueError(f"misfit_stat_list must only contain {MISFIT_STAT_LIST}")
+        if len(set(self.misfit_stat_list)) != len(self.misfit_stat_list):
+            raise ValueError("misfit_stat_list must not contain duplicates")
+        if len(self.misfit_stat_list) == 0:
+            raise ValueError("misfit_stat_list must contain at least one statistic")

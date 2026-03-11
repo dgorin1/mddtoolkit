@@ -1,4 +1,4 @@
 from .dataset import Dataset
 from .diffusion_objective import DiffusionObjective
 from .diffusion_optimizer import DiffusionOptimizer
-from .forward_model_kinetics import forwardModelKinetics
+from .forward_model_kinetics import forward_model_kinetics

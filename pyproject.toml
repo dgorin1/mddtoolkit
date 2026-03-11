@@ -3,9 +3,11 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name='mddtoolkit'
+name = "mddtoolkit"
+version = "0.3.0"
+description = "A package for modelling multi-domain diffusion (MDD) processes."
+readme = "README.md"
 requires-python = ">= 3.9"
-version='0.3.0'
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -13,20 +15,19 @@ classifiers = [
 ]
 
 dependencies = [
-    "numpy<2.0",
+    "numpy>=1.24",
     "torch",
     "scipy",
     "pandas",
     "matplotlib",
     "pyyaml",
-    "pathos",
-    "pytest",
-    "tabulate"
+    "tabulate",
 ]
-#author='Andrew Gorin'
-#url='https://github.com/dgorin1/diffusion_code_final'
-description='A package for modelling diffusion processes.'
-readme="README.md"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

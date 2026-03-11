@@ -1,94 +1,106 @@
 import os
+import json
 import pandas as pd
-from diffusion_kinetics.optimization import Dataset
+from diffusion_kinetics.optimization import Dataset, DiffusionObjective
 from diffusion_kinetics.utils.plot_results import plot_results
 from diffusion_kinetics.utils.organize_x import organize_x
-from diffusion_kinetics.optimization import DiffusionObjective
 from diffusion_kinetics.pipeline import SingleProcessPipelineConfig
-import numpy as np
-import json
+
 
 class PipelineOutput:
-    """Class to handle the construction and storage of pipeline output.
+    """Manages the output directory structure for a pipeline run.
+
+    All results (plots, JSON optimizer output, combined CSVs, and the
+    pre-processed input dataset) are written under ``output_dir``, organised
+    by misfit statistic.
+
+    Args:
+        output_dir (str): Root directory for all output files. Created
+            automatically if it does not exist.
     """
-    def __init__(self, output_dir:str):
+
+    def __init__(self, output_dir: str):
         self.output_dir = output_dir
-        self.config_path = os.path.join(output_dir, "config.yaml")
         self._setup()
-        
+
     def _setup(self):
-        if not os.path.exists(self.output_dir):
-            os.makedirs(self.output_dir)
-            
-    def get_plot_path(self, config:SingleProcessPipelineConfig, file_type:str="pdf"):
-        """Get the path to a plot file.
+        os.makedirs(self.output_dir, exist_ok=True)
+
+    def get_plot_path(self, config: SingleProcessPipelineConfig, file_type: str = "pdf") -> str:
+        """Return the path for the diagnostic plot for a given config.
 
         Args:
-            ndom (int): Number of domains.
-            file_type (str, optional): File type. Defaults to "pdf".
+            config (SingleProcessPipelineConfig): Config whose ``misfit_stat``
+                and ``num_domains`` determine the file name.
+            file_type (str): File extension. Defaults to ``"pdf"``.
+        """
+        return os.path.join(
+            self.output_dir, config.misfit_stat,
+            f"{config.num_domains}_dom_best_params.{file_type}",
+        )
 
-        Returns:
-            str: Path to plot file.
-        """
-        return os.path.join(self.output_dir, config.misfit_stat, f"{config.num_domains}_dom_best_params.{file_type}")
-    
-    def get_results_path(self, config:SingleProcessPipelineConfig, file_type:str="json"):
-        """
+    def get_results_path(self, config: SingleProcessPipelineConfig, file_type: str = "json") -> str:
+        """Return the path for the raw optimizer output for a given config.
+
         Args:
-            ndom (int): Number of domains.
-            file_type (str, optional): File type. Defaults to "csv".
-
-        Returns:
-            str: Path to results file.
+            config (SingleProcessPipelineConfig): Config whose ``misfit_stat``
+                and ``num_domains`` determine the file name.
+            file_type (str): File extension. Defaults to ``"json"``.
         """
-        return os.path.join(self.output_dir, config.misfit_stat, f"{config.num_domains}_dom_optimizer_output.{file_type}")
-    
-    def get_dataframe_path(self, misfit_type:str, file_type:str="csv"):
-        return os.path.join(self.output_dir, misfit_type, f"combined_results_{misfit_type}.{file_type}")
-    
-    def get_generated_input_path(self, input_filename:str, file_type:str="csv"):
+        return os.path.join(
+            self.output_dir, config.misfit_stat,
+            f"{config.num_domains}_dom_optimizer_output.{file_type}",
+        )
+
+    def get_dataframe_path(self, misfit_type: str, file_type: str = "csv") -> str:
+        """Return the path for the combined results CSV for a misfit statistic."""
+        return os.path.join(
+            self.output_dir, misfit_type, f"combined_results_{misfit_type}.{file_type}"
+        )
+
+    def get_generated_input_path(self, input_filename: str, file_type: str = "csv") -> str:
+        """Return the path at which the pre-processed input dataset is saved."""
         return os.path.join(self.output_dir, f"input_{input_filename}.{file_type}")
-    
-    def serialize_results(self, results:dict, config:dict):
-        """serialize the results to a json friendly format
+
+    def serialize_results(self, results, config: SingleProcessPipelineConfig) -> dict:
+        """Serialise optimizer results and config to a JSON-compatible dict.
 
         Args:
-            results (dict): _description_
-            config (dict): _description_
-            dataset (Dataset): _description_
-        """
+            results: scipy ``OptimizeResult`` object.
+            config (SingleProcessPipelineConfig): Configuration used for the run.
 
-        # serialize results
-        serialized_results = {
-            "fun": results.fun,
-            "message": results.message,
-            "nfev": results.nfev,
-            "nit": results.nit,
-            "success": results.success,
-            "x": results.x.tolist()
-        }
-        
-        serialized_config = config.serialize()
-        
+        Returns:
+            dict: ``{"results": {...}, "config": {...}}``.
+        """
         return {
-            "results": serialized_results,
-            "config": serialized_config
+            "results": {
+                "fun": results.fun,
+                "message": results.message,
+                "nfev": results.nfev,
+                "nit": results.nit,
+                "success": results.success,
+                "x": results.x.tolist(),
+            },
+            "config": config.serialize(),
         }
-    
-    def save_results(self, results:dict, config:dict, dataset:Dataset, quiet:bool=True):
-        """Save the results to a csv file.
+
+    def save_results(self, results, config: SingleProcessPipelineConfig, dataset: Dataset):
+        """Save the optimizer output, config, and diagnostic plot to disk.
 
         Args:
-            results (dict): Results dictionary.
-            config (dict): Config dictionary.
-            dataset (Dataset): Dataset object.
+            results: scipy ``OptimizeResult`` object.
+            config (SingleProcessPipelineConfig): Configuration used for the run.
+            dataset (Dataset): Dataset used for the run.
         """
-        if not os.path.exists(os.path.join(self.output_dir, config.misfit_stat)):
-            os.makedirs(os.path.join(self.output_dir, config.misfit_stat))
-        results_path = self.get_results_path(config)
-        res = self.serialize_results(results, config)
-        json.dump(res, open(results_path, "w"), indent=4)
-        
+        stat_dir = os.path.join(self.output_dir, config.misfit_stat)
+        os.makedirs(stat_dir, exist_ok=True)
+
+        json.dump(
+            self.serialize_results(results, config),
+            open(self.get_results_path(config), "w"),
+            indent=4,
+        )
+
         objective = DiffusionObjective(
             dataset,
             config.omit_value_indices,
@@ -96,11 +108,4 @@ class PipelineOutput:
             config.geometry,
             config.punish_degas_early,
         )
-
-        plot_results(
-            organize_x(results.x),
-            dataset,
-            objective,
-            self.get_plot_path(config),
-        )
-    
+        plot_results(organize_x(results.x), dataset, objective, self.get_plot_path(config))

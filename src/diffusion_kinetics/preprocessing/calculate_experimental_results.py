@@ -1,154 +1,211 @@
 import math
 import numpy as np
 import pandas as pd
-import math as math
 import warnings
 
 
-def D0calc_MonteCarloErrors(expdata,geometry:str):
-    # Function for calculating D0 and D/a^2 from experimental data. Input should be a
-    # Pandas DataFrame with columns "TC", "thr",
-    # M, and, and delM, which correspond to heating temperature (deg C), 
-    # heating step duration (time in hours),
-    # M (measured concentration in cps, atoms, or moles), delM (same units)
-    
+def calculate_diffusivity(exp_data: pd.DataFrame, geometry: str) -> pd.DataFrame:
+    """Calculate ln(D/a²) and propagated uncertainties from raw step-heating data.
+
+    Applies the Fechtig-Kalbitzer equations to convert measured gas fractions
+    and step durations into diffusivity values, then propagates measurement
+    uncertainties using the analytical expressions of Ginster (2018).
+
+    Args:
+        exp_data (pd.DataFrame): Raw experimental data with columns:
+            ``TC`` (°C), ``thr`` (hours), ``M`` (gas amount), ``delM``
+            (uncertainty on gas amount).
+        geometry (str): Diffusion geometry — ``"spherical"`` or ``"plane sheet"``.
+
+    Returns:
+        pd.DataFrame: Columns ``Tplot``, ``Fi``, ``Daa``, ``Daa uncertainty``,
+        ``ln(D/a^2)``, ``ln(D/a^2)-del``, ``ln(D/a^2)+del``.
+    """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        
-        # Calculate diffusivities from the previous experiment
-        TC = expdata.loc[:,"TC"].array
-        thr = expdata.loc[:,"thr"].array
-        M = expdata.loc[:,"M"].array
-        delM = expdata.loc[:,"delM"].array
 
-        #Check if units are in minutes and convert from hours to minutes if necesssary
+        tc = exp_data.loc[:, "TC"].array
+        thr = exp_data.loc[:, "thr"].array
+        M = exp_data.loc[:, "M"].array
+        del_m = exp_data.loc[:, "delM"].array
 
+        # Unit conversions
+        t_k = 273.15 + tc          # temperature in Kelvin
+        tsec = thr * 3600           # step duration in seconds
+        t_plot = 1e4 / t_k          # 10000/T axis for Arrhenius plots
+        n_steps = len(M)
+        cum_tsec = np.cumsum(tsec)
 
-        #Convert units
-        TK = 273.15+TC
-        tsec = thr*60*60
-        Tplot = 1*10**4/TK
-        nstep = len(M)
-        cumtsec = np.cumsum(tsec)
-        Si = np.cumsum(M)
-        S = np.amax(Si)
-        Fi = Si/S
+        # Cumulative and fractional gas release
+        cum_moles = np.cumsum(M)
+        total_moles = np.amax(cum_moles)
+        fi = cum_moles / total_moles
 
+        # Incremental step duration and fractional release (length n-1)
+        diff_ti = cum_tsec[1:] - cum_tsec[:-1]
+        diff_fi = fi[1:] - fi[:-1]
 
+        # Diffusivity arrays (one per Fechtig-Kalbitzer equation)
+        dr2_a = np.zeros(n_steps)
+        dr2_b = np.zeros(n_steps)
 
-        # initialize diffusivity vectors fore each Fechtig and Kalbitzer equation
-        DR2_a = np.zeros([nstep])
-        DR2_b = np.zeros([nstep])
-
-
-        # Create the a list of times for each heating step
-        diffti = cumtsec[1:]-cumtsec[0:-1]
-
-        # Create a list of the gas fraction differences between steps
-        diffFi = Fi[1:]-Fi[0:-1]
-
-
-
-        #If the geometry is spherical...
         if geometry == "spherical":
-            #If geometry is spherical, then a third DR2 vector is needed.
-            DR2_c = np.zeros([nstep])
-            # use equations 5a through c from Fechtig and Kalbitzer for spherical geometry
-            # Fechtig and Kalbitzer Equation 5a, for cumulative gas fractions up to 10%
-            # special case when i = 1; need to insert 0 for previous amount released
+            dr2_c = np.zeros(n_steps)
 
-            
-            
-            #DR2_a[0] = ( (Fi[0]**2 - 0.**2 )*math.pi/(36*(cumtsec[0])))
+            # Fechtig-Kalbitzer equation 5a (updated Reiners form, p. 90)
+            dr2_a[0] = (
+                1 / ((math.pi**2) * cum_tsec[0])
+                * (
+                    2 * math.pi
+                    - (math.pi**2 / 3) * fi[0]
+                    - 2 * math.pi * np.sqrt(1 - (math.pi / 3) * fi[0])
+                )
+            )
+            dr2_a[1:] = (
+                1 / (math.pi**2 * diff_ti)
+                * (
+                    -math.pi**2 / 3 * diff_fi
+                    - 2 * math.pi
+                    * (
+                        np.sqrt(1 - (math.pi / 3) * fi[1:])
+                        - np.sqrt(1 - (math.pi / 3) * fi[:-1])
+                    )
+                )
+            )
 
-            # Equation 5a for all other steps
-            # Updated textbook equations from reiners page 90
-            #Fi is cumulative F at each step i, cumtsec is cumulative t in seconds, diffFi is differential Fi at each step, so length is len(Fi)-1, diffti is analagously length n-1
-            DR2_a[0] = 1/((math.pi**2)*cumtsec[0])*(2*math.pi - (math.pi**2/3)*Fi[0] - 2*math.pi*np.sqrt(1-(math.pi/3)*Fi[0]))
-            DR2_a[1:] = (1/(math.pi**2*diffti)) * (-math.pi**2/3 * diffFi - 2*math.pi*( np.sqrt(1-(math.pi/3)*Fi[1:]) - np.sqrt(1-(math.pi/3)*Fi[0:-1])))
-            DR2_b[0] = -1/(math.pi**2* cumtsec[0]) * np.log((1-Fi[0]) * (math.pi**2/6))
-            DR2_b[1:] = -1/(math.pi**2*diffti) * np.log( (1-Fi[1:])/(1-Fi[0:-1]))
+            # Fechtig-Kalbitzer equation 5b
+            dr2_b[0] = (
+                -1 / (math.pi**2 * cum_tsec[0])
+                * np.log((1 - fi[0]) * (math.pi**2 / 6))
+            )
+            dr2_b[1:] = (
+                -1 / (math.pi**2 * diff_ti)
+                * np.log((1 - fi[1:]) / (1 - fi[:-1]))
+            )
 
+            use_a = (fi <= 0.85) & (fi > 0.00000001)
+            use_b = fi > 0.85
+            dr2 = np.nan_to_num(use_a * dr2_a) + use_b * dr2_b
 
-            # Decide which equation to use based on the cumulative gas fractions from each step
-            use_a = (Fi<= 0.85) & (Fi> 0.00000001)
-            use_b = Fi > 0.85
-            
-            # Compute the final values
-            DR2 = np.nan_to_num(use_a*DR2_a) + use_b*DR2_b
-            uncert_a = np.zeros(len(DR2))
-            uncert_b = np.zeros(len(DR2))
-            for i in range(1,len(M)):
-                
-                # Equation XXXX from Ginster (2018)
-                uncert_a[i] = 1/(3*(cumtsec[i]-cumtsec[i-1])*np.sum(M))*np.sqrt(
-                        ((1-Fi[i])*((1/(np.sqrt(1-(math.pi/3)*Fi[i])))-1) + (1-Fi[i-1])*(1-(1/(np.sqrt(1-(math.pi/3)*Fi[i-1])))))**2*np.sum(delM[0:i-1]**2) + 
-                        ((1-Fi[i])*(1/np.sqrt(1-(math.pi/3)*Fi[i])-1) - Fi[i-1]*(1 - 1/np.sqrt(1-(math.pi/3)*Fi[i-1])))**2 * delM[i]**2 + 
-                        (Fi[i]* (1- (1/np.sqrt(1-(math.pi/3)*Fi[i]))) - Fi[i-1]*(1 - 1/(np.sqrt(1-(math.pi/3)*Fi[i-1])))) **2 * np.sum(delM[i+1:]**2)
+            # Uncertainty propagation — Ginster (2018)
+            uncert_a = np.zeros(n_steps)
+            uncert_b = np.zeros(n_steps)
+            for i in range(1, n_steps):
+                uncert_a[i] = (
+                    1 / (3 * (cum_tsec[i] - cum_tsec[i - 1]) * np.sum(M))
+                    * np.sqrt(
+                        (
+                            (1 - fi[i]) * (1 / np.sqrt(1 - (math.pi / 3) * fi[i]) - 1)
+                            + (1 - fi[i - 1]) * (1 - 1 / np.sqrt(1 - (math.pi / 3) * fi[i - 1]))
+                        ) ** 2
+                        * np.sum(del_m[:i - 1] ** 2)
+                        + (
+                            (1 - fi[i]) * (1 / np.sqrt(1 - (math.pi / 3) * fi[i]) - 1)
+                            - fi[i - 1] * (1 - 1 / np.sqrt(1 - (math.pi / 3) * fi[i - 1]))
+                        ) ** 2
+                        * del_m[i] ** 2
+                        + (
+                            fi[i] * (1 - 1 / np.sqrt(1 - (math.pi / 3) * fi[i]))
+                            - fi[i - 1] * (1 - 1 / np.sqrt(1 - (math.pi / 3) * fi[i - 1]))
+                        ) ** 2
+                        * np.sum(del_m[i + 1:] ** 2)
+                    )
+                )
+                uncert_b[i] = (
+                    1 / (math.pi**2 * (cum_tsec[i] - cum_tsec[i - 1]) * np.sum(M))
+                    * np.sqrt(
+                        (1 + fi[i - 1] / (1 - fi[i - 1])) ** 2 * del_m[i] ** 2
+                        + (fi[i - 1] / (1 - fi[i - 1]) - fi[i] / (1 - fi[i])) ** 2
+                        * np.sum(del_m[i + 1:] ** 2)
+                    )
                 )
 
-                # Equation XXXX from Ginster (2018)
-                uncert_b[i] = (1/(math.pi**2*(cumtsec[i]-cumtsec[i-1])*np.sum(M))) * np.sqrt((1+(Fi[i-1]/(1-Fi[i-1])))**2 * 
-                            delM[i]**2 + (Fi[i-1]/(1-Fi[i-1]) - Fi[i]/(1-Fi[i]))**2 * np.sum(delM[i+1:]**2))
-                
-            # Combine the equations based on which gas fractions they're intended to be used for
-            DR2_uncert = np.nan_to_num(uncert_a*use_a) + uncert_b*use_b
-            
-            # Special equations for the first step (Ginster, 2018)
-            if Fi[0] <= 0.85:          
-                DR2_uncert[0] = (1/(3*cumtsec[0]*np.sum(M)))* ((1/(np.sqrt(1-(math.pi/3)*Fi[0])))-1) * np.sqrt(((1-Fi[0])*delM[0])**2 + Fi[0]**2 * np.sum(delM[1:]**2))
-            
-            # If first step is < 0.85 (Ginster, 2018) 
+            dr2_uncert = np.nan_to_num(uncert_a * use_a) + uncert_b * use_b
+
+            # Special case: first step (Ginster, 2018)
+            if fi[0] <= 0.85:
+                dr2_uncert[0] = (
+                    1 / (3 * cum_tsec[0] * np.sum(M))
+                    * (1 / np.sqrt(1 - (math.pi / 3) * fi[0]) - 1)
+                    * np.sqrt(
+                        ((1 - fi[0]) * del_m[0]) ** 2
+                        + fi[0] ** 2 * np.sum(del_m[1:] ** 2)
+                    )
+                )
             else:
-                DR2_uncert[0] = (1/(math.pi**2*cumtsec[0]*np.sum(M))) * np.sqrt(delM[0]**2 + (Fi[0]/(1-Fi[0]))**2 * np.sum(delM[1:]**2))
+                dr2_uncert[0] = (
+                    1 / (math.pi**2 * cum_tsec[0] * np.sum(M))
+                    * np.sqrt(
+                        del_m[0] ** 2
+                        + (fi[0] / (1 - fi[0])) ** 2 * np.sum(del_m[1:] ** 2)
+                    )
+                )
 
-                
         elif geometry == "plane sheet":
-            # Initialize D/r^2
-            DR2_a = np.zeros([nstep])
-            DR2_b = np.zeros([nstep])
+            # Fechtig-Kalbitzer equation 5a
+            dr2_a[0] = (fi[0] ** 2 * math.pi) / (4 * tsec[0])
+            dr2_a[1:] = ((fi[1:] ** 2 - fi[:-1] ** 2) * math.pi) / (4 * tsec[1:])
+            dr2_b[1:] = (4 / ((math.pi**2) * tsec[1:])) * np.log(
+                (1 - fi[:-1]) / (1 - fi[1:])
+            )
 
-            
-            #Fechtig and Kalbitzer Equation 5a
-            DR2_a[0] = ((((Fi[0]**2) - 0**2))*math.pi)/(4*tsec[0])
-            DR2_a[1:] = ((((Fi[1:]**2)-(Fi[0:-1])**2))*math.pi)/(4*tsec[1:])
-            DR2_b[1:] = (4/((math.pi**2)*tsec[1:]))*np.log((1-Fi[0:-1])/(1-Fi[1:]))
+            use_a = (fi > 0) & (fi < 0.6)
+            use_b = (fi >= 0.6) & (fi <= 1)
+            dr2 = use_a * dr2_a + use_b * dr2_b
 
-            # Determine where gas fractions are specific value ranges
-            usea = (Fi > 0) & (Fi < 0.6)
-            useb = (Fi >= 0.6) & (Fi <= 1)
+            uncert_b = np.zeros(n_steps)
+            uncert_c = np.zeros(n_steps)
 
-            # Calculate final vector of D/r2, using the correct equations where appropriate
-            DR2 = usea*DR2_a + useb*DR2_b
+            # Uncertainty propagation — Ginster (2018)
+            for i in range(1, n_steps):
+                uncert_b[i] = (
+                    math.pi / (2 * (cum_tsec[i] - cum_tsec[i - 1]) * np.sum(M))
+                    * np.sqrt(
+                        ((fi[i] * (1 - fi[i])) - fi[i - 1] * (1 - fi[i - 1])) ** 2
+                        * np.sum(del_m[:i] ** 2)
+                        + (fi[i] * (1 - fi[i]) + fi[i - 1] ** 2) ** 2 * del_m[i] ** 2
+                        + (fi[i - 1] ** 2 - fi[i] ** 2) ** 2
+                        * np.sum(del_m[i + 1:] ** 2)
+                    )
+                )
+                uncert_c[i] = (
+                    4 / (math.pi**2 * (cum_tsec[i] - cum_tsec[i - 1]) * np.sum(M))
+                    * np.sqrt(
+                        (1 + fi[i - 1] / (1 - fi[i - 1])) ** 2 * del_m[i] ** 2
+                        + (fi[i - 1] / (1 - fi[i - 1]) - fi[i] / (1 - fi[i])) ** 2
+                        * np.sum(del_m[i + 1:] ** 2)
+                    )
+                )
 
-            # Initialize uncertainties
-    
-            uncert_b = np.zeros(len(DR2))
-            uncert_c = np.zeros(len(DR2))
-    
-            ## Compute uncertainties using the equations of Ginster 2018       
-            for i in range(1,len(M)):
-                uncert_b[i] =(math.pi/(2*(cumtsec[i]-cumtsec[i-1])*np.sum(M)) * np.sqrt(
-                    ((Fi[i]*(1-Fi[i])) - Fi[i-1]*(1-Fi[i-1]))**2 * np.sum(delM[0:i]**2) + 
-                    (Fi[i]*(1-Fi[i]) + Fi[i-1]**2)**2 * delM[i]**2 + 
-                    (Fi[i-1]**2-Fi[i]**2)**2 * np.sum(delM[i+1:]**2)))
+            dr2_uncert = np.nan_to_num(use_a * uncert_b) + np.nan_to_num(use_b * uncert_c)
 
-                # Equation XXX from Ginster 2018
-                uncert_c[i] = (4/(math.pi**2*(cumtsec[i]-cumtsec[i-1])*np.sum(M))) * np.sqrt((1+Fi[i-1]/(1-Fi[i-1]))**2 * delM[i]**2 + ((Fi[i-1]/(1-Fi[i-1])) - (Fi[i]/(1-Fi[i])))**2 * np.sum(delM[i+1:]**2))
+            # Special case: first step (Ginster, 2018)
+            if fi[0] < 0.6:
+                dr2_uncert[0] = (
+                    math.pi / (2 * diff_ti[0])
+                    * (diff_fi[0] / np.sum(M))
+                    * np.sqrt(
+                        ((1 - diff_fi[0]) * del_m[0]) ** 2
+                        + diff_fi[0] ** 2 * np.sum(del_m[1:] ** 2)
+                    )
+                )
+            else:
+                dr2_uncert[0] = (
+                    4 / (math.pi**2 * diff_ti[0] * np.sum(M))
+                    * np.sqrt(
+                        del_m[0] ** 2
+                        + (diff_fi[0] / (1 - diff_fi[0])) ** 2 * np.sum(del_m[2:] ** 2)
+                    )
+                )
 
-                
-
-            # Put the equations together as necessary
-            DR2_uncert = np.nan_to_num(usea*uncert_b)+ np.nan_to_num(useb*uncert_c)
-            
-
-            if Fi[0] < 0.6: # If the first release is < 60% of total gas
-                DR2_uncert[0] = math.pi/(2*diffti[0]) *(diffFi[0]/np.sum(np.sum(M)))*np.sqrt(((1-diffFi[0])*delM[0])**2 + diffFi[0]**2 * np.sum(delM[1:]**2))
-            
-            else: # If first release is > 60% of gas
-                DR2_uncert[0] = (4/(math.pi^2*diffti[0]*np.sum(M)))*np.sqrt(delM[0]**2+ (diffFi[0]/(1-diffFi[0]))**2 * (np.sum(delM[2:]**2)))
-            
-
-        return pd.DataFrame({"Tplot": Tplot,"Fi": Fi.ravel(),"Daa": DR2,"Daa uncertainty": DR2_uncert.ravel(), \
-                                "ln(D/a^2)": np.log(DR2),"ln(D/a^2)-del": DR2_uncert.ravel()/DR2, \
-                                "ln(D/a^2)+del": DR2_uncert.ravel()/DR2 })
+        return pd.DataFrame(
+            {
+                "Tplot": t_plot,
+                "Fi": fi.ravel(),
+                "Daa": dr2,
+                "Daa uncertainty": dr2_uncert.ravel(),
+                "ln(D/a^2)": np.log(dr2),
+                "ln(D/a^2)-del": dr2_uncert.ravel() / dr2,
+                "ln(D/a^2)+del": dr2_uncert.ravel() / dr2,
+            }
+        )
